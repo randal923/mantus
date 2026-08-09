@@ -20,6 +20,7 @@ const REGISTERED_KINDS = [
   "imbuement-shrine",
   "lever",
   "podium",
+  "quest-lever",
   "quest-touch",
   "read",
   "rotate",
@@ -104,9 +105,10 @@ describe("worldActionPreconditions", () => {
         continue;
       }
       expect(WORLD_ACTION_REQUIREMENTS[kind].exclusive).toBe(true);
-      // Quest touches fire on baked scenery: there is no placed world item
-      // to re-check and none of them stand on house tiles.
-      if (kind === "quest-touch") continue;
+      // Quest touches and quest levers resolve from position tables: the
+      // service re-reads the live tile state itself, and none of their
+      // registered positions stand on house tiles.
+      if (kind === "quest-touch" || kind === "quest-lever") continue;
       expect(WORLD_ACTION_REQUIREMENTS[kind].itemStillPlaced).toBe(true);
       expect(WORLD_ACTION_REQUIREMENTS[kind].houseAccess).toBe(true);
     }

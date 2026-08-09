@@ -9,6 +9,11 @@ import type { Session } from "../Session";
 import type { World } from "../World";
 import { mapItemAttributes } from "./mapItemAttributes";
 import {
+  MOVEMENT_GATES,
+  type MovementGateDefinition,
+} from "./movementGateTables";
+import { positionKey } from "../positionKey";
+import {
   PRESSURE_PLATE_DEPRESS,
   PRESSURE_PLATE_RELEASE,
   TRAP_RELEASE,
@@ -45,6 +50,11 @@ export class PressurePlateRegistry {
       now: number,
     ) => void,
     private readonly tileDamage?: TileDamageHook,
+    private readonly effect?: (position: Position, effectId: number) => void,
+    private readonly gates: ReadonlyMap<
+      string,
+      MovementGateDefinition
+    > = MOVEMENT_GATES,
   ) {}
 
   /** Runs after a player's step has been applied to `player.position`. */
@@ -55,6 +65,18 @@ export class PressurePlateRegistry {
     now: number,
   ): void {
     const position = player.position;
+    // Fixed step-in gates (level/premium bridges) run before any plate: the
+    // requirement and destination are re-read at execution time, and failing
+    // sends the player to the gate's own fail spot, not the previous tile.
+    const gate = this.gates.get(positionKey(position));
+    if (gate && !this.gatePasses(gate, player, now)) {
+      if (gate.message) {
+        session.send({ type: "combat-log", kind: "condition", text: gate.message });
+      }
+      this.effect?.(gate.failPosition, gate.effectId);
+      this.snapBack(session, player, gate.failPosition, now);
+      return;
+    }
     if (this.world.isProtectionZone(position)) return;
     for (const item of this.world.getMapItems(position)) {
       const trap = TRAP_TILES.get(item.itemId);
@@ -81,6 +103,17 @@ export class PressurePlateRegistry {
       this.transform(session, player.id, item, from, released, now);
       return;
     }
+  }
+
+  private gatePasses(
+    gate: MovementGateDefinition,
+    player: Player,
+    now: number,
+  ): boolean {
+    if (gate.requirement.kind === "level") {
+      return player.level >= gate.requirement.minimum;
+    }
+    return player.isPremiumAt(now);
   }
 
   /**

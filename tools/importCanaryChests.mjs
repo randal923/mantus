@@ -46,9 +46,33 @@ const stampKeyRewards = (rewards, keyActionId) =>
       : reward,
   );
 
+// Chests whose ChestUnique entry only stamps the unique id — the reward
+// lives in a dedicated quest script instead of quest_reward_common.lua.
+// Rewards and looted keys are transcribed from those scripts at the pinned
+// commit; positions/item types still come from the parsed table.
+const SCRIPT_ANSWERED_CHESTS = new Map([
+  // data-otservbr-global/scripts/actions/rookgaard/rapier_quest.lua:
+  // grants one rapier via canGetReward/questKV "rapier".
+  [
+    14042,
+    { reward: [{ typeId: 3272, count: 1 }], lootedKey: "chest-kv:rapier" },
+  ],
+]);
+
 const chests = [];
 const skipped = [];
 for (const chest of parsed) {
+  const scriptAnswered = SCRIPT_ANSWERED_CHESTS.get(chest.uniqueId);
+  if (scriptAnswered && chest.itemTypeId !== null) {
+    chests.push({
+      uniqueId: chest.uniqueId,
+      itemTypeId: chest.itemTypeId,
+      positions: chest.positions,
+      lootedKey: scriptAnswered.lootedKey,
+      reward: scriptAnswered.reward,
+    });
+    continue;
+  }
   const { status, reason } = classifyChest(chest);
   if (status !== "implemented") {
     skipped.push({ uniqueId: chest.uniqueId, status, reason });

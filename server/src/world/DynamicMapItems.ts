@@ -3,7 +3,7 @@ import {
   OPEN_SHOVEL_HOLE_IDS,
   SHOVEL_HOLE_PAIRS,
 } from "../action/shovelHolePairs";
-import { QUEST_TOUCH_WALL_TILES } from "../action/questTouchWallTiles";
+import { QUEST_TILE_PASSABILITY } from "../action/questTilePassability";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
 import { visibleFloorRange } from "../visibleFloorRange";
 import { canSee } from "../canSee";
@@ -22,6 +22,8 @@ import { positionKey } from "../positionKey";
 export interface TilePassabilityOverride {
   readonly walkable: boolean;
   readonly blocksProjectile: boolean;
+  /** Overlaid ground speed for walkable spans over speedless ground. */
+  readonly groundSpeed?: number;
 }
 
 export class DynamicMapItems {
@@ -110,16 +112,27 @@ export class DynamicMapItems {
 
   private refreshTileOverride(position: Position): void {
     let override: TilePassabilityOverride | undefined;
-    // A quest-touch wall tile is owned by that wall the way a door tile is
-    // owned by its door: the static bitset baked the wall's placed
-    // (blocking) state, so removal must overlay "walkable" here — presence
-    // has no item of its own to hang an override on.
-    const questWallItemId = QUEST_TOUCH_WALL_TILES.get(positionKey(position));
-    if (questWallItemId !== undefined) {
-      const present = this.getMapItems(position).some(
-        (candidate) => candidate.itemId === questWallItemId,
+    // A quest-owned tile (removable wall, bear-room stone, sewer bridge
+    // span) is owned by its quest items the way a door tile is owned by its
+    // door: the static bitset baked the map's placed state, so the live
+    // answer is overlaid from what is actually on the tile right now.
+    const questRule = QUEST_TILE_PASSABILITY.get(positionKey(position));
+    if (questRule !== undefined) {
+      const items = this.getMapItems(position);
+      const blocked = (questRule.blockingItemIds ?? []).some((blockingId) =>
+        items.some((candidate) => candidate.itemId === blockingId),
       );
-      override = { walkable: !present, blocksProjectile: present };
+      const spanned =
+        questRule.requiredItemId === undefined ||
+        items.some((candidate) => candidate.itemId === questRule.requiredItemId);
+      const walkable = !blocked && spanned;
+      override = {
+        walkable,
+        blocksProjectile: !walkable && questRule.blocksProjectileWhenBlocked,
+        ...(walkable && questRule.groundSpeedWhenWalkable !== undefined
+          ? { groundSpeed: questRule.groundSpeedWhenWalkable }
+          : {}),
+      };
     }
     for (const item of this.getMapItems(position)) {
       const passable = this.passabilityForItemId(item.itemId);
@@ -132,7 +145,8 @@ export class DynamicMapItems {
       if (
         !current ||
         current.walkable !== override.walkable ||
-        current.blocksProjectile !== override.blocksProjectile
+        current.blocksProjectile !== override.blocksProjectile ||
+        current.groundSpeed !== override.groundSpeed
       ) {
         this.tileOverrides.set(key, override);
         this.currentPassabilityRevision++;

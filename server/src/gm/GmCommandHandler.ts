@@ -100,6 +100,9 @@ export class GmCommandHandler {
       case "level":
         this.setLevel(session, player, args, now);
         break;
+      case "premium":
+        this.grantPremium(session, player, args);
+        break;
       case "heal":
         this.heal(session, player, now);
         break;
@@ -150,7 +153,7 @@ export class GmCommandHandler {
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>, /raid <eventId>",
+          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /premium [days], /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>, /raid <eventId>",
         );
     }
     return true;
@@ -613,6 +616,25 @@ export class GmCommandHandler {
       );
     }
     this.reply(session, true, `Level set to ${player.level}.`);
+  }
+
+  /**
+   * Dev-only in-memory premium for the current session (playtests exercise
+   * premium gates with it). Real premium time is sold through the store and
+   * persisted on the account; this deliberately writes none of that.
+   */
+  private grantPremium(
+    session: Session,
+    player: Player,
+    args: string[],
+  ): void {
+    const days = Number(args[0] ?? 30);
+    if (!Number.isInteger(days) || days < 1 || days > 3_650) {
+      this.reply(session, false, "Usage: /premium <days 1..3650>");
+      return;
+    }
+    player.setPremiumUntil(new Date(Date.now() + days * 86_400_000));
+    this.reply(session, true, `Premium until ${days} day(s) from now.`);
   }
 
   private setMagicLevel(

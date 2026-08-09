@@ -49,6 +49,14 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: false,
     exclusive: true,
   },
+  // Quest levers resolve from the position table; the service re-reads the
+  // lever item (the state carrier) from live tile state itself.
+  "quest-lever": {
+    reach: "adjacent",
+    itemStillPlaced: false,
+    houseAccess: false,
+    exclusive: true,
+  },
   "daily-shrine": {
     reach: "adjacent",
     itemStillPlaced: true,

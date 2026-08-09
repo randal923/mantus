@@ -16,9 +16,9 @@
  },
  "counts": {
   "registrations": 1367,
-  "implemented": 26,
-  "deferred": 1308,
-  "excluded": 33,
+  "implemented": 33,
+  "deferred": 1297,
+  "excluded": 37,
   "unclassified": 0
  },
  "implementedItemIds": {
@@ -95,6 +95,10 @@
   [
    10000,
    12000
+  ],
+  [
+   14042,
+   14042
   ],
   [
    14092,
@@ -3467,9 +3471,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "excluded",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "uid 1056 is stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content; the aid-30006 sibling covers the room"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/bear_room_quest/bear_room_quest_stone.lua",
@@ -3483,9 +3487,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "quest-lever table (aid 30006 stamped by startup/tables/lever.lua)"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/chest.lua",
@@ -3499,9 +3503,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "excluded",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "aid 30492 is stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content in Canary"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/goblin_temple_quest.lua",
@@ -3515,9 +3519,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "excluded",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "uids 14049/14050 are stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content in Canary"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/goblin_temple_quest.lua",
@@ -3531,9 +3535,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "excluded",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "uids 14049/14050 are stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content in Canary"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/katana_quest/katana_quest_door.lua",
@@ -3547,9 +3551,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "quest-lever table (uid 30029/22006 stamped by startup lever/door_quest tables)"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/katana_quest/katana_quest_lever.lua",
@@ -3563,9 +3567,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "quest-lever table (uid 30029/22006 stamped by startup lever/door_quest tables)"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/rapier_quest.lua",
@@ -3579,9 +3583,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "chest import carries uid 14042 with the reward transcribed from this script"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/rookgaard/sewer_lever.lua",
@@ -3595,9 +3599,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "quest-lever table (aid 50239 in the OTBM); grounds stay baked, the drawbridge is a created span item with a passability overlay"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/roshamuul/prison/golden.lua",
@@ -4263,9 +4267,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "movement-gate table enforced by PressurePlateRegistry.onStepIn"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/movements/rookgaard/premium_bridge.lua",
@@ -4280,9 +4284,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "agents/quest-parity-rookgaard",
+   "reason": "movement-gate table enforced by PressurePlateRegistry.onStepIn"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/movements/rookgaard/rook_village.lua",

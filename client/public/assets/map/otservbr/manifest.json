@@ -3,7 +3,7 @@
   "source": {
     "mapSha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2"
   },
-  "version": "34ecc701ea7eba05",
+  "version": "311d52951fe9b79a",
   "name": "otservbr",
   "regionSize": 256,
   "bounds": {
@@ -4767,5 +4767,5 @@
       ]
     ]
   },
-  "minimapVersion": "46b3c2da2eb7"
+  "minimapVersion": "d723ad4f8443"
 }

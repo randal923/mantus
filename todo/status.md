@@ -84,7 +84,7 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Reward chests, quick-loot assignment, daily rewards (84) | ◐      | ◐      | Chests + daily rewards ✅ (2026-07-26); reward wall + bonuses/history ✅ (2026-07-30); calendar redesign + exercise chooser ✅ (2026-08-01); claimable-day call to action, countdown on the waiting day, midnight refresh ✅ (2026-08-03); exercise chooser fixed — unclickable disabled-option dropdown replaced by animated weapon art ✅ (2026-08-06); loot-container assignment + stash routing + out-of-window claimable icon remain |
 | Familiars, hirelings (85)                                | ❌     | ❌     | Everything (summon runtime exists; importer lanes + runtime gaps mapped in todo-10) |
 | Long tail: hazard, concoctions, difficulty, podium (86)  | ◐      | ◐      | Hazard + concoctions + inert perks/animus earn; podium + stat residuals ✅, difficulty = upstream no-op; livestream **excluded** (product decision) |
-| Quests (103–105)                                         | ◐      | ◐      | Platform + rewards/log + catalog+parity gate ✅ (2026-07-26); 114 script-dir behaviors + dynamic descriptions + tracker remain |
+| Quests (103–105)                                         | ◐      | ◐      | Platform + rewards/log + catalog+parity gate ✅ (2026-07-26); 114 script-dir behaviors + dynamic descriptions + tracker remain; 2026-08-09 Rookgaard starter pack live (quest-lever system: bear room, katana, sewer bridge; level/premium movement gates; rapier chest; e2e `playtest:rookgaard`; goblin temple + wooden-sword chest are dead content in Canary) |
 
 ## Engineering & launch
 

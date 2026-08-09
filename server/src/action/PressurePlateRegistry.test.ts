@@ -15,6 +15,8 @@ import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
+import type { MovementGateDefinition } from "./movementGateTables";
+import { positionKey } from "../positionKey";
 import { PressurePlateRegistry } from "./PressurePlateRegistry";
 
 const PLATE_UP = 419;
@@ -60,6 +62,8 @@ async function makeHarness(options: {
   items: ReadonlyArray<{ position: Position; item: MapItem }>;
   protectionZones?: ReadonlyArray<readonly [number, number, number]>;
   level?: number;
+  gates?: ReadonlyMap<string, MovementGateDefinition>;
+  premiumUntil?: Date;
 }) {
   const world = new World(
     gridMapData({
@@ -85,6 +89,7 @@ async function makeHarness(options: {
   const snapBacks: Position[] = [];
   const damages: Array<{ creatureId: string; minimum: number; type: string }> =
     [];
+  const effects: Array<{ position: Position; effectId: number }> = [];
   const plates = new PressurePlateRegistry(
     world,
     catalog,
@@ -100,6 +105,10 @@ async function makeHarness(options: {
         type: damage.type,
       });
     },
+    (position, effectId) => {
+      effects.push({ position: { ...position }, effectId });
+    },
+    options.gates,
   );
   const level = options.level ?? 1;
   const player = new Player(
@@ -109,6 +118,8 @@ async function makeHarness(options: {
       experience: BigInt(getExperienceForLevel(level)),
     },
     START,
+    undefined,
+    options.premiumUntil ?? null,
   );
   world.addPlayer(player);
   const sent: ServerMessage[] = [];
@@ -136,7 +147,18 @@ async function makeHarness(options: {
     plates.onStepOut(session, player, result.from, now);
     plates.onStepIn(session, player, result.from, now);
   };
-  return { world, items, plates, player, session, sent, snapBacks, damages, step };
+  return {
+    world,
+    items,
+    plates,
+    player,
+    session,
+    sent,
+    snapBacks,
+    damages,
+    effects,
+    step,
+  };
 }
 
 const tileItemIds = (world: World, position: Position) =>
@@ -255,5 +277,88 @@ describe("PressurePlateRegistry", () => {
 
     expect(tileItemIds(harness.world, PLATE)).toEqual([WOLF_TRAP]);
     expect(harness.damages).toEqual([]);
+  });
+
+  const FAIL_SPOT = { x: 2, y: 2, z: 7 } as const;
+  const levelGate = (): ReadonlyMap<string, MovementGateDefinition> =>
+    new Map([
+      [
+        positionKey(PLATE),
+        {
+          requirement: { kind: "level", minimum: 2 },
+          failPosition: FAIL_SPOT,
+          message: "You need to be at least Level 2 in order to pass.",
+          effectId: 13,
+        },
+      ],
+    ]);
+  const premiumGate = (): ReadonlyMap<string, MovementGateDefinition> =>
+    new Map([
+      [
+        positionKey(PLATE),
+        {
+          requirement: { kind: "premium" },
+          failPosition: FAIL_SPOT,
+          effectId: 13,
+        },
+      ],
+    ]);
+
+  it("bounces an underleveled player to the gate's fail spot with the line", async () => {
+    const harness = await makeHarness({ items: [], gates: levelGate() });
+    harness.step("north", 1_000);
+
+    expect(harness.snapBacks).toEqual([FAIL_SPOT]);
+    expect(harness.effects).toEqual([{ position: FAIL_SPOT, effectId: 13 }]);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      kind: "condition",
+      text: "You need to be at least Level 2 in order to pass.",
+    });
+  });
+
+  it("lets a player at the required level through a level gate", async () => {
+    const harness = await makeHarness({
+      items: [],
+      level: 2,
+      gates: levelGate(),
+    });
+    harness.step("north", 1_000);
+
+    expect(harness.snapBacks).toEqual([]);
+    expect(harness.effects).toEqual([]);
+  });
+
+  it("bounces a free account off a premium gate, silently", async () => {
+    const harness = await makeHarness({ items: [], gates: premiumGate() });
+    harness.step("north", 1_000);
+
+    expect(harness.snapBacks).toEqual([FAIL_SPOT]);
+    expect(harness.effects).toEqual([{ position: FAIL_SPOT, effectId: 13 }]);
+    expect(
+      harness.sent.filter((message) => message.type === "combat-log"),
+    ).toEqual([]);
+  });
+
+  it("lets a premium account through a premium gate", async () => {
+    const harness = await makeHarness({
+      items: [],
+      gates: premiumGate(),
+      premiumUntil: new Date(1_000_000),
+    });
+    harness.step("north", 1_000);
+
+    expect(harness.snapBacks).toEqual([]);
+    expect(harness.effects).toEqual([]);
+  });
+
+  it("ships both Rookgaard bridge gates", async () => {
+    const { MOVEMENT_GATES } = await import("./movementGateTables");
+    expect(
+      MOVEMENT_GATES.get(positionKey({ x: 32_091, y: 32_175, z: 6 })),
+    ).toMatchObject({ requirement: { kind: "level", minimum: 2 } });
+    expect(
+      MOVEMENT_GATES.get(positionKey({ x: 32_063, y: 32_193, z: 7 })),
+    ).toMatchObject({ requirement: { kind: "premium" } });
   });
 });
