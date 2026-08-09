@@ -12,7 +12,14 @@ export function handleCharacterSessionMessage(
 
   const { runtime } = state;
 
+  // Pushed while parked in the login queue; a character-list ends the wait.
+  if (message.type === "queue-position") {
+    state.setLoginQueue({ position: message.position, total: message.total });
+    return true;
+  }
+
   if (message.type === "character-list") {
+    state.setLoginQueue(null);
     state.setAccountTier(message.accountTier);
     state.setPremiumDaysRemaining(message.premiumDaysRemaining);
     state.setCharacters(message.characters);

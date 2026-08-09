@@ -112,6 +112,7 @@ import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { publicStageRates } from "./progression/publicStageRates";
 import { PublicApi } from "./PublicApi";
 import { Session } from "./Session";
+import { LoginQueue } from "./LoginQueue";
 import { SessionRegistry } from "./SessionRegistry";
 import { BestiaryService } from "./bestiary/BestiaryService";
 import type { BestiaryStore } from "./bestiary/BestiaryStore";
@@ -318,6 +319,7 @@ export class GameServer {
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
   private readonly disconnected: Session[] = [];
+  private readonly loginQueue = new LoginQueue();
   private readonly lingering = new LingeringPlayers();
   private heartbeat: NodeJS.Timeout | undefined;
   private readonly startedAt = monotonicNow();
@@ -357,6 +359,9 @@ export class GameServer {
       deps.verifier,
       deps.accounts,
       config.authTimeoutMs,
+      this.loginQueue,
+      config.maxSessions,
+      config.maxLoginQueueSize,
     );
     const characterService = new CharacterService(deps.characters, {
       ...this.world.templePosition,
@@ -1312,7 +1317,11 @@ export class GameServer {
       void publicApi.handle(request, response);
     });
     this.httpServer.maxHeadersCount = 50;
-    this.httpServer.maxConnections = config.maxSessions;
+    // Slack above the session+queue cap so over-cap logins are refused at the
+    // WS layer with a server-full message (a TCP-level refusal is a mute
+    // hang-up) and public HTTP API requests still get through.
+    this.httpServer.maxConnections =
+      config.maxSessions + config.maxLoginQueueSize + 64;
     this.httpServer.requestTimeout = 5_000;
     this.httpServer.headersTimeout = 5_000;
     this.httpServer.keepAliveTimeout = 5_000;
@@ -1383,7 +1392,13 @@ export class GameServer {
 
   private onConnection(socket: WebSocket, request: IncomingMessage): void {
     const remoteAddress = this.clientAddress(request);
-    if (!this.registry.canAccept(remoteAddress, this.config.maxSessions)) {
+    const socketCap = this.config.maxSessions + this.config.maxLoginQueueSize;
+    if (!this.registry.canAccept(remoteAddress, socketCap)) {
+      // World and queue both full gets a reason before the close; a per-IP
+      // breach stays a bare close (nothing owed to a flooding address).
+      if (this.registry.size >= socketCap) {
+        socket.send(JSON.stringify({ type: "error", code: "server-full" }));
+      }
       socket.close();
       return;
     }
@@ -1418,6 +1433,8 @@ export class GameServer {
       this.processDisconnects(now);
       this.expireLingeringPlayers(now);
       this.auth.applyResolvedOutcomes();
+      // seats freed above drain into the queue before anything else runs
+      this.auth.tickQueue();
       this.characters.applyResolvedOutcomes();
       this.items.applyResolvedOutcomes(now);
       this.chests.applyResolvedOutcomes(now);
@@ -1571,6 +1588,7 @@ export class GameServer {
       this.moderation.detach(session);
       this.store.detach(session);
       this.items.detachSession(session);
+      this.auth.detach(session);
       this.registry.remove(session);
     }
   }
@@ -1667,6 +1685,14 @@ export class GameServer {
     // re-checked at execution time, not enqueue time (charter rule 4)
     if (!session.account) {
       session.sendError("auth-required");
+      return;
+    }
+    // A queued session holds no world seat yet; only the keepalive is served
+    // until admission, so a modified client cannot skip the line (rule 8).
+    if (session.loginQueued) {
+      if (intent.type === "ping") {
+        session.send({ type: "pong", nonce: intent.nonce });
+      }
       return;
     }
     switch (intent.type) {

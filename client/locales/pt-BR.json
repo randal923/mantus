@@ -687,7 +687,9 @@
     "connected": "Conectado",
     "disconnected": "Desconectado",
     "reconnect": "Reconectar",
-    "enteringWorld": "Entrando no mundo…"
+    "enteringWorld": "Entrando no mundo…",
+    "queued": "O mundo está cheio. Você está na posição {{position}} de {{total}} na fila de espera.",
+    "queuedPremium": "Contas Premium ficam à frente das contas gratuitas na fila de espera."
   },
   "stats": {
     "health": "Vida",
@@ -1817,6 +1819,7 @@
     "logged-in-elsewhere": "Esta conta entrou por outra conexão.",
     "rate-limited": "Foram enviadas solicitações demais. Reconecte-se.",
     "world-full": "O mundo do jogo está cheio no momento.",
+    "server-full": "O mundo do jogo e a fila de espera estão cheios. Tente novamente mais tarde.",
     "unknown": "O servidor do jogo retornou um erro inesperado.",
     "kicked": "Você foi expulso do jogo por um gamemaster."
   },
@@ -3059,7 +3062,7 @@
       },
       "loginPriority": {
         "name": "Prioridade de Login",
-        "description": "Se o servidor tiver fila, jogadores VIP terão prioridade na fila."
+        "description": "Quando o mundo está cheio, jogadores VIP esperam à frente de todas as contas gratuitas na fila de login."
       },
       "houseAbsence": {
         "name": "Ausência de Casa",

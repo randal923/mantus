@@ -37,6 +37,11 @@ export class Session {
   account: Account | null = null;
   /** True while a token is being verified; blocks repeat auth attempts. */
   authPending = false;
+  /**
+   * Authenticated but parked in the login queue — no world seat yet. While
+   * set, every intent except the keepalive is refused at execution time.
+   */
+  loginQueued = false;
   characterOperationPending = false;
   languageUpdatePending = false;
   uiSettingsUpdatePending = false;

@@ -168,6 +168,9 @@ const serverConfigFileSchema = z
       .object({
         trustProxyHeader: z.boolean(),
         maxSessions: positiveIntegerSchema,
+        maxLoginQueueSize: positiveIntegerSchema.max(
+          PROTOCOL_LIMITS.maxLoginQueueSize,
+        ),
         maxPendingIntents: positiveIntegerSchema,
         maxProtocolViolations: positiveIntegerSchema,
         defaultViewRange: z
@@ -376,6 +379,7 @@ export async function loadServerConfig(
     trustProxyHeader:
       overrides.TRUST_PROXY ?? config.network.trustProxyHeader,
     maxSessions: config.network.maxSessions,
+    maxLoginQueueSize: config.network.maxLoginQueueSize,
     maxPendingIntents: config.network.maxPendingIntents,
     maxProtocolViolations: config.network.maxProtocolViolations,
     chat: config.chat,

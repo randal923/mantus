@@ -184,6 +184,7 @@ export function createGameWindowStore({
       languageSaving: false,
       languageError: false,
       serverError: null,
+      loginQueue: null,
       runeTargeting: false,
       potionTargeting: false,
       useWithTargeting: false,
@@ -555,6 +556,10 @@ export function createGameWindowStore({
         set((state) => ({
           serverError: resolveStateAction(value, state.serverError),
         })),
+      setLoginQueue: (value) =>
+        set((state) => ({
+          loginQueue: resolveStateAction(value, state.loginQueue),
+        })),
       setRuneTargeting: (value) =>
         set((state) => ({
           runeTargeting: resolveStateAction(value, state.runeTargeting),
@@ -732,6 +737,7 @@ export function createGameWindowStore({
           mapContextMenu: null,
           screenMessage: null,
           serverError: null,
+          loginQueue: null,
           connectionAttempt: state.connectionAttempt + 1,
         }));
       },

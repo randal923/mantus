@@ -687,7 +687,9 @@
     "connected": "Connected",
     "disconnected": "Disconnected",
     "reconnect": "Reconnect",
-    "enteringWorld": "Entering world…"
+    "enteringWorld": "Entering world…",
+    "queued": "The world is full. You are at place {{position}} of {{total}} in the waiting list.",
+    "queuedPremium": "Premium accounts are placed ahead of free accounts in the waiting list."
   },
   "stats": {
     "health": "Health",
@@ -1817,6 +1819,7 @@
     "logged-in-elsewhere": "This account signed in from another connection.",
     "rate-limited": "Too many requests were sent. Please reconnect.",
     "world-full": "The game world is currently full.",
+    "server-full": "The game world and its waiting list are both full. Please try again later.",
     "unknown": "The game server returned an unexpected error.",
     "kicked": "You have been kicked from the game by a gamemaster."
   },
@@ -3059,7 +3062,7 @@
       },
       "loginPriority": {
         "name": "Login Priority",
-        "description": "If the server has a queue, VIP players will have priority in the queue."
+        "description": "When the world is full, VIP players wait ahead of all free accounts in the login queue."
       },
       "houseAbsence": {
         "name": "House Absence",

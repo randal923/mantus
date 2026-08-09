@@ -55,6 +55,8 @@ export interface ServerConfig {
    */
   trustProxyHeader: boolean;
   maxSessions: number;
+  /** Connections parked in the login queue beyond maxSessions (rule 10 cap). */
+  maxLoginQueueSize: number;
   maxPendingIntents: number;
   maxProtocolViolations: number;
   /** Flood control the server enforces; the client's chat box only displays it. */

@@ -13,7 +13,7 @@ client-only remainder.
 
 Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 
-**Last updated:** 2026-08-07
+**Last updated:** 2026-08-09
 
 ## World & engine
 
@@ -93,13 +93,13 @@ Legend: ✅ shipped · ◐ partial · ❌ not started · — not applicable.
 | Reconnect/resync, state bounds, error taxonomy (90–92)          | ❌     | ❌     | All (freeze probes ship as regression gates)                                                             |
 | Client polish: lighting, sound, hotkey persistence, modals (87) | —      | ❌     | All                                                                                                      |
 | Performance budgets + deferred items (88, 106, 107)             | ◐      | ◐      | Measure-first list; login is 1 connection but ~28 sequential round trips (collapse to one statement); intents (2026-08-02) and resolved DB outcomes (2026-08-03, `ResolvedOutcomes` + `TickLoop.wakeAll`) both wake the tick; per-swing try-award saves coalesced onto the 30 s interval 2026-08-03 (level-ups/XP/death still save in place) |
-| Network/resource limits (93)                                    | ◐      | —      | TLS/origin policy, per-intent rates, per-IP caps, idle timeouts                                          |
+| Network/resource limits (93)                                    | ◐      | —      | TLS/origin policy, per-intent rates, per-IP caps, idle timeouts; capacity now ends in a premium-priority login queue (`maxLoginQueueSize`, `queue-position` pushes, `server-full`) instead of a mute close 2026-08-09 |
 | Structured logging + metrics/alerting (94, 95)                  | ❌     | —      | All                                                                                                      |
 | Error handling, durability/drain, DB audit/recovery (97–99)     | ❌     | —      | All                                                                                                      |
 | Testing + release gates, CI (100)                               | ◐      | ◐      | Staging soak, fuzz, full CI pipeline, launch runbook                                                     |
 | Auth follow-ups (101)                                           | ◐      | ◐      | Captcha, production rate limits, reauth forms, coin funding; public Login/Play Now session actions shipped 2026-07-31 |
 | Dev tooling (102)                                               | ◐      | ◐      | AI-detach fix, delete audit event, gm-response rendering                                                 |
-| Public website + read-only public API (110)                     | ✅     | ✅     | Editorial preview/archive content (content-first route frame, Tibia-style news, vocation guide, and profile polish shipped 2026-07-31) is provisional; sibling-character lists need a public opt-in; wiki dropdown + /wiki/items rarity & affix guide shipped 2026-08-05 (client copy of rarity tuning — see TODO.md); guild directory + public rosters (/guilds) shipped 2026-08-05; /vip-account benefits page (renders PREMIUM_BENEFITS, 4 coming-soon rows → todo/vip-*.md) 2026-08-08 |
+| Public website + read-only public API (110)                     | ✅     | ✅     | Editorial preview/archive content (content-first route frame, Tibia-style news, vocation guide, and profile polish shipped 2026-07-31) is provisional; sibling-character lists need a public opt-in; wiki dropdown + /wiki/items rarity & affix guide shipped 2026-08-05 (client copy of rarity tuning — see TODO.md); guild directory + public rosters (/guilds) shipped 2026-08-05; /vip-account benefits page (renders PREMIUM_BENEFITS) 2026-08-08; Login Priority live 2026-08-09, 1 coming-soon row left (familiars → todo/vip-familiar-optimization.md) |
 | Parity ledger + gates (1, 17, 26, 89)                           | ◐      | —      | Importer surface extensions; inventory generator (89, unblocked by the pinned checkout since 2026-07-26) |
 
 ## The shape of what's left

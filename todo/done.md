@@ -4590,3 +4590,63 @@ legacy blacklist shape, 198-rule near-cap list) against local Postgres.
 
 **Residual risk**: characters sitting at 198+ rules without coins are
 skipped by the backfill by design; they add coins manually.
+
+## 2026-08-09 — Login queue with premium priority (VIP Login Priority unblocked)
+
+**Problem**: at capacity (`maxSessions`) the connection handler closed the
+socket with no message — no server-full reason, no waiting list — so the
+advertised VIP "Login Priority" benefit had nothing to attach to
+(`todo/vip-login-priority.md`, now deleted).
+
+**What changed**: a full held-socket waiting list modeled on Canary's
+`WaitingList` (`waitlist.cpp`), adapted from its disconnect-and-retry
+protocol to our persistent WebSocket. New `server/src/LoginQueue.ts`: two
+FIFO lanes (premium, free); the premium lane drains entirely before the
+free lane, arrival order kept per lane, so positions only improve.
+`AuthHandler` decides at auth-apply time (tier is only known once the
+account row is loaded, inside the tick): seats drain strictly through the
+queue — a fresh login never overtakes it even if a seat is free that tick;
+a same-account relogin swaps into its old session's seat, and a
+reconnecting queued account keeps its place in line (`LoginQueue.replace`).
+Admission = the normal `auth-ok`, sent by `AuthHandler.tickQueue` each tick
+as seats free. New `queue-position {position, total}` server message
+(bounded by `PROTOCOL_LIMITS.maxLoginQueueSize`), pushed only on change
+with per-session dedupe. Queue capacity is `network.maxLoginQueueSize`
+(config.yml, default 200); beyond it the socket gets a new `server-full`
+error — also sent pre-session when the socket cap
+(`maxSessions + maxLoginQueueSize`) is hit, replacing the old mute close
+(`httpServer.maxConnections` got +64 slack so refusals happen at the WS
+layer, not as a TCP hang-up). While queued, only the `ping` keepalive is
+served — a modified client sending `list-characters`/`select-character` is
+ignored (charter rule 8); the existing 30 s heartbeat reaps dead queued
+sockets and `processDisconnects` removes them from the line. New
+`login.bypass` capability (gamemaster, admin) mirrors Canary's GM bypass.
+Client: `queue-position` lands in `handleCharacterSessionMessage` →
+`loginQueue` store state → `CharacterSelectScreen` shows "You are at place
+N of M" (+ premium-priority note), cleared on `character-list`/disconnect;
+the pre-character-list screen now also shows the `serverError` text (e.g.
+server-full, logged-in-elsewhere) instead of a bare "Disconnected".
+`/vip-account` Login Priority row flipped to live (en/pt-BR copy updated).
+
+**Files**: `protocol/src/{serverMessages,limits}.ts`,
+`server/src/{LoginQueue,AuthHandler,GameServer,Session,config,loadServerConfig}.ts`,
+`server/src/auth/AccountRole.ts`, `config.yml`,
+`client/components/game-window/{types/GameWindowState,types/GameWindowStoreActions,store/createGameWindowStore,messages/handleCharacterSessionMessage,controllers/handleGameClientStatus,CharacterSelectionOverlay}.ts*`,
+`client/components/characters/CharacterSelectScreen.tsx`,
+`client/components/public-site/VipAccountPage.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: 6 new `GameServer.test.ts` integration tests (premium admitted
+ahead of free across seat churn; queued session refused everything but ping
+until admission; `server-full` at queue cap; reconnect keeps the queue spot;
+two logins racing the last seat → exactly one seated; GM bypass with the
+queue untouched) — full server suite 3902 passing; protocol/server/client
+typechecks; client unit suite 446 passing (storybook/e2e lane failures
+pre-exist on main).
+
+**Residual risk**: unauthenticated handshaking sockets count as seated, so
+at the margin a queued player waits up to `authTimeoutMs` (10 s) longer —
+conservative, never overshoots `maxSessions`. Queue positions push only on
+change (no periodic re-send; the WS heartbeat covers liveness). The public
+API still reports `maxPlayers` only — queue length is deliberately not
+exposed.

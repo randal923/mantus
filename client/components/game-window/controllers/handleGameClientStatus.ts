@@ -43,6 +43,7 @@ export function handleGameClientStatus(
       runtime.huntingBotSaveTimerRef.current = null;
     }
     state.setWorldLoading(false);
+    state.setLoginQueue(null);
     state.setLevelUpNotice(null);
     state.setPortableSellerNotice(null);
     state.setVisibleCreatures([]);
