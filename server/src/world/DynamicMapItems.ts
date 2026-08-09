@@ -22,6 +22,8 @@ import { positionKey } from "../positionKey";
 export interface TilePassabilityOverride {
   readonly walkable: boolean;
   readonly blocksProjectile: boolean;
+  /** Overlaid ground speed for walkable spans over speedless ground. */
+  readonly groundSpeed?: number;
 }
 
 export class DynamicMapItems {
@@ -127,6 +129,9 @@ export class DynamicMapItems {
       override = {
         walkable,
         blocksProjectile: !walkable && questRule.blocksProjectileWhenBlocked,
+        ...(walkable && questRule.groundSpeedWhenWalkable !== undefined
+          ? { groundSpeed: questRule.groundSpeedWhenWalkable }
+          : {}),
       };
     }
     for (const item of this.getMapItems(position)) {
@@ -140,7 +145,8 @@ export class DynamicMapItems {
       if (
         !current ||
         current.walkable !== override.walkable ||
-        current.blocksProjectile !== override.blocksProjectile
+        current.blocksProjectile !== override.blocksProjectile ||
+        current.groundSpeed !== override.groundSpeed
       ) {
         this.tileOverrides.set(key, override);
         this.currentPassabilityRevision++;

@@ -17,6 +17,12 @@ export interface QuestTilePassabilityRule {
    * and stones, false for a water channel a shot can pass over.
    */
   readonly blocksProjectileWhenBlocked: boolean;
+  /**
+   * Ground speed while the tile is walkable, for spans whose baked ground
+   * has none (Canary transforms the water ground into the drawbridge; we
+   * overlay the drawbridge item's own appearance speed instead).
+   */
+  readonly groundSpeedWhenWalkable?: number;
 }
 
 const rules = new Map<string, QuestTilePassabilityRule>();
@@ -42,18 +48,25 @@ const LEVER_TILE_RULES: ReadonlyArray<
     { blockingItemIds: [1_791], blocksProjectileWhenBlocked: true },
   ],
   // Sewer bridge span: the west/east tiles also carry a shallow-water rail
-  // while retracted; the water channel never blocks projectiles.
+  // while retracted; the water channel never blocks projectiles. Ground
+  // speed 90 is the drawbridge appearance's own (objects.json id 5770) —
+  // the middle tile's baked water ground has none at all.
   [
     { x: 32_099, y: 32_205, z: 8 },
     {
       blockingItemIds: [4_634],
       requiredItemId: 5_770,
       blocksProjectileWhenBlocked: false,
+      groundSpeedWhenWalkable: 90,
     },
   ],
   [
     { x: 32_100, y: 32_205, z: 8 },
-    { requiredItemId: 5_770, blocksProjectileWhenBlocked: false },
+    {
+      requiredItemId: 5_770,
+      blocksProjectileWhenBlocked: false,
+      groundSpeedWhenWalkable: 90,
+    },
   ],
   [
     { x: 32_101, y: 32_205, z: 8 },
@@ -61,6 +74,7 @@ const LEVER_TILE_RULES: ReadonlyArray<
       blockingItemIds: [4_636],
       requiredItemId: 5_770,
       blocksProjectileWhenBlocked: false,
+      groundSpeedWhenWalkable: 90,
     },
   ],
 ];

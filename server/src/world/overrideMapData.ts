@@ -38,6 +38,8 @@ export function overrideMapData(
       return map.isWalkable(position, pathfinding);
     },
     getGroundSpeed(position) {
+      const override = overrides.getTileOverride(position);
+      if (override?.groundSpeed !== undefined) return override.groundSpeed;
       return map.getGroundSpeed(position);
     },
     blocksProjectile(position) {

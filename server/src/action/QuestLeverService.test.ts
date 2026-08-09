@@ -385,6 +385,10 @@ describe("QuestLeverService", () => {
     ).toEqual({ blockingItemIds: [STONE], blocksProjectileWhenBlocked: true });
     expect(
       QUEST_TILE_PASSABILITY.get(positionKey({ x: 32_100, y: 32_205, z: 8 })),
-    ).toEqual({ requiredItemId: BRIDGE, blocksProjectileWhenBlocked: false });
+    ).toEqual({
+      requiredItemId: BRIDGE,
+      blocksProjectileWhenBlocked: false,
+      groundSpeedWhenWalkable: 90,
+    });
   });
 });
