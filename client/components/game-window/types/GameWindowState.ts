@@ -185,6 +185,8 @@ export interface GameWindowState {
   languageSaving: boolean;
   languageError: boolean;
   serverError: ServerErrorCode | null;
+  /** Place in the server's login queue while the world is full; null = seated. */
+  loginQueue: { readonly position: number; readonly total: number } | null;
   runeTargeting: boolean;
   potionTargeting: boolean;
   useWithTargeting: boolean;

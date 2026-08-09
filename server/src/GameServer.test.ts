@@ -32,6 +32,7 @@ const testConfig: ServerConfig = {
   authTimeoutMs: 5_000,
   trustProxyHeader: false,
   maxSessions: 10,
+  maxLoginQueueSize: 50,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   chat: DEFAULT_CHAT_FLOOD_LIMITS,
@@ -1642,4 +1643,191 @@ describe("wakeable tick", () => {
       expect(performance.now() - sentAt).toBeLessThan(60);
     }
   }, 15_000);
+});
+
+describe("login queue", () => {
+  let server: GameServer;
+  const sockets: WebSocket[] = [];
+
+  afterEach(async () => {
+    for (const socket of sockets.splice(0)) socket.terminate();
+    await server.stop();
+  });
+
+  const startServer = (
+    overrides: Partial<ServerConfig>,
+    accounts = new InMemoryAccountStore(),
+  ) => {
+    server = new GameServer(
+      { ...testConfig, ...overrides },
+      {
+        verifier: fakeVerifier,
+        accounts,
+        characters: new InMemoryCharacterStore(),
+        items: new MemoryItemStore(),
+        itemCatalog: new ItemCatalog([]),
+      },
+    );
+    server.start();
+  };
+
+  const seedAccount = (
+    accounts: InMemoryAccountStore,
+    token: string,
+    extra: { premiumUntil?: Date; role?: "gamemaster" } = {},
+  ) =>
+    accounts.seed({
+      id: `acc-sub-${token}`,
+      supabaseUserId: `sub-${token}`,
+      email: null,
+      bannedUntil: null,
+      role: extra.role ?? ("player" as const),
+      isStaff: extra.role !== undefined,
+      premiumUntil: extra.premiumUntil ?? null,
+      mantusCoins: 0,
+      language: "en" as const,
+      uiSettings: {},
+      fightMode: { attack: "offensive", chase: false, secure: true },
+    });
+
+  const authed = async (token: string): Promise<RawClient> => {
+    const client = await openRaw(server.port);
+    sockets.push(client.socket);
+    client.socket.send(JSON.stringify({ type: "auth", token, language: "en" }));
+    return client;
+  };
+
+  const lastPosition = (client: RawClient): number | undefined => {
+    const updates = client.messages.filter((m) => m.type === "queue-position");
+    const last = updates[updates.length - 1];
+    return last?.type === "queue-position" ? last.position : undefined;
+  };
+
+  const sawAuthOk = (client: RawClient) =>
+    client.messages.some((m) => m.type === "auth-ok");
+
+  const takeSeat = async (name: string): Promise<TestClient> => {
+    const seat = await connect(server.port, name);
+    sockets.push(seat.socket);
+    return seat;
+  };
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  it("queues logins at capacity and admits premium ahead of free", async () => {
+    const accounts = new InMemoryAccountStore();
+    seedAccount(accounts, "tok.vip", {
+      premiumUntil: new Date(Date.now() + 24 * 60 * 60 * 1_000),
+    });
+    startServer({ maxSessions: 1, maxLoginQueueSize: 5 }, accounts);
+    const seat = await takeSeat("Seatholder");
+
+    const free = await authed("tok.free");
+    await waitFor(() => lastPosition(free) === 1, "free queued at 1");
+    expect(sawAuthOk(free)).toBe(false);
+
+    const vip = await authed("tok.vip");
+    await waitFor(() => lastPosition(vip) === 1, "premium queued at 1");
+    await waitFor(() => lastPosition(free) === 2, "free pushed to 2");
+
+    seat.socket.close();
+    await waitFor(() => sawAuthOk(vip), "premium admitted first");
+    await waitFor(() => lastPosition(free) === 1, "free back to 1");
+    expect(sawAuthOk(free)).toBe(false);
+
+    vip.socket.close();
+    await waitFor(() => sawAuthOk(free), "free admitted after premium leaves");
+  });
+
+  it("refuses everything but the keepalive while queued", async () => {
+    startServer({ maxSessions: 1, maxLoginQueueSize: 5 });
+    const seat = await takeSeat("Blocker");
+
+    const queued = await authed("tok.sneak");
+    await waitFor(() => lastPosition(queued) === 1, "session queued");
+
+    queued.socket.send(JSON.stringify({ type: "list-characters" }));
+    queued.socket.send(JSON.stringify({ type: "ping", nonce: 7 }));
+    await waitFor(
+      () => queued.messages.some((m) => m.type === "pong" && m.nonce === 7),
+      "keepalive served",
+    );
+    await sleep(100);
+    expect(queued.messages.some((m) => m.type === "character-list")).toBe(
+      false,
+    );
+    expect(sawAuthOk(queued)).toBe(false);
+    expect(queued.closed()).toBe(false);
+
+    seat.socket.close();
+    await waitFor(() => sawAuthOk(queued), "admitted after seat freed");
+    queued.socket.send(JSON.stringify({ type: "list-characters" }));
+    await waitFor(
+      () => queued.messages.some((m) => m.type === "character-list"),
+      "characters served once admitted",
+    );
+  });
+
+  it("closes with server-full when the queue itself is full", async () => {
+    startServer({ maxSessions: 1, maxLoginQueueSize: 1 });
+    await takeSeat("Seatholder");
+
+    const queued = await authed("tok.waits");
+    await waitFor(() => lastPosition(queued) === 1, "first login queued");
+
+    const rejected = await authed("tok.late");
+    await waitFor(
+      () => sawError(rejected.messages, "server-full") && rejected.closed(),
+      "server-full rejection",
+    );
+    expect(queued.closed()).toBe(false);
+  });
+
+  it("lets a reconnecting account keep its place in line", async () => {
+    startServer({ maxSessions: 1, maxLoginQueueSize: 5 });
+    await takeSeat("Seatholder");
+
+    const first = await authed("tok.head");
+    await waitFor(() => lastPosition(first) === 1, "head queued");
+    const second = await authed("tok.tail");
+    await waitFor(() => lastPosition(second) === 2, "tail queued");
+
+    const reconnect = await authed("tok.head");
+    await waitFor(() => first.closed(), "old socket kicked");
+    await waitFor(() => lastPosition(reconnect) === 1, "place kept");
+    await sleep(100);
+    expect(lastPosition(second)).toBe(2);
+  });
+
+  it("seats exactly one of two logins racing for the last seat", async () => {
+    startServer({ maxSessions: 2, maxLoginQueueSize: 5 });
+    await takeSeat("Seatholder");
+
+    const [a, b] = await Promise.all([
+      authed("tok.racerA"),
+      authed("tok.racerB"),
+    ]);
+    await waitFor(
+      () =>
+        [a, b].filter(sawAuthOk).length === 1 &&
+        [a, b].filter((c) => lastPosition(c) === 1).length === 1,
+      "one seated, one queued",
+    );
+  });
+
+  it("lets a gamemaster bypass a full world", async () => {
+    const accounts = new InMemoryAccountStore();
+    seedAccount(accounts, "tok.gm", { role: "gamemaster" });
+    startServer({ maxSessions: 1, maxLoginQueueSize: 5 }, accounts);
+    await takeSeat("Seatholder");
+
+    const queued = await authed("tok.mortal");
+    await waitFor(() => lastPosition(queued) === 1, "player queued");
+
+    const gm = await authed("tok.gm");
+    await waitFor(() => sawAuthOk(gm), "gamemaster admitted");
+    await sleep(100);
+    expect(lastPosition(queued)).toBe(1);
+  });
 });

@@ -174,6 +174,12 @@ export interface GameWindowStoreActions {
   setLanguageSaving: (value: SetStateAction<boolean>) => void;
   setLanguageError: (value: SetStateAction<boolean>) => void;
   setServerError: (value: SetStateAction<ServerErrorCode | null>) => void;
+  setLoginQueue: (
+    value: SetStateAction<{
+      readonly position: number;
+      readonly total: number;
+    } | null>,
+  ) => void;
   setRuneTargeting: (value: SetStateAction<boolean>) => void;
   setPotionTargeting: (value: SetStateAction<boolean>) => void;
   setUseWithTargeting: (value: SetStateAction<boolean>) => void;

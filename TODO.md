@@ -29,6 +29,18 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Login-queue seat accounting counts unauthenticated handshaking sockets
+  as seated** (2026-08-09). Admission checks `registry.size - queue.size <
+  maxSessions`, and `registry.size` includes sockets still inside the 10 s
+  auth window, so at the margin a queued player is admitted up to
+  `authTimeoutMs` late. Deliberately conservative — the world can never
+  overshoot `maxSessions`. If handshake churn ever gets heavy enough to
+  starve admissions, count only account-bound sessions as seated (the
+  registry already tracks `sessionsAwaitingAuth` separately). Also: queue
+  positions are pushed only on change (the WS heartbeat covers liveness),
+  and the public API deliberately reports `maxPlayers` without queue depth.
+  Owner: network/resource limits (93).
+
 - **Absence eviction protects online owners via the in-process session
   registry only** (2026-08-08). `characters.last_seen_at` is a durable-save
   anchor and goes stale for an online-but-idle owner, so

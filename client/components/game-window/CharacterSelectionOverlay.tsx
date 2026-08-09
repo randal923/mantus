@@ -18,6 +18,7 @@ export function CharacterSelectionOverlay() {
   );
   const busy = useGameWindowStore((state) => state.characterBusy);
   const serverError = useGameWindowStore((state) => state.serverError);
+  const loginQueue = useGameWindowStore((state) => state.loginQueue);
   const onLogout = useGameWindowStore((state) => state.onLogout);
   const setBusy = useGameWindowStore((state) => state.setCharacterBusy);
   const setServerError = useGameWindowStore((state) => state.setServerError);
@@ -31,6 +32,7 @@ export function CharacterSelectionOverlay() {
       accountTier={accountTier}
       premiumDaysRemaining={premiumDaysRemaining}
       busy={busy}
+      loginQueue={loginQueue}
       error={
         serverError
           ? t(`serverErrors.${serverError}`, {

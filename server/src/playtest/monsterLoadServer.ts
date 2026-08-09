@@ -57,6 +57,7 @@ const config: ServerConfig = {
   authTimeoutMs: 10_000,
   trustProxyHeader: false,
   maxSessions: 8,
+  maxLoginQueueSize: 50,
   maxPendingIntents: 16,
   maxProtocolViolations: 5,
   chat: DEFAULT_CHAT_FLOOD_LIMITS,

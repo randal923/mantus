@@ -3,6 +3,7 @@ import {
   accountTierSchema,
   premiumDaysRemainingSchema,
 } from "./account";
+import { PROTOCOL_LIMITS } from "./limits";
 import {
   ACTION_BAR_SLOT_COUNT,
   actionBarSchema,
@@ -237,6 +238,18 @@ export const authOkMessageSchema = z.object({
   language: languageSchema,
   accountTier: accountTierSchema,
   premiumDaysRemaining: premiumDaysRemainingSchema,
+});
+
+/**
+ * Pushed to a connection that authenticated while the world was full: its
+ * live place in the login queue (1 = next seat). Premium sessions sit ahead
+ * of free ones. Re-pushed whenever the position changes; admission is
+ * signalled by a normal `auth-ok`.
+ */
+export const queuePositionMessageSchema = z.object({
+  type: z.literal("queue-position"),
+  position: z.number().int().min(1).max(PROTOCOL_LIMITS.maxLoginQueueSize),
+  total: z.number().int().min(1).max(PROTOCOL_LIMITS.maxLoginQueueSize),
 });
 
 export const languageUpdatedMessageSchema = z.object({
@@ -566,6 +579,7 @@ export const serverErrorCodeSchema = z.enum([
   "kicked",
   "rate-limited",
   "world-full",
+  "server-full",
 ]);
 
 export const errorMessageSchema = z.object({
@@ -581,6 +595,7 @@ export const pongMessageSchema = z.object({
 
 export const serverMessageSchema = z.discriminatedUnion("type", [
   authOkMessageSchema,
+  queuePositionMessageSchema,
   languageUpdatedMessageSchema,
   uiSettingsUpdatedMessageSchema,
   actionBarUpdatedMessageSchema,

@@ -16,6 +16,9 @@ network:
   # Enable only behind a trusted proxy that replaces Fly-Client-IP.
   trustProxyHeader: false
   maxSessions: 2000
+  # Extra connections held in the login queue once maxSessions is reached;
+  # beyond this the server answers server-full and closes.
+  maxLoginQueueSize: 200
   maxPendingIntents: 16
   maxProtocolViolations: 5
   defaultViewRange:

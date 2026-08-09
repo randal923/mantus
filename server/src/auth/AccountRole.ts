@@ -25,7 +25,9 @@ export type AdminCapability =
   /** Relocate a character within the world. */
   | "world.teleport"
   /** Read privileged state about a character or position. */
-  | "world.inspect";
+  | "world.inspect"
+  /** Skip the login queue when the world is full. */
+  | "login.bypass";
 
 const CAPABILITIES_BY_ROLE: Readonly<
   Record<AccountRole, readonly AdminCapability[]>
@@ -42,6 +44,7 @@ const CAPABILITIES_BY_ROLE: Readonly<
     "moderate.namelock",
     "world.teleport",
     "world.inspect",
+    "login.bypass",
   ],
   admin: [
     "moderate.mute",
@@ -51,6 +54,7 @@ const CAPABILITIES_BY_ROLE: Readonly<
     "moderate.namelock",
     "world.teleport",
     "world.inspect",
+    "login.bypass",
   ],
 };
 

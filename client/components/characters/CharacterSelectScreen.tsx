@@ -20,6 +20,7 @@ interface CharacterSelectScreenProps {
   premiumDaysRemaining: number;
   busy: boolean;
   error: string | null;
+  loginQueue?: { readonly position: number; readonly total: number } | null;
   onCreate: (input: CreateCharacterInput) => void;
   onSelect: (characterId: string) => void;
   onReconnect: () => void;
@@ -34,6 +35,7 @@ export function CharacterSelectScreen({
   premiumDaysRemaining,
   busy,
   error,
+  loginQueue = null,
   onCreate,
   onSelect,
   onReconnect,
@@ -48,16 +50,27 @@ export function CharacterSelectScreen({
   };
 
   if (!characters || !creationOptions) {
+    const queued = status !== "disconnected" && loginQueue !== null;
     const message =
       status === "disconnected"
-        ? t("connection.disconnected")
-        : t("characters.loading");
+        ? (error ?? t("connection.disconnected"))
+        : queued
+          ? t("connection.queued", {
+              position: loginQueue.position,
+              total: loginQueue.total,
+            })
+          : t("characters.loading");
     return (
       <div className="ui-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 font-tibia text-ui-text">
         <div className="ui-panel-frame relative flex max-w-md flex-col gap-4 px-6 py-5 text-center text-sm text-ui-accent-light">
           <p role={status === "disconnected" ? "alert" : "status"}>
             {logoutFailed ? t("menu.logoutFailed") : message}
           </p>
+          {queued && (
+            <p className="text-xs text-ui-muted">
+              {t("connection.queuedPremium")}
+            </p>
+          )}
           {status === "disconnected" && (
             <div className="flex justify-center gap-2">
               <Button variant="primary" onClick={onReconnect}>
