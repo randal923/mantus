@@ -146,6 +146,7 @@ export function toItemTooltip(
     name: titleCase(item.name),
     typeLine: titleCase(itemTypeLine(item)),
     spriteId: item.spriteId,
+    clientId: item.clientId,
     ...(rarity ? { rarity } : {}),
     ...(headline.length > 0 ? { primaryStat: headline.join(" · ") } : {}),
     affixes,

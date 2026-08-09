@@ -33,3 +33,23 @@ export const portableSellerTriggeredMessageSchema = z
 export type PortableSellerTriggeredMessage = z.infer<
   typeof portableSellerTriggeredMessageSchema
 >;
+
+/**
+ * A manual trigger refused because the seller is still recharging. Carries
+ * the server's own remaining wait so the client can show a countdown without
+ * ever keeping its own authoritative clock.
+ */
+export const portableSellerCooldownMessageSchema = z
+  .object({
+    type: z.literal("portable-seller-cooldown"),
+    remainingMs: z
+      .number()
+      .int()
+      .positive()
+      .max(PORTABLE_SELLER_MANUAL_COOLDOWN_MS),
+  })
+  .strict();
+
+export type PortableSellerCooldownMessage = z.infer<
+  typeof portableSellerCooldownMessageSchema
+>;

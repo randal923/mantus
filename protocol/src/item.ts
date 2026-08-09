@@ -87,6 +87,8 @@ export const itemTooltipSchema = z
     name: z.string().min(1).max(120),
     typeLine: z.string().min(1).max(80),
     spriteId: z.number().int().positive(),
+    /** Appearance id, so custom-art items draw their own icon in tooltips. */
+    clientId: z.number().int().positive().max(65_535).optional(),
     rarity: itemDisplayRaritySchema.optional(),
     primaryStat: z.string().min(1).max(100).optional(),
     affixes: z.array(itemAffixSchema).max(20),

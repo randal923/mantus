@@ -17,6 +17,7 @@ import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
 import { InventoryCharacterStats } from "./InventoryCharacterStats";
 import type { ItemDragSource } from "./ItemDragSource";
+import { BOUND_ITEM_TYPE_IDS } from "../../lib/inventory/boundItemTypeIds";
 
 interface InventoryPanelProps {
   characterName: string;
@@ -330,7 +331,12 @@ export function InventoryPanel({
                     item={item}
                     onActivate={item ? () => activateItem(item) : undefined}
                     onDragStart={
-                      item && dropContainer && onDragStart && !boundRootInView
+                      item &&
+                      dropContainer &&
+                      onDragStart &&
+                      // In the bound root only the bound item types (pouch,
+                      // seller) are pinned; store deliveries drag out freely.
+                      !(boundRootInView && BOUND_ITEM_TYPE_IDS.has(item.typeId))
                         ? () =>
                             onDragStart({
                               kind: "owned",

@@ -10,7 +10,7 @@ import { TransactionRollback } from "../economy/TransactionRollback";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { Item } from "../item/Item";
 import { deliverExpBoost } from "./delivery/deliverExpBoost";
-import { deliverInboxItem } from "./delivery/deliverInboxItem";
+import { deliverBoundItem } from "./delivery/deliverBoundItem";
 import { deliverMount } from "./delivery/deliverMount";
 import { deliverNameChange } from "./delivery/deliverNameChange";
 import { deliverOutfit } from "./delivery/deliverOutfit";
@@ -206,7 +206,7 @@ export class PgMantusStore implements MantusStoreStore {
       grant.kind === "charges" ||
       grant.kind === "house-item"
     ) {
-      const { items } = await deliverInboxItem(context, grant);
+      const { items } = await deliverBoundItem(context, grant);
       const first = items[0];
       if (!first) throw new Error("store delivery produced no item");
       return { effect: { kind: "inbox-item", item: first }, items };
@@ -269,12 +269,20 @@ export class PgMantusStore implements MantusStoreStore {
     const bounded = uniqueItemTypeIds
       .filter((id) => Number.isInteger(id) && id > 0 && id <= 65_535)
       .slice(0, 32);
+    // Recursive: bound-container deliveries are container-located rows with
+    // no character_id of their own, and must still grey out a unique offer.
     const owned =
       bounded.length === 0
         ? { rows: [] as Array<{ item_type_id: number }> }
         : await this.pool.query<{ item_type_id: number }>(
-            `SELECT DISTINCT item_type_id FROM items
-             WHERE character_id = $1 AND item_type_id = ANY($2::int[])`,
+            `WITH RECURSIVE owned AS (
+               SELECT id, item_type_id FROM items WHERE character_id = $1
+               UNION ALL
+               SELECT child.id, child.item_type_id
+               FROM items child JOIN owned parent ON child.container_id = parent.id
+             )
+             SELECT DISTINCT item_type_id FROM owned
+             WHERE item_type_id = ANY($2::int[])`,
             [characterId, bounded],
           );
     const limits = await this.pool.query<{

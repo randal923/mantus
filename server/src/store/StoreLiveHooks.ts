@@ -25,8 +25,12 @@ export interface StoreLiveHooks {
   applyHuntingSlotUnlock(characterId: string, slot: number): void;
   xpBoostUntilMs(characterId: string): number;
   applyXpBoost(characterId: string, untilMs: number, nowMs: number): void;
-  /** Puts a delivered product into the buyer's live inbox cache. */
-  injectDelivery(characterId: string, item: Item): void;
+  /**
+   * Puts a delivered product into the buyer's live caches: bound-container
+   * deliveries (container-located rows) land in the carried inventory,
+   * anything else in the depot inbox cache.
+   */
+  injectDelivery(characterId: string, item: Item, nowMs: number): void;
   /** Applies a committed sex change to the live creature. */
   applySexChange(characterId: string, sex: CharacterSex, lookType: number): void;
   /** Canary's temple teleport; refused while the player is fighting. */

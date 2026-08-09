@@ -34,10 +34,7 @@ export function handleGameClientError(
   }
   // A refused seller trigger is ordinary gameplay feedback: log line, no
   // blocking banner.
-  if (
-    code === "portable-seller-cooldown" ||
-    code === "portable-seller-empty"
-  ) {
+  if (code === "portable-seller-empty") {
     state.appendCombatLog(i18n.t(`serverErrors.${code}`));
     return;
   }

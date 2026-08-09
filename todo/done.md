@@ -4521,3 +4521,38 @@ in-memory (relog re-arms auto, clears manual cooldown — judged benign);
 seller is delivered to the store inbox rather than straight into the bound
 container; wiki-items.json regeneration would resurface the old pouch name
 until the semantics converter gains an override table.
+
+## 2026-08-08 — Store→bound delivery, seller cooldown UX, tooltip art, slot-bounds fix
+
+**Problem**: store purchases still went to the depot inbox; the bound
+container was 20 slots; a Portable Seller click on cooldown gave no feedback
+beyond a log line; its tooltip drew the aliased watch sprite; and container
+`slot_index` was still DB-capped at 99 — a pre-pouch bound that would have
+poisoned the persist lane at the 101st occupied pouch/bound slot.
+
+**What changed**: `deliverBoundItem` replaces `deliverInboxItem` for
+item/stackable/charges/house-item grants — rows land as bound-container
+children in the purchase transaction (lazy root creation, recursive-CTE
+unique re-check that sees container-located rows, 500-carried-row budget,
+same idempotency keys), applied to the live inventory in-tick via the
+routed `injectDelivery` hook; `PgMantusStore.facts` went recursive for the
+same reason. Bound semantics relaxed to type-based locks: only the pouch and
+seller are pinned (`isBoundLockedItem`), deliveries drag out/equip/split
+freely, arbitrary ingress still refused; client validator, bound-window
+drag gating, and tests mirror it. Bound container capacity 500 (∞), new
+description; `store-purchase-completed.deliveredToInbox` renamed
+`deliveredToBound` with a success-banner note. Cooldown clicks now send
+`portable-seller-cooldown {remainingMs}` → centered screenMessage countdown
+text (error-code path removed). Tooltips carry `clientId` so the seller's
+tooltip draws its idle PNG frame. Migration 079 raises container/corpse
+slot bounds to 0..499 (and the move-item wire cap follows
+MAX_CONTAINER_CAPACITY).
+
+**Verified**: all three typechecks; server 3871 + client 446 suites; the
+rewritten PgMantusStore integration suite (21/21, incl. bound delivery,
+carried-cap rollback, replay, recursive unique facts) on local docker Pg;
+migration chain through 079 on a scratch DB.
+
+**Residual risk**: carried rows written outside the item lane during
+purchases (TODO.md); `{storeinbox}` description markers in imported catalog
+copy still name the old inbox.

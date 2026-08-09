@@ -70,7 +70,13 @@ export class PortableSellerService {
     if (item.typeId !== PORTABLE_SELLER_TYPE_ID) return false;
     const readyAt = this.manualReadyAt.get(characterId) ?? 0;
     if (now < readyAt) {
-      session.sendError("portable-seller-cooldown");
+      session.send({
+        type: "portable-seller-cooldown",
+        remainingMs: Math.min(
+          readyAt - now,
+          PORTABLE_SELLER_MANUAL_COOLDOWN_MS,
+        ),
+      });
       return true;
     }
     if (session.itemOperationPending || session.travelOperationPending) {

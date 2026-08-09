@@ -625,13 +625,14 @@
   },
   "store": {
     "title": "Mantus Store",
-    "description": "Mantus Coins buy premium time, outfits, mounts, boosts and supplies for every character on your account. Purchases are delivered to your Store inbox, and coins are added to your account, never to a single character.",
+    "description": "Mantus Coins buy premium time, outfits, mounts, boosts and supplies for every character on your account. Purchases are delivered to your Bound Items container, and coins are added to your account, never to a single character.",
     "open": "Open Mantus Store",
     "categories": "Store categories",
     "yourBalance": "Your Mantus Coins",
     "currentPremium": "{{count}} premium days remaining",
     "loading": "Opening the store…",
     "purchaseComplete": "Purchase complete.",
+    "deliveredToBound": "Delivered to your Bound Items.",
     "confirmTitle": "Confirm purchase",
     "confirmDescription": "Are you sure you want to redeem this item? {{price}} Mantus Coins will be deducted from your balance.",
     "balanceAfter": "Balance after purchase: {{balance}}",
@@ -653,7 +654,7 @@
       "name-invalid": "That name cannot be used.",
       "name-required": "Enter the new character name first.",
       "in-combat": "You cannot use this while in combat.",
-      "inbox-full": "Your store inbox has no free space."
+      "inbox-full": "Your character cannot carry any more items."
     },
     "home": "Home",
     "empty": "No offers in this category.",
@@ -728,6 +729,7 @@
     "saveText": "Save",
     "boundItems": "Bound items",
     "portableSellerSold": "Your Portable Seller sold {{soldCount}} items for {{gold}} gold.",
+    "portableSellerCooldown": "Portable Seller recharging — ready in {{seconds}}s.",
     "rejections": {
       "bound-item": "This item is bound to your character.",
       "wrong-slot": "You cannot equip that item there.",
@@ -1802,7 +1804,6 @@
     "spell-vocation-restricted": "Your vocation cannot cast that spell.",
     "spell-weapon-required": "You must equip a weapon to cast that spell.",
     "item-action-failed": "That item action could not be completed.",
-    "portable-seller-cooldown": "Your Portable Seller is still recharging.",
     "portable-seller-empty": "Your loot pouch has nothing a merchant would buy.",
     "potion-exhausted": "Wait a moment before using another potion.",
     "potion-level-restricted": "Your level is too low to use that potion.",

@@ -117,7 +117,7 @@ try {
   }
   ok(
     `bought ${purchased.offerId} for ${EPIC_PRICE}, balance ${purchased.balance}` +
-      `${purchased.deliveredToInbox ? ", delivered to the store inbox" : ""}`,
+      `${purchased.deliveredToBound ? ", delivered to the bound container" : ""}`,
   );
 
   step("conjuring both tiers and standing next to the dummy");

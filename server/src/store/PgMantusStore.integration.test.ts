@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { DEPOT_LIMITS } from "@tibia/protocol";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Client, Pool } from "pg";
 import { loadItemCatalog } from "../item/loadItemCatalog";
@@ -37,19 +36,22 @@ const setCoins = async (amount: number): Promise<void> => {
   ]);
 };
 
-/** Leaves the inbox with no free slot for a delivery. */
-const fillInbox = async (): Promise<void> => {
-  await pool.query(
-    "INSERT INTO character_storage_state (character_id) VALUES ($1) ON CONFLICT DO NOTHING",
+/** Fills the carried tree to the 500-row cap a delivery must respect. */
+const fillCarried = async (): Promise<void> => {
+  const bound = await pool.query<{ id: string }>(
+    `INSERT INTO items (
+       id, item_type_id, count, location_type, character_id, equipment_slot
+     ) VALUES (gen_random_uuid(), 23396, 1, 'equipment', $1, 'bound')
+     RETURNING id`,
     [characterId],
   );
   await pool.query(
     `INSERT INTO items (
-       id, item_type_id, count, location_type, character_id, slot_index
+       id, item_type_id, count, location_type, container_id, slot_index
      )
-     SELECT gen_random_uuid(), 3031, 1, 'inbox', $1, slot
-     FROM generate_series(0, $2) AS slot`,
-    [characterId, DEPOT_LIMITS.maxInboxItems - 1],
+     SELECT gen_random_uuid(), 3031, 1, 'container', $1, slot
+     FROM generate_series(0, 498) AS slot`,
+    [bound.rows[0]!.id],
   );
 };
 
@@ -268,7 +270,7 @@ databaseDescribe("PgMantusStore integration", () => {
     );
   });
 
-  it("delivers a charged item to the inbox in the purchase's own transaction", async () => {
+  it("delivers a charged item to the bound container in the purchase's own transaction", async () => {
     const result = await store.purchase({
       accountId,
       characterId,
@@ -282,16 +284,22 @@ databaseDescribe("PgMantusStore integration", () => {
     expect(result.deliveredItems).toHaveLength(1);
     const delivered = await pool.query<{
       location_type: string;
-      character_id: string;
+      container_id: string;
       count: number;
       attributes: { charges?: number };
     }>(
-      "SELECT location_type, character_id, count, attributes FROM items WHERE id = $1",
+      "SELECT location_type, container_id, count, attributes FROM items WHERE id = $1",
       [result.deliveredItems[0]?.id],
     );
+    const boundRoot = await pool.query<{ id: string }>(
+      `SELECT id FROM items
+       WHERE character_id = $1 AND location_type = 'equipment'
+         AND equipment_slot = 'bound'`,
+      [characterId],
+    );
     expect(delivered.rows[0]).toMatchObject({
-      location_type: "inbox",
-      character_id: characterId,
+      location_type: "container",
+      container_id: boundRoot.rows[0]!.id,
       count: 1,
       attributes: { charges: 500 },
     });
@@ -328,7 +336,7 @@ databaseDescribe("PgMantusStore integration", () => {
     // The buyer gets the wrapped kit, not the (uncarriable) dummy itself.
     expect(delivered.rows[0]).toMatchObject({
       item_type_id: 23_398,
-      location_type: "inbox",
+      location_type: "container",
       attributes: {
         unwrapTo: 28_561,
         description:
@@ -351,15 +359,14 @@ databaseDescribe("PgMantusStore integration", () => {
     expect(result.deliveredItems).toHaveLength(3);
     const counts = await pool.query<{ count: number }>(
       `SELECT count FROM items
-       WHERE character_id = $1 AND location_type = 'inbox'
+       WHERE location_type = 'container'
        ORDER BY count DESC`,
-      [characterId],
     );
     expect(counts.rows.map((row) => row.count)).toEqual([100, 100, 50]);
   });
 
-  it("rolls the coin debit back when the inbox cannot take the product", async () => {
-    await fillInbox();
+  it("rolls the coin debit back when the carried tree cannot take the product", async () => {
+    await fillCarried();
 
     const result = await store.purchase({
       accountId,
@@ -411,7 +418,7 @@ databaseDescribe("PgMantusStore integration", () => {
       await pool.query("SELECT id FROM mantus_coin_ledger"),
     ).toHaveProperty("rowCount", 1);
     expect(
-      await pool.query("SELECT id FROM items WHERE location_type = 'inbox'"),
+      await pool.query("SELECT id FROM items WHERE location_type = 'container'"),
     ).toHaveProperty("rowCount", 1);
   });
 

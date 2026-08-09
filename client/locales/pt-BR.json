@@ -625,13 +625,14 @@
   },
   "store": {
     "title": "Loja Mantus",
-    "description": "Moedas Mantus compram tempo premium, outfits, montarias, bônus e suprimentos para todos os personagens da sua conta. As compras são entregues na sua caixa de entrada da Loja, e as moedas ficam na conta, nunca em um único personagem.",
+    "description": "Mantus Coins compram tempo premium, trajes, montarias, impulsos e suprimentos para todos os personagens da sua conta. As compras são entregues no seu contêiner de Itens Vinculados, e as moedas são adicionadas à sua conta, nunca a um único personagem.",
     "open": "Abrir Loja Mantus",
     "categories": "Categorias da loja",
     "yourBalance": "Suas Mantus Coins",
     "currentPremium": "{{count}} dias premium restantes",
     "loading": "Abrindo a loja…",
     "purchaseComplete": "Compra concluída.",
+    "deliveredToBound": "Entregue nos seus Itens Vinculados.",
     "confirmTitle": "Confirmar compra",
     "confirmDescription": "Tem certeza de que deseja resgatar este item? {{price}} Mantus Coins serão descontadas do seu saldo.",
     "balanceAfter": "Saldo após a compra: {{balance}}",
@@ -653,7 +654,7 @@
       "name-invalid": "Esse nome não pode ser usado.",
       "name-required": "Digite o novo nome do personagem primeiro.",
       "in-combat": "Você não pode usar isto durante um combate.",
-      "inbox-full": "Sua caixa de entrada da loja está sem espaço."
+      "inbox-full": "Seu personagem não pode carregar mais itens."
     },
     "home": "Início",
     "empty": "Nenhuma oferta nesta categoria.",
@@ -728,6 +729,7 @@
     "saveText": "Salvar",
     "boundItems": "Itens vinculados",
     "portableSellerSold": "Seu Vendedor Portátil vendeu {{soldCount}} itens por {{gold}} de ouro.",
+    "portableSellerCooldown": "Vendedor Portátil recarregando — pronto em {{seconds}}s.",
     "rejections": {
       "bound-item": "Este item está vinculado ao seu personagem.",
       "wrong-slot": "Você não pode equipar esse item aí.",
@@ -1802,7 +1804,6 @@
     "spell-vocation-restricted": "Sua vocação não pode lançar essa magia.",
     "spell-weapon-required": "Você precisa equipar uma arma para lançar essa magia.",
     "item-action-failed": "Não foi possível concluir essa ação de item.",
-    "portable-seller-cooldown": "Seu Vendedor Portátil ainda está recarregando.",
     "portable-seller-empty": "Sua bolsa de saque não tem nada que um mercador compraria.",
     "potion-exhausted": "Aguarde um momento antes de usar outra poção.",
     "potion-level-restricted": "Seu nível é muito baixo para usar essa poção.",

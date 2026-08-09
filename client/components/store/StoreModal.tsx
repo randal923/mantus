@@ -194,7 +194,9 @@ export function StoreModal({
               role="status"
               className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-950/25 px-4 py-2.5 text-sm text-emerald-200"
             >
-              {t("store.purchaseComplete")}
+              {session.purchaseDeliveredToBound
+                ? `${t("store.purchaseComplete")} ${t("store.deliveredToBound")}`
+                : t("store.purchaseComplete")}
             </p>
           )}
           {session?.error && (
