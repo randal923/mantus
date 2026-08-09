@@ -6,7 +6,7 @@ worktree is created, merged, or removed.
 
 | Branch                           | Status      |
 | -------------------------------- | ----------- |
-| `agents/login-queue`             | in progress |
+| `agents/login-queue`             | done        |
 | `agents/default-loot-coins`      | done        |
 | `agents/seller-empty-copy`       | done        |
 | `agents/seller-feedback-art`     | done        |
