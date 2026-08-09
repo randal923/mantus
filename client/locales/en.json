@@ -728,7 +728,7 @@
     "closeContainer": "Close {{name}}",
     "saveText": "Save",
     "boundItems": "Bound items",
-    "portableSellerSold": "Your Portable Seller sold {{soldCount}} items for {{gold}} gold.",
+    "portableSellerSold": "Your Portable Seller sold {{soldCount}} items — {{gold}} gold added to your bank account.",
     "portableSellerCooldown": "Portable Seller recharging — ready in {{seconds}}s.",
     "rejections": {
       "bound-item": "This item is bound to your character.",

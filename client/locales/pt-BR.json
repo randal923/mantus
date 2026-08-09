@@ -728,7 +728,7 @@
     "closeContainer": "Fechar {{name}}",
     "saveText": "Salvar",
     "boundItems": "Itens vinculados",
-    "portableSellerSold": "Seu Vendedor Portátil vendeu {{soldCount}} itens por {{gold}} de ouro.",
+    "portableSellerSold": "Seu Vendedor Portátil vendeu {{soldCount}} itens — {{gold}} de ouro adicionados à sua conta bancária.",
     "portableSellerCooldown": "Vendedor Portátil recarregando — pronto em {{seconds}}s.",
     "rejections": {
       "bound-item": "Este item está vinculado ao seu personagem.",
