@@ -8,6 +8,7 @@ worktree is created, merged, or removed.
 | -------------------------------- | ----------- |
 | `agents/login-queue`             | in progress |
 | `agents/default-loot-coins`      | done        |
+| `agents/seller-feedback-art`     | done        |
 | `agents/bound-button-rclick`     | done        |
 | `agents/bound-safe-art`          | done        |
 | `agents/store-bound-delivery`    | done        |
