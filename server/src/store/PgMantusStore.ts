@@ -28,8 +28,10 @@ import type {
   MantusStoreStore,
   StoreDbFacts,
 } from "./MantusStoreStore";
+import { persistStoreDelivery } from "./delivery/persistStoreDelivery";
 import { coinLedgerHistoryQuery } from "./sql/coinLedgerHistoryQuery";
 import { coinLedgerInsert } from "./sql/coinLedgerInsert";
+import { decrementStoreBalanceQuery } from "./sql/decrementStoreBalanceQuery";
 import { ensureStoreLimitsInsert } from "./sql/ensureStoreLimitsInsert";
 import { lockCoinLedgerEntryQuery } from "./sql/lockCoinLedgerEntryQuery";
 import { lockStoreAccountQuery } from "./sql/lockStoreAccountQuery";
@@ -41,6 +43,7 @@ import { updateStoreLimitsQuery } from "./sql/updateStoreLimitsQuery";
 import { STORE_OFFERS_BY_ID, type StoreGrant } from "./storeCatalog";
 import { XP_BOOST_DAILY_LIMIT } from "./storeOfferAvailability";
 import type { StorePurchaseEffect } from "./StorePurchaseEffect";
+import type { StorePurchasePersistPlan } from "./StorePurchasePlan";
 import { xpBoostPrice } from "./xpBoostPrice";
 
 interface LockedAccount {
@@ -180,6 +183,110 @@ export class PgMantusStore implements MantusStoreStore {
         effect: delivered.effect,
         deliveredItems: delivered.items,
       };
+    });
+  }
+
+  /**
+   * Makes a memory-first purchase durable. Every step is an assertion of what
+   * the tick already decided: the request key makes replays no-ops, the
+   * relative guarded debit refuses to go negative, the delivery legs re-check
+   * their own rules against locked rows, and the XP boost counter must still
+   * be exactly what the charged price was derived from. Any assertion failing
+   * throws — the persist lane poisons the character and resyncs from
+   * committed state rather than letting memory and database drift apart.
+   */
+  async persistPurchase(plan: StorePurchasePersistPlan): Promise<void> {
+    const entry = STORE_OFFERS_BY_ID.get(plan.offerId);
+    if (!entry) throw new Error("store persist: unknown offer");
+    if (!Number.isSafeInteger(plan.price) || plan.price < 0) {
+      throw new Error("store persist: invalid price");
+    }
+    await runSerializableTransaction(this.pool, async (client) => {
+      const locked = await client.query<LockedAccount>(lockStoreAccountQuery, [
+        plan.accountId,
+      ]);
+      const account = locked.rows[0];
+      if (!account) throw new Error("store persist: account missing");
+      const replayed = await client.query(storeRequestKeyQuery, [
+        plan.requestKey,
+      ]);
+      if (replayed.rows.length > 0) return;
+      const character = await client.query<StoreCharacterRow>(
+        lockStoreCharacterQuery,
+        [plan.characterId],
+      );
+      const characterRow = character.rows[0];
+      if (!characterRow) throw new Error("store persist: character missing");
+      if (
+        plan.premiumUntil !== null &&
+        plan.premiumUntil.getTime() - account.transaction_now.getTime() >
+          MAX_PREMIUM_DAYS * DAY_MS
+      ) {
+        throw new Error("store persist: premium limit exceeded");
+      }
+      if (entry.offer.grant.kind === "exp-boost") {
+        let already: number;
+        try {
+          already = await this.bumpExpBoostCount(
+            client,
+            plan.characterId,
+            account.transaction_now,
+          );
+        } catch (cause) {
+          if (cause instanceof TransactionRollback) {
+            throw new Error("store persist: xp boost limit reached");
+          }
+          throw cause;
+        }
+        if (already !== plan.xpBoostCountBefore) {
+          throw new Error("store persist: xp boost counter drifted");
+        }
+      }
+      await persistStoreDelivery(
+        {
+          client,
+          characterId: plan.characterId,
+          accountId: plan.accountId,
+          character: characterRow,
+          catalog: this.catalog,
+          requestKey: plan.requestKey,
+          transactionNow: account.transaction_now,
+        },
+        entry.offer.grant,
+        plan,
+      );
+      const debited = await client.query<{ mantus_coins: string }>(
+        decrementStoreBalanceQuery,
+        [plan.accountId, plan.price, plan.premiumUntil],
+      );
+      const balanceRow = debited.rows[0];
+      if (!balanceRow) throw new Error("store persist: insufficient coins");
+      const balanceAfter = Number(balanceRow.mantus_coins);
+      await client.query(coinLedgerInsert, [
+        plan.accountId,
+        "purchase",
+        -plan.price,
+        balanceAfter,
+        entry.offer.id,
+        plan.requestKey,
+        null,
+        null,
+      ]);
+      await client.query(storeAuditInsert, [
+        "store-purchase",
+        plan.characterId,
+        JSON.stringify({
+          accountId: plan.accountId,
+          offerId: entry.offer.id,
+          productId: entry.product.id,
+          kind: entry.product.kind,
+          price: plan.price,
+          balanceAfter,
+          premiumUntil: plan.premiumUntil?.toISOString() ?? null,
+          deliveredItemIds:
+            plan.boundDelivery?.rows.map((row) => row.id) ?? [],
+        }),
+      ]);
     });
   }
 
@@ -428,7 +535,11 @@ export class PgMantusStore implements MantusStoreStore {
           balanceAfter,
         }),
       ]);
-      return { status: "committed" as const, balance: balanceAfter };
+      return {
+        status: "committed" as const,
+        balance: balanceAfter,
+        refunded,
+      };
     });
   }
 

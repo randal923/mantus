@@ -29,6 +29,21 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Memory-first store purchases: three bounded staleness windows**
+  (2026-08-09). (a) Per-character store facts (owned unique items, XP boost
+  day counter) load once per session on first store-open and then update
+  only from purchases — destroying or trading away a unique store item
+  mid-session leaves its offer greyed until relogin (wrong-refusal only; the
+  persist's ownership assertion still blocks the dupe direction). (b) A
+  daily-reward wildcard claim applies its absolute post-transaction balance
+  to the live counter and can transiently disagree with a queued store
+  wildcard persist; the DB converges (both writes are relative and capped),
+  the display heals on relogin — fix by making the prey apply relative too.
+  (c) The client still re-sends `store-open` on every window toggle and the
+  server recomputes `adjustmentsFor` over all 670 offers per list draw —
+  CPU-only now (no DB), a client session cache + per-character adjustment
+  memo is the follow-up. Owner: Mantus Store (43).
+
 - **Login-queue seat accounting counts unauthenticated handshaking sockets
   as seated** (2026-08-09). Admission checks `registry.size - queue.size <
   maxSessions`, and `registry.size` includes sockets still inside the 10 s

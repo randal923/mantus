@@ -4729,3 +4729,69 @@ quest_system2 uids with no map host, pre-change keys lacking ActionIds
 quest_system1 side tables (tutorial/hota/quest-log/pit-door), and the
 deferred-ChestUnique shadow-check blind spot. Canary's `parity:check`
 buildItemCatalog hash drift pre-exists on main and is untouched.
+## 2026-08-09 — Memory-first Mantus Store purchases
+
+**Problem.** Buying from the store on production felt slow: every purchase
+was one SERIALIZABLE transaction of ~15–20 *sequential* round-trips (account
++ character `FOR UPDATE`, replay guard, a recursive whole-inventory CTE used
+only for its row count, 3 inserts per delivered stack, balance/ledger/audit
+writes) that the reply waited on — 400–800 ms against remote Postgres, worse
+when a concurrent character save aborted it with 40001 and the 5-attempt
+retry re-ran everything. It was the one purchase path not using the
+memory-first shape `ShopService` already established.
+
+**What changed.** Purchases are now decided, applied and answered inside the
+tick, and made durable behind it on the item persist lane:
+
+- `planStorePurchase` (pure) re-derives every rule the transaction enforced —
+  balance, premium cap, outfit/mount/unique ownership, wildcard cap, slot
+  availability, the XP boost's escalating price and daily cap — from live
+  caches (`InventoryCache`, outfit/prey/hunting services, a per-character
+  store-facts cache seeded once per session on first store-open). Item offers
+  are placed by `planBoundItemDelivery` into exact bound-container slots with
+  pinned item ids.
+- The tick applies the outcome (coins, premium, entitlements via new
+  `applyOutfitGrant`/`applyMountGrant`/`nextLocked*Slot` hooks, injected
+  items) and sends `store-purchase-completed` immediately; no protocol
+  changes.
+- `PgMantusStore.persistPurchase` runs one transaction that *asserts* what
+  memory decided: request-key replay is a no-op, the debit is relative and
+  guarded (`WHERE mantus_coins >= price`), the legacy delivery legs re-check
+  their own rules against locked rows (refusals become thrown errors), and
+  the XP boost counter must equal what the price was derived from. Any
+  assertion failure poisons the character via `enqueuePersist`, which resyncs
+  from committed state — memory and database cannot silently drift.
+- Name/sex changes (need the DB's global name-uniqueness answer) and any
+  purchase raced in before facts load still use the legacy DB-first path,
+  which now applies its result *relatively* (as do operator grant/refund via
+  the new `refunded` field) so it composes with queued memory-first persists.
+- `refreshFacts` (2 queries incl. the recursive inventory scan per purchase
+  *and* per store-open) is gone; facts update incrementally in-tick.
+
+**Files.** `server/src/store/` (`MantusStoreService`, `PgMantusStore`,
+`planStorePurchase`, `planBoundItemDelivery`, `StorePurchasePlan`,
+`StoreLiveHooks`, `StoreOperatorService`, `MantusStoreStore`,
+`delivery/persistStoreDelivery`, `sql/decrementStoreBalanceQuery`),
+`OutfitService.applyStoreGrant/applyStoreMountGrant`,
+`PreyService.nextLockedSlot`, `HuntingTaskService.nextLockedSlot`,
+`GameServer` wiring (equipment-located deliveries now land in the carried
+inventory — the created bound root).
+
+**Verified.** 9 new planner unit tests (price curve, caps, stack splitting
+around occupied slots, row budget); 4 new service tests (same-tick answer +
+single queued persist with pinned rows, in-tick insufficient-coins after the
+balance is spent, legacy fallback before facts load, mount entitlement
+applied in-tick); 6 new Pg integration tests for `persistPurchase`
+(atomicity, replay no-op, refuse-below-zero rollback, **two plans racing for
+one balance commit exactly one**, XP-boost counter drift dies, second mount
+purchase refused instead of charged). Full server suite 3,915 passed; full
+typecheck clean. The 8 pre-existing integration failures (guild bank ledger
+check constraint, conjuring audit, highscore value types, item sweep slot
+conflict) fail identically on `main` — unrelated.
+
+**Residual risk.** Store facts are session-pinned (destroying a unique store
+item mid-session leaves its offer greyed until relogin); prey-wildcard live
+counter can transiently disagree if a daily-reward claim races a queued store
+persist (DB converges — both writes are relative/capped); recorded in
+TODO.md. A persist assertion failure disconnects the buyer (deliberate: the
+session's memory was wrong).

@@ -164,6 +164,14 @@ export class HuntingTaskService {
     return slots !== undefined && slots.every((slot) => slot.state !== "locked");
   }
 
+  /** The lowest still-locked slot — what the store's unlock opens next. */
+  nextLockedSlot(characterId: string): number | undefined {
+    const slots = this.slotsByCharacter.get(characterId);
+    const locked = slots?.filter((slot) => slot.state === "locked") ?? [];
+    if (locked.length === 0) return undefined;
+    return Math.min(...locked.map((slot) => slot.slot));
+  }
+
   /**
    * Unlocks a slot the Mantus Store already unlocked durably (Canary's
    * Permanent Hunting Task Slot). Refresh-only: the row was written inside

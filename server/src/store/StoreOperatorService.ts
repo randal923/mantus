@@ -64,13 +64,14 @@ export class StoreOperatorService {
               reply(session, false, `Grant rejected: ${result.status}.`);
               return;
             }
+            // Applied relatively: memory-first purchases queued behind this
+            // grant are not in its balance, so adopting the absolute number
+            // would resurrect coins the tick already spent.
+            const balance = (session.account?.mantusCoins ?? 0) + amount;
             if (session.account) {
-              session.account = {
-                ...session.account,
-                mantusCoins: result.balance,
-              };
+              session.account = { ...session.account, mantusCoins: balance };
             }
-            reply(session, true, `Granted. Balance: ${result.balance} coins.`);
+            reply(session, true, `Granted. Balance: ${balance} coins.`);
           });
         }),
       session,
@@ -105,11 +106,13 @@ export class StoreOperatorService {
               reply(session, false, `Refund rejected: ${result.status}.`);
               return;
             }
+            // Relative for the same reason as the grant above.
             const own = session.account;
+            const balance = (own?.mantusCoins ?? 0) + result.refunded;
             if (own) {
-              session.account = { ...own, mantusCoins: result.balance };
+              session.account = { ...own, mantusCoins: balance };
             }
-            reply(session, true, `Refunded. Balance: ${result.balance} coins.`);
+            reply(session, true, `Refunded. Balance: ${balance} coins.`);
           });
         }),
       session,

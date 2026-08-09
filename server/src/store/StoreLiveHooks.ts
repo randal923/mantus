@@ -16,11 +16,17 @@ export interface StoreLiveHooks {
   };
   /** Re-reads outfit/mount entitlements after a committed grant. */
   refreshOutfits(characterId: string): void;
+  /** Merges a memory-first outfit grant into the live entitlements. */
+  applyOutfitGrant(characterId: string, lookType: number, addons: number): void;
+  applyMountGrant(characterId: string, mountId: number): void;
   wildcardsOf(characterId: string): number;
   applyWildcardBalance(characterId: string, balance: number): void;
   /** True once the character has no locked prey / hunting task slots left. */
   preySlotsUnlocked(characterId: string): boolean;
   huntingSlotsUnlocked(characterId: string): boolean;
+  /** The slot a store unlock opens next; undefined once none are locked. */
+  nextLockedPreySlot(characterId: string): number | undefined;
+  nextLockedHuntingSlot(characterId: string): number | undefined;
   applyPreySlotUnlock(characterId: string, slot: number): void;
   applyHuntingSlotUnlock(characterId: string, slot: number): void;
   xpBoostUntilMs(characterId: string): number;
