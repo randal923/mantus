@@ -286,6 +286,7 @@ export function InventoryPanel({
             onDropInBackpack={dropInEquippedBackpack}
             onOpenBackpack={openEquippedBackpack}
             onOpenBound={openBoundContainer}
+            boundOpen={boundRootInView}
           />
 
           {(onStack || onSort) && dropContainer && (

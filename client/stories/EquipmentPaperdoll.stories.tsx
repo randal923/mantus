@@ -83,3 +83,11 @@ const boundEquipment: Equipment = {
 export const WithBoundItems: Story = {
   args: { equipment: boundEquipment, onOpenBound: () => undefined },
 };
+
+export const WithBoundItemsOpen: Story = {
+  args: {
+    equipment: boundEquipment,
+    onOpenBound: () => undefined,
+    boundOpen: true,
+  },
+};
