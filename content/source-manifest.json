@@ -182,11 +182,11 @@
     },
     {
       "path": "tools/buildWorldActionParityInventory.mjs",
-      "sha256": "65475e7fea7e64a8871f2ae32b3fed941e3fb2288610939a65aeab27bb793d25"
+      "sha256": "53b9f4623a48fc6ea915da83ec7e7001ef78023b0b9e6dfe692f03cb1a9e181e"
     },
     {
       "path": "tools/classifyWorldActionRegistration.mjs",
-      "sha256": "19b4b5c73869c0eb2d6f00a1614f44b22a395dc8e0ec7d9d7c036dc2d8b655d0"
+      "sha256": "d456e206b70e24b6ae5a6c70397df5ffc0539805751c0a58351bb0081d3b1cae"
     },
     {
       "path": "tools/convertCanaryItems.mjs",
@@ -194,7 +194,7 @@
     },
     {
       "path": "tools/convertOtbm.mjs",
-      "sha256": "3f783bfda6b917aafa1f27a160cf0e44b93d5ef5d402ea9ab3416174e66d0ed3"
+      "sha256": "4b0bb72f7e1d76a2429fa579d611473b5fe59fa40e2ef4d730dea3714714fa2a"
     },
     {
       "path": "tools/extractCanaryAppearanceFlags.mjs",
