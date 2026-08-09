@@ -1804,7 +1804,7 @@
     "spell-vocation-restricted": "Your vocation cannot cast that spell.",
     "spell-weapon-required": "You must equip a weapon to cast that spell.",
     "item-action-failed": "That item action could not be completed.",
-    "portable-seller-empty": "Your loot pouch has nothing a merchant would buy.",
+    "portable-seller-empty": "Your loot pouch has nothing to sell.",
     "potion-exhausted": "Wait a moment before using another potion.",
     "potion-level-restricted": "Your level is too low to use that potion.",
     "potion-vocation-restricted": "Your vocation cannot use that potion.",
