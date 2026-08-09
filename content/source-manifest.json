@@ -166,7 +166,7 @@
     },
     {
       "path": "tools/buildItemCatalog.mjs",
-      "sha256": "665e08471746cd6c5cf00a338750f3e70ceda37681ddbf65eca9de9b850ed6c2"
+      "sha256": "520bc4b4e42cd9356030d9939504c0ea0f010330cd7f4b3d6bb011581015eab4"
     },
     {
       "path": "tools/buildProficiencySprites.mjs",
@@ -186,7 +186,7 @@
     },
     {
       "path": "tools/classifyWorldActionRegistration.mjs",
-      "sha256": "728d1ba9e3116cc5a5b4d3b2596643d6c50950af8177aa4ebbadc7b1de0b0c78"
+      "sha256": "19b4b5c73869c0eb2d6f00a1614f44b22a395dc8e0ec7d9d7c036dc2d8b655d0"
     },
     {
       "path": "tools/convertCanaryItems.mjs",
@@ -194,7 +194,7 @@
     },
     {
       "path": "tools/convertOtbm.mjs",
-      "sha256": "d3bd7cc25a171d3891b3a6422805f7577537903cdd786ea2d48278dc0d079440"
+      "sha256": "3f783bfda6b917aafa1f27a160cf0e44b93d5ef5d402ea9ab3416174e66d0ed3"
     },
     {
       "path": "tools/extractCanaryAppearanceFlags.mjs",
@@ -206,7 +206,7 @@
     },
     {
       "path": "tools/importCanaryChests.mjs",
-      "sha256": "daf07411e8be6eb0de3aec255b22e41c6f1db2b94421ed943668aeba5ee6fae9"
+      "sha256": "1d5af8ba126b018fd2f0228fd7aad0bbe6502e010a60eb85b3645e3794fe2acb"
     },
     {
       "path": "tools/importCanaryCreatures.mjs",
@@ -270,7 +270,7 @@
     },
     {
       "path": "tools/parseCanaryChestTables.mjs",
-      "sha256": "55af07eb0a9474dad8dbcb98095672b71c78f4f229f8e687c5a8f0bce5810610"
+      "sha256": "268b328a7fc2a936bace405249c899c87e0027a01f26cb02ce63fe1afeec1dc9"
     },
     {
       "path": "tools/parseCanaryCreatureContent.mjs",
