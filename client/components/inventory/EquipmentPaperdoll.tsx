@@ -38,7 +38,17 @@ interface EquipmentPaperdollProps {
   onDropInBackpack?(): void;
   onOpenBackpack?(): void;
   onOpenBound?(): void;
+  /** Whether the bound-items container is the window currently in view. */
+  boundOpen?: boolean;
 }
+
+/**
+ * The bound-items button draws the stock safe rather than the bound
+ * container's own art (a lidless red inbox with no closed state): shut at
+ * rest, ajar on hover, open while the window is in view.
+ */
+const BOUND_SAFE_CLOSED = { spriteId: 23_420, clientId: 23_409 };
+const BOUND_SAFE_OPEN = { spriteId: 23_421, clientId: 23_410 };
 
 export function EquipmentPaperdoll({
   equipment,
@@ -49,6 +59,7 @@ export function EquipmentPaperdoll({
   onDropInBackpack,
   onOpenBackpack,
   onOpenBound,
+  boundOpen = false,
 }: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
   const bound = equipment.bound;
@@ -75,13 +86,26 @@ export function EquipmentPaperdoll({
                 title={t("inventory.boundItems")}
                 aria-label={t("inventory.boundItems")}
                 onClick={onOpenBound}
-                className="flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
+                className="group flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
               >
-                <SpriteIcon
-                  spriteId={bound.spriteId}
-                  clientId={bound.clientId}
-                  scale={1}
-                />
+                <span className={boundOpen ? "hidden" : "group-hover:hidden"}>
+                  <SpriteIcon
+                    spriteId={BOUND_SAFE_CLOSED.spriteId}
+                    clientId={BOUND_SAFE_CLOSED.clientId}
+                    scale={1}
+                  />
+                </span>
+                <span
+                  className={
+                    boundOpen ? "" : "hidden group-hover:inline-block"
+                  }
+                >
+                  <SpriteIcon
+                    spriteId={BOUND_SAFE_OPEN.spriteId}
+                    clientId={BOUND_SAFE_OPEN.clientId}
+                    scale={1}
+                  />
+                </span>
               </button>
             )}
             {column.map(
