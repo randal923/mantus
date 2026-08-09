@@ -6,6 +6,8 @@ worktree is created, merged, or removed.
 
 | Branch                           | Status      |
 | -------------------------------- | ----------- |
+| `agents/quest-touch-actions`     | in progress |
+| `agents/chest-click-redirect`    | done        |
 | `agents/quest-chest-key-parity`  | done        |
 | `agents/store-memory-first`      | done        |
 | `agents/login-queue`             | done        |
