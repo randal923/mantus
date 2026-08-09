@@ -86,7 +86,18 @@ export function EquipmentPaperdoll({
                 type="button"
                 title={t("inventory.boundItems")}
                 aria-label={t("inventory.boundItems")}
-                onClick={onOpenBound}
+                // Containers open on right-click here, same as every slot
+                // (ItemSlot routes onContextMenu to onActivate); the keyboard
+                // keeps Enter/Space since a context gesture has no key.
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  onOpenBound?.();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  onOpenBound?.();
+                }}
                 className="group flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
               >
                 {BOUND_TRUNK_ART ? (
