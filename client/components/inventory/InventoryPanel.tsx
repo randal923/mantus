@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 import type {
   ContainerState,
   InventorySlotEntry,
@@ -9,15 +9,14 @@ import type {
 } from "@tibia/protocol";
 import type { Equipment, InventoryItem } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { Button } from "../ui/Button";
 import { CloseButton } from "../ui/CloseButton";
-import { CapacityBar } from "./CapacityBar";
-import { EquipmentPaperdoll } from "./EquipmentPaperdoll";
-import { ItemSlot } from "./ItemSlot";
 import { SpriteIcon } from "./SpriteIcon";
 import { InventoryCharacterStats } from "./InventoryCharacterStats";
+import {
+  InventoryContainerView,
+  type InventoryContainerDropTarget,
+} from "./InventoryContainerView";
 import type { ItemDragSource } from "./ItemDragSource";
-import { BOUND_ITEM_TYPE_IDS } from "../../lib/inventory/boundItemTypeIds";
 
 interface InventoryPanelProps {
   characterName: string;
@@ -81,114 +80,27 @@ export function InventoryPanel({
   onDropInEquipment,
 }: InventoryPanelProps) {
   const { t } = useAppTranslation();
-  const [containerPath, setContainerPath] = useState<InventoryItem[]>([]);
-  const requestedContainer = containerPath[containerPath.length - 1];
-  const viewedContainer = containers.find(
-    (container) => container.container.id === requestedContainer?.id,
-  );
-  const visibleContainer = requestedContainer
-    ? (viewedContainer?.container ?? requestedContainer)
-    : equipment.backpack;
-  const dropContainer = requestedContainer
-    ? viewedContainer?.container
-    : equipment.backpack;
-  const visibleItems = requestedContainer
-    ? (viewedContainer?.items ?? [])
-    : items;
-  const visibleSlotCount = requestedContainer
-    ? (viewedContainer?.capacity ?? requestedContainer.containerCapacity ?? 0)
-    : slotCount;
-  const bySlot = new Map(
-    visibleItems.map((entry) => [entry.slot, entry.item]),
-  );
-  // The bound-items root is view-only: its direct children never drag out and
-  // nothing drops in. The server enforces both; hiding the affordances here
-  // keeps the window honest. Containers *inside* it (the loot pouch) are
-  // ordinary windows.
-  const boundRootInView =
-    equipment.bound !== undefined &&
-    requestedContainer?.id === equipment.bound.id;
-  const dropInVisibleContainer = () => {
-    if (!dropContainer || !onDropInContainer || boundRootInView) return;
-    onDropInContainer(dropContainer, 0, "front");
-  };
-  const dropInEquippedBackpack = () => {
-    if (!equipment.backpack || !onDropInContainer) return;
-    onDropInContainer(equipment.backpack, 0, "front");
-  };
-  const openContainer = (item: InventoryItem) => {
-    if (!onOpenContainer) return;
-    setContainerPath((current) => [...current, item]);
-    onOpenContainer(item);
-  };
-  const openEquippedBackpack = () => {
-    setContainerPath([]);
-    for (let index = containerPath.length - 1; index >= 0; index -= 1) {
-      onCloseContainer?.(containerPath[index]!.id);
-    }
-  };
-  const openBoundContainer = () => {
-    const bound = equipment.bound;
-    if (!bound || requestedContainer?.id === bound.id) return;
-    openContainer(bound);
-  };
-  const goBack = () => {
-    if (!requestedContainer) return;
-    setContainerPath((current) => current.slice(0, -1));
-    onCloseContainer?.(requestedContainer.id);
-  };
-  const activateItem = (item: InventoryItem) => {
-    if (item.useKind === "rune" && onUseRune) {
-      onUseRune(item);
-      return;
-    }
-    if (item.useKind === "potion" && onUsePotion) {
-      onUsePotion(item);
-      return;
-    }
-    if (item.useKind === "useWith" && onUseItemWith) {
-      onUseItemWith(item);
-      return;
-    }
-    if (item.useKind === "container" && onOpenContainer) {
-      openContainer(item);
-      return;
-    }
-    if (
-      (item.useKind === "read" ||
-        item.useKind === "rotate" ||
-        item.useKind === "food" ||
-        item.useKind === "activate") &&
-      onUseItem
-    ) {
-      onUseItem(item);
-      return;
-    }
-    if (
-      item.equipmentSlot &&
-      item.equipmentSlot !== "backpack" &&
-      onEquip
-    ) {
-      onEquip(item);
-    }
-  };
+  // The container view publishes its drop target here so drops anywhere on
+  // the panel land in the visible container without this component
+  // subscribing to (and re-rendering on) the container-path state.
+  const dropTargetRef = useRef<InventoryContainerDropTarget | null>(null);
 
   return (
     <section
       aria-label={t("inventory.label", { name: characterName })}
       onDragOver={(event) => {
-        if (!dropContainer || !onDropInContainer || boundRootInView) return;
+        if (!dropTargetRef.current) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
       }}
       onDrop={(event) => {
-        if (!dropContainer || !onDropInContainer || boundRootInView) return;
+        if (!dropTargetRef.current) return;
         event.preventDefault();
-        dropInVisibleContainer();
+        dropTargetRef.current.drop();
       }}
       onPointerUp={(event) => {
         if (event.button !== 0 || event.defaultPrevented) return;
-        dropInVisibleContainer();
+        dropTargetRef.current?.drop();
       }}
       className="relative flex h-full w-full justify-end font-tibia text-ui-text select-none"
     >
@@ -278,90 +190,29 @@ export function InventoryPanel({
           </header>
           <div aria-hidden className="ui-divider" />
 
-          <EquipmentPaperdoll
+          <InventoryContainerView
             equipment={equipment}
+            items={items}
+            capacityUsed={capacityUsed}
+            capacityMax={capacityMax}
+            slotCount={slotCount}
+            containers={containers}
+            dropTargetRef={dropTargetRef}
+            onStack={onStack}
+            onSort={onSort}
+            onEquip={onEquip}
             onUnequip={onUnequip}
+            onUseRune={onUseRune}
+            onUsePotion={onUsePotion}
+            onUseItemWith={onUseItemWith}
+            onOpenContainer={onOpenContainer}
+            onCloseContainer={onCloseContainer}
+            onUseItem={onUseItem}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            onDrop={onDropInEquipment}
-            onDropInBackpack={dropInEquippedBackpack}
-            onOpenBackpack={openEquippedBackpack}
-            onOpenBound={openBoundContainer}
-            boundOpen={boundRootInView}
+            onDropInContainer={onDropInContainer}
+            onDropInEquipment={onDropInEquipment}
           />
-
-          {(onStack || onSort) && dropContainer && (
-            <div className="flex justify-end gap-2">
-              {onStack && (
-                <Button size="sm" onClick={() => onStack(dropContainer.id)}>
-                  {t("inventory.stack")}
-                </Button>
-              )}
-              {onSort && (
-                <Button size="sm" onClick={() => onSort(dropContainer.id)}>
-                  {t("inventory.sort")}
-                </Button>
-              )}
-            </div>
-          )}
-
-          <CapacityBar used={capacityUsed} max={capacityMax} />
-
-          <div className="flex items-center gap-2 border-b border-ui-gold/15 pb-2">
-            {requestedContainer && (
-              <Button size="sm" onClick={goBack}>
-                ‹ {t("common.back")}
-              </Button>
-            )}
-            <h3 className="min-w-0 flex-1 truncate font-display text-xs tracking-[0.18em] text-ui-gold uppercase">
-              {visibleContainer?.name ?? t("inventory.backpack")}
-            </h3>
-            <span className="text-xs text-ui-muted">
-              {visibleItems.length} / {visibleSlotCount}
-            </span>
-          </div>
-
-          <div className="ui-scrollbar min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/60 bg-black/20 p-2.5 shadow-inner shadow-black/45">
-            <div className="grid grid-cols-4 justify-items-center gap-2">
-              {Array.from({ length: visibleSlotCount }, (_, slot) => {
-                const item = bySlot.get(slot);
-                return (
-                  <ItemSlot
-                    key={item?.id ?? `empty-${slot}`}
-                    item={item}
-                    onActivate={item ? () => activateItem(item) : undefined}
-                    onDragStart={
-                      item &&
-                      dropContainer &&
-                      onDragStart &&
-                      // In the bound root only the bound item types (pouch,
-                      // seller) are pinned; store deliveries drag out freely.
-                      !(boundRootInView && BOUND_ITEM_TYPE_IDS.has(item.typeId))
-                        ? () =>
-                            onDragStart({
-                              kind: "owned",
-                              item,
-                              location: {
-                                kind: "container",
-                                containerId: dropContainer.id,
-                                slot,
-                              },
-                            })
-                        : undefined
-                    }
-                    onDragEnd={onDragEnd}
-                    onDrop={
-                      dropContainer && onDropInContainer && !boundRootInView
-                        ? item?.useKind === "container"
-                          ? () => onDropInContainer(item, 0, "front")
-                          : dropInVisibleContainer
-                        : undefined
-                    }
-                  />
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
     </section>

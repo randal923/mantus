@@ -75,6 +75,26 @@ const deeplyNestedBackpack = makeInventoryItem({
   containerCapacity: 8,
 });
 
+const boundTrunk = makeInventoryItem({
+  id: "00000000-0000-4000-8000-000000000008",
+  clientId: 23396,
+  spriteId: 7137,
+  name: "bound items",
+  count: 1,
+  useKind: "container",
+  containerCapacity: 500,
+});
+
+const lootPouch = makeInventoryItem({
+  id: "00000000-0000-4000-8000-000000000009",
+  clientId: 23721,
+  spriteId: 7137,
+  name: "Loot Pouch",
+  count: 1,
+  useKind: "container",
+  containerCapacity: 500,
+});
+
 const character: OwnCharacterState = {
   id: "00000000-0000-4000-8000-000000000010",
   name: "Deceius",
@@ -321,6 +341,51 @@ export const OpensExactBackpackWithoutFlashingPreviousItems: Story = {
     ).toBeInTheDocument();
     await expect(canvas.queryByTitle("Rope")).not.toBeInTheDocument();
     await expect(canvas.queryByTitle("5 Health Potion")).not.toBeInTheDocument();
+  },
+};
+
+export const BoundTrunkRendersOnlyUsedRows: Story = {
+  args: {
+    ...Knight.args,
+    equipment: { ...equipment, bound: boundTrunk },
+    containers: [
+      {
+        container: boundTrunk,
+        parentContainerId: null,
+        capacity: 500,
+        items: [{ slot: 0, item: lootPouch }],
+      },
+    ],
+    onOpenContainer: fn(),
+    onCloseContainer: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    fireEvent.contextMenu(canvas.getByRole("button", { name: "Bound items" }));
+    await expect(
+      canvas.getByRole("heading", { name: "bound items" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("1 / ∞")).toBeInTheDocument();
+
+    // The 500-slot trunk draws the row its contents need plus one fully
+    // open row — enough to read as infinite, never the whole grid.
+    const grid = canvasElement.querySelector(
+      ".ui-scrollbar .grid.justify-items-center",
+    );
+    await expect(grid?.children).toHaveLength(8);
+
+    // Browse into the pouch before any server confirm (it has no entry in
+    // `containers`): the stack/sort row must survive that frame so the
+    // capacity bar does not jump while the container opens.
+    fireEvent.contextMenu(canvas.getByTitle("Loot Pouch"));
+    await expect(
+      canvas.getByRole("heading", { name: "Loot Pouch" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("0 / ∞")).toBeInTheDocument();
+    await expect(
+      canvas.getByRole("button", { name: "Stack" }),
+    ).toBeInTheDocument();
   },
 };
 

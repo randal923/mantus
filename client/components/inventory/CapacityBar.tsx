@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { WeightIcon } from "./WeightIcon";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
@@ -7,7 +8,10 @@ interface CapacityBarProps {
   max: number;
 }
 
-export function CapacityBar({ used, max }: CapacityBarProps) {
+export const CapacityBar = memo(function CapacityBar({
+  used,
+  max,
+}: CapacityBarProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
   const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
@@ -42,4 +46,4 @@ export function CapacityBar({ used, max }: CapacityBarProps) {
       </div>
     </div>
   );
-}
+});

@@ -4,6 +4,7 @@ import { applyPendingItemOp } from "../lib/inventory/applyPendingItemOp";
 import { applyInventoryPrediction } from "../lib/inventory/applyInventoryPrediction";
 import { buildPendingItemOpMessage } from "../lib/inventory/buildPendingItemOpMessage";
 import { findInventoryItem } from "../lib/inventory/findInventoryItem";
+import { replaceEqualDeep } from "../lib/inventory/replaceEqualDeep";
 import type { InventoryPrediction } from "../lib/inventory/InventoryPrediction";
 import { resolveConfirmAction } from "../lib/inventory/resolveConfirmAction";
 import type {
@@ -117,7 +118,10 @@ export function useOptimisticInventory(
 
   const confirm = useCallback(
     (state: InventoryState, nonce?: string) => {
-      serverStateRef.current = state;
+      // Reuse unchanged subtrees of the previous snapshot so a confirm that
+      // only touches one container keeps identity everywhere else and
+      // memoized UI can skip re-rendering.
+      serverStateRef.current = replaceEqualDeep(serverStateRef.current, state);
       const action = resolveConfirmAction({
         hasPreview: previewRef.current.length > 0,
         inFlight: inFlightRef.current,
