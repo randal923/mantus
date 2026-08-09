@@ -18,7 +18,9 @@ const CUSTOM_ART: ReadonlyMap<number, CustomItemArt> = new Map([
     {
       src: "store/items/portable_seller.png",
       frames: 4,
-      frameSize: 32,
+      // 64px frames: at the default 2× icon scale they render 1:1, so the
+      // art keeps its detail instead of round-tripping through 32px.
+      frameSize: 64,
       restingFrame: 0,
     },
   ],

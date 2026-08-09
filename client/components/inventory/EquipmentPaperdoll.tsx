@@ -98,33 +98,16 @@ export function EquipmentPaperdoll({
                   event.preventDefault();
                   onOpenBound?.();
                 }}
-                className="group flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
+                className="flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
               >
                 {BOUND_TRUNK_ART ? (
-                  <>
-                    <span
-                      className={boundOpen ? "hidden" : "group-hover:hidden"}
-                    >
-                      <CustomArtSpriteIcon
-                        art={BOUND_TRUNK_ART}
-                        clientId={bound.clientId}
-                        frame={0}
-                        scale={1}
-                      />
-                    </span>
-                    <span
-                      className={
-                        boundOpen ? "" : "hidden group-hover:inline-block"
-                      }
-                    >
-                      <CustomArtSpriteIcon
-                        art={BOUND_TRUNK_ART}
-                        clientId={bound.clientId}
-                        frame={1}
-                        scale={1}
-                      />
-                    </span>
-                  </>
+                  // Closed at rest, open only while the window is in view.
+                  <CustomArtSpriteIcon
+                    art={BOUND_TRUNK_ART}
+                    clientId={bound.clientId}
+                    frame={boundOpen ? 1 : 0}
+                    scale={1}
+                  />
                 ) : (
                   <SpriteIcon
                     spriteId={bound.spriteId}

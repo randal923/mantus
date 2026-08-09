@@ -159,12 +159,12 @@ export function handleCommerceMessage(
       id: message.saleId,
       itemId: message.itemId,
     });
-    state.appendCombatLog(
-      i18n.t("inventory.portableSellerSold", {
-        soldCount: message.soldCount,
-        gold: message.proceeds,
-      }),
-    );
+    const soldLine = i18n.t("inventory.portableSellerSold", {
+      soldCount: message.soldCount,
+      gold: message.proceeds,
+    });
+    state.showScreenMessage(soldLine, "status");
+    state.appendCombatLog(soldLine);
     return true;
   }
 
