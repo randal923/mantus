@@ -4896,3 +4896,60 @@ version changed.
 early — TODO.md); only this one quest-touch entry ships (table seeds future
 imports); torch ids 2928-2931 remain out of the item catalog (zero
 first-sprite drop, TODO.md).
+
+## 2026-08-09 — Rookgaard starter quest pack (quest levers, movement gates, rapier chest)
+
+**Problem**: The quest-parity triage's most player-visible cluster (§10b #3)
+— the Rookgaard starter quests — was entirely deferred: rapier chest, bear
+room, katana room, sewer bridge, level bridge, premium bridge. No engine
+mechanic existed for stateful quest levers (toggle + remove/create/transform
++ creature relocation) or for fixed step-in gates with a fail destination.
+
+**What changed**:
+- New quest-lever system: `server/src/action/questLeverTables.ts`
+  (position-keyed `QUEST_LEVER_TRIGGERS`, branch ops with per-branch
+  `requiresPrimaryTarget` mirroring each Canary script's guards),
+  `QuestLeverService.ts` (in-tick state machine; lever item id carries the
+  state; relocations split players/monsters like Canary's sewer script),
+  `handleQuestLeverUse.ts`, new `"quest-lever"` WorldAction kind resolved
+  ahead of generic door/lever behaviours. Covers: bear room stone (aid
+  30006), katana lever/door (uid 30029/22006, incl. the door-use forced
+  close + lever re-arm), sewer drawbridge (aid 50239, both levers flip
+  together).
+- `questTilePassability.ts` generalizes the quest-touch wall overlay into
+  blocking-item / required-item rules with an optional walkable ground-speed
+  overlay (drawbridge 90 over speedless water); `DynamicMapItems` +
+  `overrideMapData` consume it (replaces `questTouchWallTiles.ts`).
+- Movement gates: `movementGateTables.ts` (level bridge aid 50998, premium
+  bridge aid 50241) enforced at the top of `PressurePlateRegistry.onStepIn`
+  with a fixed fail position, effect and Canary message.
+- Rapier chest uid 14042 imported via `SCRIPT_ANSWERED_CHESTS` in
+  `tools/importCanaryChests.mjs` (reward transcribed from rapier_quest.lua).
+- `MUTABLE_POSITIONS` += bear stone 1791, sewer rails 4634/4636; map
+  reconverted.
+- `/premium <days>` dev-only GM command (in-memory premium for playtests).
+- Parity ledger: +7 implemented, +4 excluded as **dead content** — uid 1056
+  (bear_room_quest_lever), uids 14049/14050 (goblin temple), aid 30492
+  (wooden-sword chest) are stamped nowhere at canary a879c931 (not in the
+  OTBM, not in any startup table), so Canary itself never fires them.
+  Re-pinned two converter hashes that had already drifted at HEAD
+  (buildWorldActionParityInventory, convertOtbm).
+
+**Verified**: 6 new QuestLeverService unit tests + 5 movement-gate tests;
+full server suite 3,956 passing; typecheck + parity:check + test:tools
+clean. New e2e `yarn workspace server playtest:rookgaard` drives two real
+clients through all six quests — chest grant + "The box is empty.", stone
+removal/walk-through/relocation, katana open/close/doorway push/door-use
+re-arm, drawbridge extend/walk-over-water/retract-relocation/rails restore,
+level-1 bounce with the Canary line then level-2 pass, silent free-account
+bounce then premium pass — and passes repeatably against the persistent
+playtest DB (state normalization first). Playtest DB needed one
+`db:reconcile-world-seed` after the map version changed.
+
+**Residual risk**: created span items are memory-first, so a restart
+retracts the bridge while persisted levers stay pulled — the next pull
+self-repairs (ops are idempotent); loose ITEMS on the span are not relocated
+on retraction (Canary moves them); a relocation whose destination is
+occupied leaves the creature in place (Canary push-moves); the extended
+bridge renders as a drawbridge item over the water ground rather than a
+ground transform (recorded in TODO.md).

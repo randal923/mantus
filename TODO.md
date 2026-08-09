@@ -1334,3 +1334,23 @@ limitations accepted during a session are recorded in the owning feature file
   importing the other Canary quest touch scripts; each import needs its wall
   positions added to `MUTABLE_POSITIONS` plus a `map:convert` rerun. Owner:
   quest touches (agents/quest-touch-actions).
+
+- 2026-08-09: quest-lever state is only half-persistent: lever/door
+  transforms write item rows, but created span items (sewer drawbridge
+  5770) are memory-first — a restart retracts the bridge while the levers
+  stay pulled. The next pull self-repairs (branch ops are idempotent).
+  Full fix: persist quest-lever created items like chest loot, or reset
+  the levers at boot. Owner: quest levers (agents/quest-parity-rookgaard).
+
+- 2026-08-09: retracting the Rookgaard sewer bridge relocates creatures
+  but not loose dropped ITEMS off the span (Canary moves those to the east
+  bank too); and any relocation whose destination tile is occupied leaves
+  the creature where it stands (Canary push-moves to a nearby tile). Both
+  need a world-item move primitive / push-move search. Owner: quest levers.
+
+- 2026-08-09: the extended sewer drawbridge renders as a drawbridge item
+  stacked over the water ground instead of Canary's ground transform (our
+  grounds are baked client-side). Server walkability/speed are correct via
+  the questTilePassability ground-speed overlay; if the visual reads badly
+  in the real client, the fix is a ground-transform channel in tile-states.
+  Owner: quest levers.
