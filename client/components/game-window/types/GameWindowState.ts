@@ -40,6 +40,7 @@ import type { MinimapMarker } from "@tibia/protocol";
 import type { HouseToast } from "./HouseToast";
 import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
+import type { PortableSellerSaleNotice } from "./PortableSellerSaleNotice";
 import type { LootSessionState } from "./LootSessionState";
 import type { MailboxSessionState } from "./MailboxSessionState";
 import type { MapContextMenuState } from "./MapContextMenuState";
@@ -89,6 +90,7 @@ export interface GameWindowState {
   /** The character's own persisted minimap waypoint flags. */
   mapMarkers: ReadonlyArray<MinimapMarker>;
   levelUpNotice: LevelUpNotice | null;
+  portableSellerNotice: PortableSellerSaleNotice | null;
   chatState: ChatState;
   chatFocusRequestId: number;
   characterBusy: boolean;

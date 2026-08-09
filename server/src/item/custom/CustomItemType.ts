@@ -13,6 +13,8 @@ export interface CustomItemType {
   readonly baseTypeId: number;
   readonly name: string;
   readonly article: string;
-  readonly charges: number;
+  readonly charges?: number;
   readonly description: string;
+  /** Overrides the base's movability (the Portable Seller never drops). */
+  readonly movable?: boolean;
 }

@@ -21,8 +21,8 @@ describe("getStarterSet", () => {
 
       expect(slots).toEqual(
         vocation === "Monk"
-          ? new Set(["helmet", "backpack", "armor", "weapon", "legs", "boots"])
-          : new Set(["helmet", "backpack", "armor", "weapon", "shield", "legs", "boots"]),
+          ? new Set(["helmet", "backpack", "armor", "weapon", "legs", "boots", "bound"])
+          : new Set(["helmet", "backpack", "armor", "weapon", "shield", "legs", "boots", "bound"]),
       );
       expect(weapon).toBeDefined();
       expect(starterSet.backpackContents).toEqual(
@@ -46,6 +46,11 @@ describe("getStarterSet", () => {
       for (const starterItem of equipment) {
         const itemType = catalog.require(starterItem.typeId);
 
+        // The bound slot holds a system container no item type declares.
+        if (starterItem.slot === "bound") {
+          expect(itemType.containerCapacity ?? 0).toBeGreaterThan(0);
+          continue;
+        }
         expect(itemType.equipmentSlot).toBe(starterItem.slot);
         expect(itemType.requirements?.level ?? 0).toBeLessThanOrEqual(1);
         if (itemType.requirements?.vocations) {
@@ -72,6 +77,18 @@ describe("getStarterSet", () => {
       typeId: 50181,
       count: 1,
     });
+  });
+
+  it("gives every vocation a loot pouch inside the bound container", () => {
+    for (const vocation of STARTER_VOCATIONS) {
+      const starterSet = getStarterSet(vocation);
+
+      expect(
+        starterSet.equipment.some((item) => item.slot === "bound"),
+      ).toBe(true);
+      expect(starterSet.boundContents).toEqual([{ typeId: 23721, count: 1 }]);
+      expect(catalog.require(23721).name).toBe("loot pouch");
+    }
   });
 
   it("keeps vocation wands and rods in the backpack until level requirements are met", () => {

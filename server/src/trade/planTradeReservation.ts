@@ -1,5 +1,6 @@
 import type { Item } from "../item/Item";
 import type { CarriedPlan } from "../item/plan/CarriedPlan";
+import { isBoundLockedItem } from "../item/plan/isBoundLockedItem";
 import { tradeOfferSubtree } from "./tradeOfferSubtree";
 
 /**
@@ -24,6 +25,7 @@ export function planTradeReservation(input: {
   ) {
     return null;
   }
+  if (isBoundLockedItem(input.items, item)) return null;
   const reserved: Item = {
     ...item,
     location: {

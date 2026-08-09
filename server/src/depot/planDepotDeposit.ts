@@ -6,6 +6,7 @@ import type { DepotCache } from "./DepotCache";
 import type { DepotMutationPlan } from "./DepotMutationPlan";
 import { depotSnapshotOf } from "./depotSnapshotOf";
 import { firstFreeDepotSlot } from "./firstFreeDepotSlot";
+import { isBoundLockedItem } from "../item/plan/isBoundLockedItem";
 
 export function planDepotDeposit(input: {
   readonly characterId: string;
@@ -28,6 +29,9 @@ export function planDepotDeposit(input: {
     return { status: "stale" };
   }
   if (item.location.kind !== "container") {
+    return { status: "invalid-item" };
+  }
+  if (isBoundLockedItem(carried.items, item)) {
     return { status: "invalid-item" };
   }
   const type = catalog.require(item.typeId);

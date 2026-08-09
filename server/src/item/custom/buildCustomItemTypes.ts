@@ -44,7 +44,8 @@ export function buildCustomItemTypes(
       clientId: custom.id,
       name: custom.name,
       article: custom.article,
-      charges: custom.charges,
+      ...(custom.charges !== undefined ? { charges: custom.charges } : {}),
+      ...(custom.movable !== undefined ? { movable: custom.movable } : {}),
       description: custom.description,
     };
   });

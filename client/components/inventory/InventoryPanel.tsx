@@ -100,8 +100,15 @@ export function InventoryPanel({
   const bySlot = new Map(
     visibleItems.map((entry) => [entry.slot, entry.item]),
   );
+  // The bound-items root is view-only: its direct children never drag out and
+  // nothing drops in. The server enforces both; hiding the affordances here
+  // keeps the window honest. Containers *inside* it (the loot pouch) are
+  // ordinary windows.
+  const boundRootInView =
+    equipment.bound !== undefined &&
+    requestedContainer?.id === equipment.bound.id;
   const dropInVisibleContainer = () => {
-    if (!dropContainer || !onDropInContainer) return;
+    if (!dropContainer || !onDropInContainer || boundRootInView) return;
     onDropInContainer(dropContainer, 0, "front");
   };
   const dropInEquippedBackpack = () => {
@@ -118,6 +125,11 @@ export function InventoryPanel({
     for (let index = containerPath.length - 1; index >= 0; index -= 1) {
       onCloseContainer?.(containerPath[index]!.id);
     }
+  };
+  const openBoundContainer = () => {
+    const bound = equipment.bound;
+    if (!bound || requestedContainer?.id === bound.id) return;
+    openContainer(bound);
   };
   const goBack = () => {
     if (!requestedContainer) return;
@@ -144,7 +156,8 @@ export function InventoryPanel({
     if (
       (item.useKind === "read" ||
         item.useKind === "rotate" ||
-        item.useKind === "food") &&
+        item.useKind === "food" ||
+        item.useKind === "activate") &&
       onUseItem
     ) {
       onUseItem(item);
@@ -163,12 +176,12 @@ export function InventoryPanel({
     <section
       aria-label={t("inventory.label", { name: characterName })}
       onDragOver={(event) => {
-        if (!dropContainer || !onDropInContainer) return;
+        if (!dropContainer || !onDropInContainer || boundRootInView) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
       }}
       onDrop={(event) => {
-        if (!dropContainer || !onDropInContainer) return;
+        if (!dropContainer || !onDropInContainer || boundRootInView) return;
         event.preventDefault();
         dropInVisibleContainer();
       }}
@@ -272,6 +285,7 @@ export function InventoryPanel({
             onDrop={onDropInEquipment}
             onDropInBackpack={dropInEquippedBackpack}
             onOpenBackpack={openEquippedBackpack}
+            onOpenBound={openBoundContainer}
           />
 
           {(onStack || onSort) && dropContainer && (
@@ -315,7 +329,7 @@ export function InventoryPanel({
                     item={item}
                     onActivate={item ? () => activateItem(item) : undefined}
                     onDragStart={
-                      item && dropContainer && onDragStart
+                      item && dropContainer && onDragStart && !boundRootInView
                         ? () =>
                             onDragStart({
                               kind: "owned",
@@ -330,7 +344,7 @@ export function InventoryPanel({
                     }
                     onDragEnd={onDragEnd}
                     onDrop={
-                      dropContainer && onDropInContainer
+                      dropContainer && onDropInContainer && !boundRootInView
                         ? item?.useKind === "container"
                           ? () => onDropInContainer(item, 0, "front")
                           : dropInVisibleContainer

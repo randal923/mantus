@@ -1,5 +1,6 @@
 import { GOLD_COIN_TYPE_ID } from "@tibia/protocol";
 import type { ServerMessage } from "@tibia/protocol";
+import { i18n } from "../../../i18n/i18n";
 import type { GameWindowMessageContext } from "../types/GameWindowMessageContext";
 
 export function handleCommerceMessage(
@@ -134,6 +135,24 @@ export function handleCommerceMessage(
       if (message.reason === "out-of-range") return null;
       return { ...current, pending: false, error: message.reason };
     });
+    return true;
+  }
+
+  if (message.type === "portable-seller-triggered") {
+    state.setBankBalance(message.bankBalance);
+    state.setShopSession((current) =>
+      current ? { ...current, bankBalance: message.bankBalance } : current,
+    );
+    state.setPortableSellerNotice({
+      id: message.saleId,
+      itemId: message.itemId,
+    });
+    state.appendCombatLog(
+      i18n.t("inventory.portableSellerSold", {
+        soldCount: message.soldCount,
+        gold: message.proceeds,
+      }),
+    );
     return true;
   }
 

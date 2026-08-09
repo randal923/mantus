@@ -1,0 +1,35 @@
+import { PORTABLE_SELLER_TYPE_ID } from "@tibia/protocol";
+
+/** A hand-drawn PNG strip that replaces the atlas art for one custom item. */
+export interface CustomItemArt {
+  /** Asset path under /assets, a horizontal strip of equal square frames. */
+  readonly src: string;
+  /** Total frames in the strip. */
+  readonly frames: number;
+  /** Square frame edge in native pixels. */
+  readonly frameSize: number;
+  /** The strip frame drawn when nothing is animating. */
+  readonly restingFrame: number;
+}
+
+const CUSTOM_ART: ReadonlyMap<number, CustomItemArt> = new Map([
+  [
+    PORTABLE_SELLER_TYPE_ID,
+    {
+      src: "store/items/portable_seller.png",
+      frames: 4,
+      frameSize: 32,
+      restingFrame: 0,
+    },
+  ],
+]);
+
+/**
+ * The bespoke icon art a custom item type ships instead of aliased atlas
+ * sprites, if it ships any. Keyed by appearance/client id, like getItemTint.
+ */
+export function getCustomItemArt(
+  clientId?: number,
+): CustomItemArt | undefined {
+  return clientId === undefined ? undefined : CUSTOM_ART.get(clientId);
+}

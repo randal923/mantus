@@ -66,3 +66,20 @@ const twoHandedEquipment: Equipment = {
 
 /** The off-hand mirrors a two-handed weapon instead of the shield hint. */
 export const TwoHanded: Story = { args: { equipment: twoHandedEquipment } };
+
+const boundEquipment: Equipment = {
+  ...equipment,
+  bound: makeInventoryItem({
+    id: "00000000-0000-4000-8000-000000000006",
+    clientId: 23396,
+    spriteId: 7137,
+    name: "Bound Items",
+    count: 1,
+    containerCapacity: 20,
+  }),
+};
+
+/** The bound-items button replaces the backpack column's spacer. */
+export const WithBoundItems: Story = {
+  args: { equipment: boundEquipment, onOpenBound: () => undefined },
+};

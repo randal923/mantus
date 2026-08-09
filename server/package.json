@@ -34,7 +34,8 @@
     "db:reconcile-loose-inventory": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/reconcileLooseInventory.ts",
     "db:cleanup-partial-world-seed": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/cleanupPartialWorldSeed.ts",
     "db:reconcile-world-seed": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/reconcileWorldSeed.ts",
-    "db:grant-gold": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/grantGold.ts"
+    "db:grant-gold": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/grantGold.ts",
+    "db:backfill-bound": "tsx --env-file-if-exists=./.env --env-file-if-exists=.env scripts/backfillBoundContainers.ts"
   },
   "dependencies": {
     "@tibia/protocol": "*",

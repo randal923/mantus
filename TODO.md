@@ -72,15 +72,39 @@ limitations accepted during a session are recorded in the owning feature file
   converter hash per the parity-inventory procedure. Owner: content
   pipeline.
 
-- **The Item Pouch's semantics live as a hand edit to a generated file**
-  (2026-08-07). `content/canary-item-semantics.json` entry 23721 (renamed
-  Item Pouch: `containerSize` 500, movable, new description) deviates from
-  Canary's items.xml, and `tools/convertCanaryItems.mjs` has no override
-  table — a future `yarn items:convert` regenerates the file from Canary
-  sources and would silently revert the pouch to the 20-slot gold pouch.
-  The store side is safe (`OFFER_OVERRIDES` in
-  `tools/importCanaryStoreCatalog.mjs` survives regeneration). Fix: give
-  the semantics converter the same corrected-at-import override table.
+- **The Loot Pouch's semantics live as a hand edit to a generated file**
+  (2026-08-07, narrowed 2026-08-08). `content/canary-item-semantics.json`
+  entry 23721 (renamed Loot Pouch: `containerSize` 500, new description)
+  deviates from Canary's items.xml, and `tools/convertCanaryItems.mjs` has
+  no override table — a future `yarn items:convert` regenerates the file
+  from Canary sources and would revert the entry. The runtime is now safe
+  regardless: the `lootPouch` entry in
+  `server/src/item/overrides/ITEM_OVERRIDES.ts` reasserts name, description,
+  capacity 500 and `movable: false` at catalog load, and the store side
+  survives via `OFFER_OVERRIDES` plus the type-id filter in
+  `server/src/store/storeCatalog.ts`. Residual exposure: the generated
+  `client/public/assets/wiki-items.json` is built from the raw catalog JSON
+  (no overrides), so a regeneration would show the stale name on the public
+  wiki until the semantics entry is re-edited. Fix: give the semantics
+  converter a corrected-at-import override table.
+
+- **Portable Seller timers are in-memory only** (2026-08-08). The 10-minute
+  auto-sell timer re-arms from zero at login and the 1-minute manual
+  cooldown clears on relog (`PortableSellerService` maps, wiped in
+  `detachCharacter`). Relogging therefore *delays* the auto sweep (no gain)
+  and can shave the tail off a manual cooldown at the cost of a full
+  reconnect — judged not exploitable enough to persist. Fix if it ever
+  matters: store both as epoch-ms rows like `character_spell_cooldowns`
+  (migration 073), flushed on disconnect.
+
+- **The Portable Seller is delivered to the store inbox, not the bound
+  container** (2026-08-08). Purchases use the standard `deliverInboxItem`
+  path; the buyer withdraws the seller and may move it into the bound
+  container (a one-way door via `BOUND_ITEM_TYPE_IDS`). It works from
+  anywhere in the carried tree, so this is UX friction only. A direct
+  bound-container delivery would need a new grant kind whose item leg lands
+  in the carried tree of a possibly-online character — deliberately not
+  built (memory-locked carried items vs. store transaction).
 
 - **`yarn items:catalog` fails at its last step** (pre-existing, observed
   2026-08-07). The script still chains `node tools/buildItemAnimations.mjs`,

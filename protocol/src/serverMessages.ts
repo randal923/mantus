@@ -58,6 +58,7 @@ import {
   mailSentMessageSchema,
 } from "./depot";
 import { DIRECTIONS } from "./direction";
+import { portableSellerTriggeredMessageSchema } from "./portableSeller";
 import { gmResponseMessageSchema } from "./gm";
 import {
   bestiaryActionFailedMessageSchema,
@@ -552,6 +553,8 @@ export const serverErrorCodeSchema = z.enum([
   "spell-parameter-invalid",
   "item-action-failed",
   "item-exhausted",
+  "portable-seller-cooldown",
+  "portable-seller-empty",
   "loot-protected",
   "player-full",
   "potion-exhausted",
@@ -611,6 +614,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   tileStatesMessageSchema,
   worldContainerStateMessageSchema,
   worldContainerClosedMessageSchema,
+  portableSellerTriggeredMessageSchema,
   npcDialogueMessageSchema,
   npcDialogueClosedMessageSchema,
   bankOpenedMessageSchema,

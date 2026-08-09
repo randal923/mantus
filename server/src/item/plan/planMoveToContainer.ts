@@ -3,8 +3,10 @@ import type { CarriedPersistAudit, CarriedPersistRowOp } from "../CarriedPersist
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
+import { BOUND_ITEM_TYPE_IDS } from "../boundItemTypeIds";
 import { canMergeItems } from "./canMergeItems";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
+import { findBoundRoot } from "./findBoundRoot";
 import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 
 const MAX_CARRIED_ITEMS = 500;
@@ -31,6 +33,20 @@ export function planMoveToContainer(input: {
   }
   if (item.location.kind !== "container") return null;
   if (item.id === destination.id) return null;
+  // Character-bound placement: direct children of the bound container only
+  // ever move within it, and only the bound item types may enter it.
+  const boundRoot = findBoundRoot(items);
+  if (boundRoot) {
+    const sourceInBound = item.location.containerId === boundRoot.id;
+    if (sourceInBound && destination.id !== boundRoot.id) return null;
+    if (
+      destination.id === boundRoot.id &&
+      !sourceInBound &&
+      !BOUND_ITEM_TYPE_IDS.has(item.typeId)
+    ) {
+      return null;
+    }
+  }
   const type = catalog.require(item.typeId);
   const destinationCapacity =
     catalog.require(destination.typeId).containerCapacity ?? 0;
@@ -317,6 +333,17 @@ function planSwap(
   if (count !== item.count) return null;
   if (item.location.kind !== "container") return null;
   const sourceLocation = item.location;
+  // A swap would displace the slot's occupant to the source container; never
+  // let it pull a character-bound item out of the bound container.
+  const boundRoot = findBoundRoot(items);
+  if (
+    boundRoot &&
+    slotTarget.location.kind === "container" &&
+    slotTarget.location.containerId === boundRoot.id &&
+    sourceLocation.containerId !== boundRoot.id
+  ) {
+    return null;
+  }
   const sourceContainer = itemsById.get(sourceLocation.containerId);
   if (
     !sourceContainer ||

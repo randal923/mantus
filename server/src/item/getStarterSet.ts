@@ -1,10 +1,17 @@
 import type { StarterVocation } from "@tibia/protocol";
+import { BOUND_CONTAINER_TYPE_ID } from "./boundContainerTypeId";
+import { ITEM_POUCH_TYPE_ID } from "./itemPouchTypeId";
 import type { StarterSet } from "./StarterSet";
 
 const COMMON_EQUIPMENT = [
   { typeId: 3355, slot: "helmet" },
   { typeId: 3552, slot: "boots" },
   { typeId: 2854, slot: "backpack" },
+  { typeId: BOUND_CONTAINER_TYPE_ID, slot: "bound" },
+] as const;
+
+const COMMON_BOUND_CONTENTS = [
+  { typeId: ITEM_POUCH_TYPE_ID, count: 1 },
 ] as const;
 
 const COMMON_SUPPLIES = [
@@ -15,7 +22,9 @@ const COMMON_SUPPLIES = [
   { typeId: 3457, count: 1 },
 ] as const;
 
-const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {
+const STARTER_SETS: Readonly<
+  Record<StarterVocation, Omit<StarterSet, "boundContents">>
+> = {
   Knight: {
     equipment: [
       ...COMMON_EQUIPMENT,
@@ -79,5 +88,5 @@ const STARTER_SETS: Readonly<Record<StarterVocation, StarterSet>> = {
 };
 
 export function getStarterSet(vocation: StarterVocation): StarterSet {
-  return STARTER_SETS[vocation];
+  return { ...STARTER_SETS[vocation], boundContents: COMMON_BOUND_CONTENTS };
 }

@@ -5,7 +5,9 @@ import type {
   StoreProductKind,
 } from "@tibia/protocol";
 
+import { ITEM_POUCH_TYPE_ID } from "../item/itemPouchTypeId";
 import { EXERCISE_WEAPON_CATEGORY } from "./EXERCISE_WEAPON_CATEGORY";
+import { PORTABLE_SELLER_PRODUCT } from "./PORTABLE_SELLER_PRODUCT";
 import { STORE_CATALOG_CATEGORIES } from "./storeCatalogData";
 
 /**
@@ -101,11 +103,36 @@ export interface StoreCatalogCategory {
  * the client's tree order follows.
  */
 export const STORE_CATEGORIES: ReadonlyArray<StoreCatalogCategory> =
-  STORE_CATALOG_CATEGORIES.map((category) =>
-    category.id === EXERCISE_WEAPON_CATEGORY.id
-      ? EXERCISE_WEAPON_CATEGORY
-      : category,
+  STORE_CATALOG_CATEGORIES.map((category) => {
+    if (category.id === EXERCISE_WEAPON_CATEGORY.id) {
+      return EXERCISE_WEAPON_CATEGORY;
+    }
+    if (category.id === "useful-things") {
+      // The loot pouch is no longer sold — every character owns one from
+      // creation — and this is where the Portable Seller shelf lives.
+      return {
+        ...category,
+        products: [
+          PORTABLE_SELLER_PRODUCT,
+          ...category.products.filter(
+            (product) => !productSellsItemType(product, ITEM_POUCH_TYPE_ID),
+          ),
+        ],
+      };
+    }
+    return category;
+  });
+
+function productSellsItemType(
+  product: StoreCatalogProduct,
+  itemTypeId: number,
+): boolean {
+  return product.subOffers.some(
+    (offer) =>
+      (offer.grant.kind === "item" || offer.grant.kind === "stackable") &&
+      offer.grant.itemTypeId === itemTypeId,
   );
+}
 
 export const STORE_CATEGORIES_BY_ID: ReadonlyMap<string, StoreCatalogCategory> =
   new Map(STORE_CATEGORIES.map((category) => [category.id, category]));
@@ -144,7 +171,7 @@ export const STORE_HOME_PRODUCT_IDS: ReadonlyArray<string> = [
   "outfits-full-arbalester-outfit",
   "mounts-armoured-war-horse",
   "potions-great-health-potion",
-  "useful-things-item-pouch",
+  "useful-things-portable-seller",
 ];
 
 /** The category tree, as the client's left-hand list needs it. */

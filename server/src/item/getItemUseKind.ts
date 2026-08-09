@@ -1,4 +1,4 @@
-import type { ItemUseKind } from "@tibia/protocol";
+import { PORTABLE_SELLER_TYPE_ID, type ItemUseKind } from "@tibia/protocol";
 import { getExerciseWeaponDefinition } from "../action/getExerciseWeaponDefinition";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getToolDefinition } from "./getToolDefinition";
@@ -6,6 +6,7 @@ import type { ItemType } from "./ItemType";
 
 /** How the client should offer this item type to be used, if at all. */
 export function getItemUseKind(type: ItemType): ItemUseKind | undefined {
+  if (type.id === PORTABLE_SELLER_TYPE_ID) return "activate";
   if (type.kind === "rune") return "rune";
   if (getPotionDefinition(type.id)) return "potion";
   // Exercise weapons are used *on* a dummy, so they raise the same crosshair a

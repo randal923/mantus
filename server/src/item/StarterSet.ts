@@ -10,4 +10,9 @@ export interface StarterSet {
     readonly typeId: number;
     readonly count: number;
   }>;
+  /** Direct children of the bound container (the starting loot pouch). */
+  readonly boundContents: ReadonlyArray<{
+    readonly typeId: number;
+    readonly count: number;
+  }>;
 }
