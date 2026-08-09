@@ -20,6 +20,8 @@ interface CustomArtSpriteIconProps {
   clientId: number;
   /** Zoom multiplier; frames are native pixels, default renders at 2×. */
   scale?: number;
+  /** Pins one strip frame (the bound button's open state); no animation. */
+  frame?: number;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export function CustomArtSpriteIcon({
   art,
   clientId,
   scale = 2,
+  frame: pinnedFrame,
   className,
 }: CustomArtSpriteIconProps) {
   const store = useContext(GameWindowStoreContext);
@@ -66,6 +69,7 @@ export function CustomArtSpriteIcon({
     };
   }, [saleId, clientId, art.restingFrame]);
 
+  const shownFrame = pinnedFrame ?? frame;
   const box = TILE_SIZE * scale;
   const frameScale = (TILE_SIZE * scale) / art.frameSize;
 
@@ -86,7 +90,7 @@ export function CustomArtSpriteIcon({
           width: art.frameSize * frameScale,
           height: art.frameSize * frameScale,
           backgroundImage: `url(/assets/${art.src})`,
-          backgroundPosition: `${-frame * art.frameSize * frameScale}px 0px`,
+          backgroundPosition: `${-shownFrame * art.frameSize * frameScale}px 0px`,
           backgroundSize: `${art.frames * art.frameSize * frameScale}px ${
             art.frameSize * frameScale
           }px`,
