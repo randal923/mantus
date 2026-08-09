@@ -4830,3 +4830,69 @@ matches "click what you see on the tile" but differs from the old
 always-redirect. E2e camera gotcha for future scenarios: compute click
 offsets from the live own position at click time (the /goto lands via
 intermediate movement messages), and the camera centers the live tile.
+
+## 2026-08-09 — Cults of Tibia touch torch + position-keyed quest touch actions
+
+**Problem**: Canary's Cults of Tibia touch
+(`data-otservbr-global/scripts/quests/cults_of_tibia/actions_torch.lua`) had
+no counterpart: using the torch bearer at (32400,31793,8) must remove the
+decaying stone wall (item 1295) at (32396,31806,8) for five minutes behind a
+world-shared 306 s cooldown. Nothing could reproduce it — the torch is baked
+static scenery (ids 2928-2931 are not even in the item catalog: the catalog
+builder drops appearances whose first sprite id is 0) and the wall was baked
+into the static map and walkability bitset, so no world item existed to
+remove.
+
+**What changed**: New reusable position-keyed quest-touch infrastructure:
+`QUEST_TOUCH_ACTIONS` table (`server/src/action/questTouchTables.ts`, keyed
+by positionKey with removals/message/effect/cooldown/restore),
+`QuestTouchService` (world-shared in-memory cooldown + tick-driven restore
+drained from `applyResolvedOutcomes` in the game tick — never a timer),
+`handleQuestTouchUse` + `"quest-touch"` WorldAction kind wired through
+`resolveWorldAction` (position branch before the per-item loop, like
+chests), `WorldActionRegistry`, `WorldActionContext`, and the preconditions
+table (adjacent reach, exclusive, no placed-item re-check — made the
+`itemStillPlaced` check tolerate item-less kinds by failing closed).
+Cooldown semantics mirror Canary exactly: cooldown running → poff at the
+player only; wall present → poff at the wall, remove, grinding message,
+cooldown now+306 s, restore after 300 s; wall gone + no cooldown → silently
+consumed. The wall became server-owned via a new position-scoped converter
+override (`MUTABLE_POSITIONS` in `tools/getMapItemSemantics.mjs`, position
+threaded from `tools/convertOtbm.mjs`), and its tile passability is overlaid
+by `QUEST_TOUCH_WALL_TILES` in `DynamicMapItems.refreshTileOverride`
+(present → blocked as baked, absent → walkable), then `yarn map:convert`
+regenerated the map artifacts (wall now classification "mutable" in
+items.bin; dropped from the client's static draw layer). Parity: the
+`data-otservbr-global/scripts/quests` tree is now scanned by
+`buildWorldActionParityInventory` (1367 registrations, all quest scripts
+deferred to todo-20) with a specific rule marking `actions_torch.lua`
+implemented (owner agents/quest-touch-actions).
+
+**Files**: `server/src/action/questTouchTables.ts`,
+`questTouchWallTiles.ts`, `QuestTouchService.ts`, `handleQuestTouchUse.ts`,
+`QuestTouchService.test.ts` (all new); `WorldAction.ts`,
+`WorldActionContext.ts`, `WorldActionRegistry.ts`, `resolveWorldAction.ts`,
+`worldActionPreconditions.ts` (+test), `server/src/world/DynamicMapItems.ts`,
+`server/src/GameServer.ts`, `server/src/playtest/scenarios/cultistKeyChest.ts`;
+`tools/getMapItemSemantics.mjs` (+test), `tools/convertOtbm.mjs`,
+`tools/classifyWorldActionRegistration.mjs`,
+`tools/buildWorldActionParityInventory.mjs`;
+regenerated `server/data/otservbr.items.bin`/`otservbr.map.json`,
+`client/public/assets/map/otservbr/*`, `content/canary-world-action-parity.json`.
+
+**Verified**: 6 new unit tests (removal+message+poff, world-shared cooldown
+across characters, silent fall-through, tick-drain restore then re-use,
+out-of-reach rejection, shipped-table shape); full server suite 3,945
+passing, typecheck clean, `getMapItemSemantics` node tests 11 passing.
+Extended `yarn playtest:cultist-key` passes end to end on both a fresh and a
+persistent playtest DB: grinding message verbatim, poff-only silence inside
+the cooldown, wall tile absent from fresh tile-states, and the player steps
+through the removed wall (the scenario now also tolerates the crypt door's
+persisted unlocked/open states and lowercases its generated character
+names). Playtest DBs needed `db:reconcile-world-seed` once after the map
+version changed.
+
+**Residual risk**: cooldown/restore are memory-only (restart closes the wall
+early — TODO.md); only this one quest-touch entry ships (table seeds future
+imports); torch ids 2928-2931 remain out of the item catalog (zero
+first-sprite drop, TODO.md).

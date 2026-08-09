@@ -19,7 +19,9 @@ import { handleLeverUse } from "./handleLeverUse";
 import { handleMapRotate } from "./handleMapRotate";
 import { handleMapWrite } from "./handleMapWrite";
 import { handlePodiumUse } from "./handlePodiumUse";
+import { handleQuestTouchUse } from "./handleQuestTouchUse";
 import { handleSignRead } from "./handleSignRead";
+import type { QuestTouchDefinition } from "./questTouchTables";
 import { resolveWorldAction } from "./resolveWorldAction";
 import type { WorldAction } from "./WorldAction";
 import { checkWorldActionPreconditions } from "./worldActionPreconditions";
@@ -56,6 +58,7 @@ export class WorldActionRegistry {
     harvest: handleHarvestUse,
     lever: handleLeverUse,
     podium: handlePodiumUse,
+    "quest-touch": handleQuestTouchUse,
     read: handleSignRead,
     rotate: handleMapRotate,
     write: handleMapWrite,
@@ -97,6 +100,14 @@ export class WorldActionRegistry {
       characterId: string,
       position: Position,
     ) => boolean,
+    private readonly questTouches: ReadonlyMap<string, QuestTouchDefinition> = new Map(),
+    private readonly questTouchUse?: (
+      session: Session,
+      player: Player,
+      position: Position,
+      touch: QuestTouchDefinition,
+      now: number,
+    ) => void,
   ) {}
 
   /**
@@ -164,6 +175,7 @@ export class WorldActionRegistry {
       this.catalog,
       position,
       this.chests,
+      this.questTouches,
     );
     if (!action || action.kind === "map-movement") return null;
     return action;
@@ -235,6 +247,9 @@ export class WorldActionRegistry {
       case "podium":
         this.handlers.podium(context, action);
         return true;
+      case "quest-touch":
+        this.handlers["quest-touch"](context, action);
+        return true;
       case "read":
         this.handlers.read(context, action);
         return true;
@@ -283,6 +298,7 @@ export class WorldActionRegistry {
     now: number,
   ): WorldActionContext {
     const lootChest = this.lootChest;
+    const questTouchUse = this.questTouchUse;
     return {
       session,
       player,
@@ -308,6 +324,12 @@ export class WorldActionRegistry {
         : {
             lootChest: (chest: ChestDefinition) =>
               lootChest(session, player, chest),
+          }),
+      ...(questTouchUse === undefined
+        ? {}
+        : {
+            questTouchUse: (touch: QuestTouchDefinition) =>
+              questTouchUse(session, player, position, touch, now),
           }),
       ...(this.openPodium === undefined
         ? {}

@@ -20,6 +20,7 @@ worktree is created, merged, or removed.
 | `agents/bound-button-art`        | done        |
 | `agents/portable-seller`         | done        |
 | `agents/world-lighting`          | in progress |
+| `agents/quest-touch-actions`     | in progress |
 | `agents/vip-house-absence`       | done        |
 | `agents/vip-full-bless`          | done        |
 | `agents/vip-account-bonuses`     | done        |

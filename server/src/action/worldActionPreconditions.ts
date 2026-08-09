@@ -41,6 +41,14 @@ export const WORLD_ACTION_REQUIREMENTS: Readonly<
     houseAccess: false,
     exclusive: false,
   },
+  // Quest touches resolve from the position table on baked scenery, so
+  // there is no placed world item to re-check.
+  "quest-touch": {
+    reach: "adjacent",
+    itemStillPlaced: false,
+    houseAccess: false,
+    exclusive: true,
+  },
   "daily-shrine": {
     reach: "adjacent",
     itemStillPlaced: true,
@@ -138,13 +146,18 @@ export function checkWorldActionPreconditions(input: {
   }
   if (requirements.reach === "adjacent" && !near) return "out-of-reach";
   if (requirements.exclusive && input.itemOperationPending) return "busy";
-  if (
-    requirements.itemStillPlaced &&
-    !world
-      .getMapItems(position)
-      .some((candidate) => candidate.instanceId === action.item.instanceId)
-  ) {
-    return "stale-item";
+  if (requirements.itemStillPlaced) {
+    // Kinds without a carried map item (quest-touch) never set the flag; a
+    // future kind that does without carrying one fails closed here.
+    const placedId = "item" in action ? action.item.instanceId : undefined;
+    if (
+      placedId === undefined ||
+      !world
+        .getMapItems(position)
+        .some((candidate) => candidate.instanceId === placedId)
+    ) {
+      return "stale-item";
+    }
   }
   if (
     requirements.houseAccess &&

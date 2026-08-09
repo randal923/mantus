@@ -3,6 +3,7 @@ import {
   OPEN_SHOVEL_HOLE_IDS,
   SHOVEL_HOLE_PAIRS,
 } from "../action/shovelHolePairs";
+import { QUEST_TOUCH_WALL_TILES } from "../action/questTouchWallTiles";
 import { getFirstVisibleFloor } from "../getFirstVisibleFloor";
 import { visibleFloorRange } from "../visibleFloorRange";
 import { canSee } from "../canSee";
@@ -109,6 +110,17 @@ export class DynamicMapItems {
 
   private refreshTileOverride(position: Position): void {
     let override: TilePassabilityOverride | undefined;
+    // A quest-touch wall tile is owned by that wall the way a door tile is
+    // owned by its door: the static bitset baked the wall's placed
+    // (blocking) state, so removal must overlay "walkable" here — presence
+    // has no item of its own to hang an override on.
+    const questWallItemId = QUEST_TOUCH_WALL_TILES.get(positionKey(position));
+    if (questWallItemId !== undefined) {
+      const present = this.getMapItems(position).some(
+        (candidate) => candidate.itemId === questWallItemId,
+      );
+      override = { walkable: !present, blocksProjectile: present };
+    }
     for (const item of this.getMapItems(position)) {
       const passable = this.passabilityForItemId(item.itemId);
       if (passable === undefined) continue;

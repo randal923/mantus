@@ -1305,3 +1305,32 @@ limitations accepted during a session are recorded in the owning feature file
   generated. Likely the host items fell into the 22 non-mutable instances or
   the OTBM never stamps those uids on this map edition. Revisit together with
   the MUTABLE_ITEM_IDS reconvert noted above. Owner: quest chests.
+
+- 2026-08-09: quest-touch actions (Cults of Tibia torch) keep their
+  world-shared cooldown and pending wall restores in memory only
+  (`QuestTouchService`). A server restart forgets both: the removed wall
+  simply returns at boot with the map seed (so a restart *closes* the wall
+  early, never leaves it open) and the 306 s cooldown re-arms as expired.
+  Canary's global storage does not survive our restarts either; accepted.
+  Fix if it ever matters: persist the cooldown stamp/restore deadline in the
+  quest-storage tables when todo-20 ships. Owner: quest touches
+  (agents/quest-touch-actions).
+
+- 2026-08-09: torch bearer item ids 2928-2931 are missing from the item
+  catalog. Cause: `tools/buildItemCatalog.mjs` drops any appearance whose
+  first sprite id is 0 (`appearance.sprites[0] <= 0` guard) and these four
+  hangable wall torches have a reserved zero first-sprite slot (their real
+  art sits in later pattern slots — 2930 has sprites [0, 46832]). The
+  quest-touch table therefore resolves the torch purely by position and never
+  consults the catalog. If those ids ever need catalog entries (look text,
+  market), teach the catalog builder to fall back to the first non-zero
+  sprite instead of dropping the item. Owner: quest touches.
+
+- 2026-08-09: `QUEST_TOUCH_ACTIONS` ships with exactly one entry (the Cults
+  of Tibia torch at (32400,31793,8)). The table, the position-scoped
+  converter override (`MUTABLE_POSITIONS` in `tools/getMapItemSemantics.mjs`)
+  and the wall-tile passability overlay (`QUEST_TOUCH_WALL_TILES` consulted
+  by `DynamicMapItems.refreshTileOverride`) are the reusable seams for
+  importing the other Canary quest touch scripts; each import needs its wall
+  positions added to `MUTABLE_POSITIONS` plus a `map:convert` rerun. Owner:
+  quest touches (agents/quest-touch-actions).
