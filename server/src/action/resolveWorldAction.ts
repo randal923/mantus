@@ -10,6 +10,7 @@ import { DAILY_SHRINE_ITEM_IDS } from "../daily/dailyShrineItemIds";
 import { IMBUEMENT_SHRINE_ITEM_IDS } from "../imbuement/imbuementShrineItemIds";
 import { PODIUM_DEFINITIONS } from "../podium/PodiumDefinition";
 import { mapItemAttributes } from "./mapItemAttributes";
+import type { QuestLeverTrigger } from "./questLeverTables";
 import type { QuestTouchDefinition } from "./questTouchTables";
 import type { WorldAction } from "./WorldAction";
 import type { WorldActionWorldView } from "./WorldActionWorldView";
@@ -27,6 +28,7 @@ export function resolveWorldAction(
   position: Position,
   chests: ReadonlyMap<string, ChestDefinition> = new Map(),
   questTouches: ReadonlyMap<string, QuestTouchDefinition> = new Map(),
+  questLevers: ReadonlyMap<string, QuestLeverTrigger> = new Map(),
 ): WorldAction | null {
   // Use-with actions (rope spots, rope holes) never resolve from a bare
   // use-map: they require the authoritative tool check in ToolUseHandler.
@@ -48,6 +50,11 @@ export function resolveWorldAction(
   // from the position table — never from a placed item.
   const touch = questTouches.get(positionKey(position));
   if (touch) return { kind: "quest-touch", touch };
+  // Quest levers outrank the generic behaviours of their tiles: the sewer
+  // levers carry a map actionId (which would fail closed below) and the
+  // katana door would otherwise open as a plain key-variant door.
+  const leverTrigger = questLevers.get(positionKey(position));
+  if (leverTrigger) return { kind: "quest-lever", trigger: leverTrigger };
   for (const item of items) {
     const type = catalog.get(item.itemId);
     if (!type) continue;

@@ -56,6 +56,8 @@ import { ExerciseTrainingHandler } from "./action/ExerciseTrainingHandler";
 import { RopePullHandler } from "./action/RopePullHandler";
 import { ToolUseHandler } from "./action/ToolUseHandler";
 import { WorldActionRegistry } from "./action/WorldActionRegistry";
+import { QuestLeverService } from "./action/QuestLeverService";
+import { QUEST_LEVER_TRIGGERS } from "./action/questLeverTables";
 import { QuestTouchService } from "./action/QuestTouchService";
 import { QUEST_TOUCH_ACTIONS } from "./action/questTouchTables";
 import { WorldActionRng } from "./action/WorldActionRng";
@@ -259,6 +261,7 @@ export class GameServer {
   private readonly clocks: ClockHandler;
   private readonly chests: ChestService;
   private readonly questTouch: QuestTouchService;
+  private readonly questLevers: QuestLeverService;
   private readonly rewards: RewardChestService;
   private readonly daily: DailyRewardService;
   private readonly quests: QuestService;
@@ -1016,6 +1019,21 @@ export class GameServer {
       (position, effectId) =>
         this.visibility.broadcastMagicEffect(position, effectId),
     );
+    this.questLevers = new QuestLeverService(
+      this.world,
+      deps.itemCatalog,
+      this.items,
+      {
+        relocatePlayer: (player, to, now) => {
+          const session = this.registry.sessionFor(player.id);
+          if (session) this.movement.teleportPlayer(session, player, to, now);
+        },
+        relocateMonster: (creature, to) => {
+          const from = this.world.relocateCreature(creature, to);
+          this.visibility.onCreatureStepped(creature, from, 0);
+        },
+      },
+    );
     this.worldActions = new WorldActionRegistry(
       this.world,
       deps.itemCatalog,
@@ -1044,6 +1062,9 @@ export class GameServer {
       QUEST_TOUCH_ACTIONS,
       (session, player, position, touch, now) =>
         this.questTouch.use(session, player, position, touch, now),
+      QUEST_LEVER_TRIGGERS,
+      (session, player, position, trigger, now) =>
+        this.questLevers.use(session, player, position, trigger, now),
     );
     // Look descriptions are composed from live state through these closures,
     // so a promotion, party join, or house sale shows up on the next look.
@@ -1066,6 +1087,8 @@ export class GameServer {
         this.movement.teleportPlayer(session, player, to, now),
       (creature, damage, now) =>
         this.combatSystem.applyTileTrapDamage(creature, damage, now),
+      (position, effectId) =>
+        this.visibility.broadcastMagicEffect(position, effectId),
     );
     this.toolUse = new ToolUseHandler(
       this.world,

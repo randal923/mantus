@@ -5,6 +5,7 @@ import type { MapItem } from "../MapItem";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { ChestDefinition } from "./ChestDefinition";
+import type { QuestLeverTrigger } from "./questLeverTables";
 import type { QuestTouchDefinition } from "./questTouchTables";
 import type { WorldActionWorldView } from "./WorldActionWorldView";
 
@@ -41,4 +42,6 @@ export interface WorldActionContext {
   readonly lootChest?: (chest: ChestDefinition) => void;
   /** Fires a quest touch; absent without a quest-touch service. */
   readonly questTouchUse?: (touch: QuestTouchDefinition) => void;
+  /** Fires a quest lever trigger; absent without a quest-lever service. */
+  readonly questLeverUse?: (trigger: QuestLeverTrigger) => void;
 }

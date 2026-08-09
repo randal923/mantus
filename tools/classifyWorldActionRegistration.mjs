@@ -22,6 +22,10 @@ export const IMPLEMENTED_ITEM_IDS = {
 export const IMPLEMENTED_CHEST_UID_RANGES = [
   [5000, 9000],
   [10000, 12000],
+  // Rookgaard rapier chest: answered by rapier_quest.lua in Canary, imported
+  // with its transcribed reward (SCRIPT_ANSWERED_CHESTS in
+  // importCanaryChests.mjs).
+  [14042, 14042],
   [14092, 14092],
 ];
 
@@ -33,6 +37,65 @@ export const IMPLEMENTED_CHEST_UID_RANGES = [
 const FILE_DISPOSITIONS = [
   // Specific quest scripts the server reproduces must be named ABOVE the
   // structural rule that defers everything under /quests/ wholesale.
+  {
+    match:
+      /^data-otservbr-global\/scripts\/actions\/rookgaard\/bear_room_quest\/bear_room_quest_stone\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-parity-rookgaard",
+    reason: "quest-lever table (aid 30006 stamped by startup/tables/lever.lua)",
+  },
+  {
+    match:
+      /^data-otservbr-global\/scripts\/actions\/rookgaard\/bear_room_quest\/bear_room_quest_lever\.lua$/,
+    status: "excluded",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "uid 1056 is stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content; the aid-30006 sibling covers the room",
+  },
+  {
+    match:
+      /^data-otservbr-global\/scripts\/actions\/rookgaard\/katana_quest\/katana_quest_(lever|door)\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "quest-lever table (uid 30029/22006 stamped by startup lever/door_quest tables)",
+  },
+  {
+    match: /^data-otservbr-global\/scripts\/actions\/rookgaard\/sewer_lever\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "quest-lever table (aid 50239 in the OTBM); grounds stay baked, the drawbridge is a created span item with a passability overlay",
+  },
+  {
+    match: /^data-otservbr-global\/scripts\/actions\/rookgaard\/rapier_quest\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "chest import carries uid 14042 with the reward transcribed from this script",
+  },
+  {
+    match: /^data-otservbr-global\/scripts\/actions\/rookgaard\/chest\.lua$/,
+    status: "excluded",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "aid 30492 is stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content in Canary",
+  },
+  {
+    match:
+      /^data-otservbr-global\/scripts\/actions\/rookgaard\/goblin_temple_quest\.lua$/,
+    status: "excluded",
+    owner: "agents/quest-parity-rookgaard",
+    reason:
+      "uids 14049/14050 are stamped nowhere at the pinned commit (not in the OTBM, not in any startup table) — dead content in Canary",
+  },
+  {
+    match:
+      /^data-otservbr-global\/scripts\/movements\/rookgaard\/(level_bridge|premium_bridge)\.lua$/,
+    status: "implemented",
+    owner: "agents/quest-parity-rookgaard",
+    reason: "movement-gate table enforced by PressurePlateRegistry.onStepIn",
+  },
   {
     match:
       /^data-otservbr-global\/scripts\/quests\/cults_of_tibia\/actions_torch\.lua$/,

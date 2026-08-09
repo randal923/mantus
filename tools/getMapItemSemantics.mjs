@@ -61,6 +61,14 @@ export const MUTABLE_POSITIONS = new Map([
   // Cults of Tibia decaying wall: removed for 5 minutes by the torch bearer
   // at (32400,31793,8).
   ["32396:31806:8", 1295],
+  // Rookgaard bear room: the blocking stone the lever at (32148,32105,11)
+  // removes/recreates (sync with QUEST_LEVER_DEFINITIONS in
+  // server/src/action/questLeverTables.ts).
+  ["32145:32101:11", 1791],
+  // Rookgaard sewer bridge: the shallow-water rails the aid-50239 levers
+  // remove while the drawbridge is extended.
+  ["32099:32205:8", 4634],
+  ["32101:32205:8", 4636],
 ]);
 
 const STATEFUL_ATTRIBUTES = [

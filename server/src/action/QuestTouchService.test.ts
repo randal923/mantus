@@ -19,7 +19,7 @@ import {
   QUEST_TOUCH_ACTIONS,
   type QuestTouchDefinition,
 } from "./questTouchTables";
-import { QUEST_TOUCH_WALL_TILES } from "./questTouchWallTiles";
+import { QUEST_TILE_PASSABILITY } from "./questTilePassability";
 import { WorldActionRegistry } from "./WorldActionRegistry";
 
 const STONE_WALL = 1_295;
@@ -246,7 +246,10 @@ describe("QuestTouchService", () => {
       { position: { x: 32_396, y: 31_806, z: 8 }, itemId: STONE_WALL },
     ]);
     expect(
-      QUEST_TOUCH_WALL_TILES.get(positionKey({ x: 32_396, y: 31_806, z: 8 })),
-    ).toBe(STONE_WALL);
+      QUEST_TILE_PASSABILITY.get(positionKey({ x: 32_396, y: 31_806, z: 8 })),
+    ).toEqual({
+      blockingItemIds: [STONE_WALL],
+      blocksProjectileWhenBlocked: true,
+    });
   });
 });
