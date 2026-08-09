@@ -1234,3 +1234,12 @@ limitations accepted during a session are recorded in the owning feature file
   random steps, not chases and not player movement) on `world.isPathable`, and
   carry an item `hasHeight` bit through the map converter if the NPC-only
   height rule is wanted too. Owner: creatures/spawns/AI (Feature 9/10).
+
+- 2026-08-09: The inventory render-isolation pass (client
+  `InventoryContainerView`, `replaceEqualDeep` in `useOptimisticInventory`)
+  left `EquipmentPaperdoll` un-memoized: it still re-renders on every
+  container-view render because its callbacks are recreated inline in
+  `GameInventoryOverlays`/`InventoryContainerView`. Harmless at ~10 slots;
+  if the profiler ever shows it hot, memoize it and thread stable
+  (useCallback + store.getState()) callbacks down from
+  `GameInventoryOverlays`. Owner: client inventory UI.
