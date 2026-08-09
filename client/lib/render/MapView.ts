@@ -173,15 +173,18 @@ export class MapView {
 
   /** Redirects a clicked tile to the anchor of a covering multi-tile sprite. */
   interactiveTileFor(position: Position): Position {
-    return resolveInteractiveTile(position, (candidate) =>
-      this.tileItems(candidate.z, candidate.x, candidate.y).map(
-        ({ object }) => ({
-          clientId: object.clientId,
-          width: object.width,
-          height: object.height,
-          flags: object.flags,
-        }),
-      ),
+    return resolveInteractiveTile(
+      position,
+      (candidate) =>
+        this.tileItems(candidate.z, candidate.x, candidate.y).map(
+          ({ object }) => ({
+            clientId: object.clientId,
+            width: object.width,
+            height: object.height,
+            flags: object.flags,
+          }),
+        ),
+      (candidate) => this.topServerItem(candidate) !== undefined,
     );
   }
 

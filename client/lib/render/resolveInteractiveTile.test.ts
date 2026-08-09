@@ -124,6 +124,31 @@ describe("resolveInteractiveTile", () => {
     });
   });
 
+  it("keeps a tile holding a server item despite a covering neighbour", () => {
+    // The Carlin cultist key box: the clicked tile holds the (server-owned)
+    // box while the neighbouring room's wide counter sprite overlaps it
+    // through the wall — the click must stay on the box.
+    const itemsAt = world({
+      "5,5,7": [GROUND, DOOR_1X1],
+      "6,5,7": [GROUND, GATE_2X2],
+    });
+    const hasServerItem = (position: Position) => key(position) === "5,5,7";
+    expect(
+      resolveInteractiveTile({ x: 5, y: 5, z: 7 }, itemsAt, hasServerItem),
+    ).toEqual({ x: 5, y: 5, z: 7 });
+  });
+
+  it("still redirects to a covering sprite when the clicked tile has no server item", () => {
+    const itemsAt = world({
+      "5,5,7": [GROUND, DOOR_1X1],
+      "6,5,7": [GROUND, GATE_2X2],
+    });
+    const hasServerItem = () => false;
+    expect(
+      resolveInteractiveTile({ x: 5, y: 5, z: 7 }, itemsAt, hasServerItem),
+    ).toEqual({ x: 6, y: 5, z: 7 });
+  });
+
   it("does not treat a wide-but-flat sprite as covering the row above", () => {
     const wide = {
       clientId: 999,

@@ -27,12 +27,20 @@ const ANCHOR_OFFSETS = [
 export function resolveInteractiveTile(
   position: Position,
   itemsAt: (position: Position) => ReadonlyArray<InteractiveTileItem>,
+  hasDirectTarget?: (position: Position) => boolean,
 ): Position {
   // Grates are direct use targets even when an adjacent wall sprite overlaps
   // their tile; redirecting the click makes the server receive the wall.
   if (
     itemsAt(position).some((item) => SEWER_GRATE_ITEM_IDS.has(item.clientId))
   ) {
+    return position;
+  }
+  // A tile holding a server-tracked item (a chest, a door, dropped loot) is
+  // what the player sees and means; a neighbour's wide furniture sprite —
+  // often behind a wall in another room — must not steal the click. The
+  // Carlin cultist key box sat exactly west of such a counter.
+  if (hasDirectTarget?.(position)) {
     return position;
   }
   for (const [dx, dy] of ANCHOR_OFFSETS) {
