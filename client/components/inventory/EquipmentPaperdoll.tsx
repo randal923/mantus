@@ -1,9 +1,13 @@
 import type { Equipment, EquipmentSlotId } from "./inventoryTypes";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { ItemSlot } from "./ItemSlot";
+import { SpriteIcon } from "./SpriteIcon";
 import type { ItemDragSource } from "./ItemDragSource";
 
-const SLOT_HINT_SPRITES: Record<EquipmentSlotId, number> = {
+/** The gear slots the paperdoll draws; the bound-items root is not one. */
+type PaperdollSlotId = Exclude<EquipmentSlotId, "bound">;
+
+const SLOT_HINT_SPRITES: Record<PaperdollSlotId, number> = {
   helmet: 7837,
   amulet: 7522,
   backpack: 7137,
@@ -16,11 +20,14 @@ const SLOT_HINT_SPRITES: Record<EquipmentSlotId, number> = {
   ammo: 7946,
 };
 
-const SLOT_GRID: (EquipmentSlotId | null)[][] = [
+const SLOT_GRID: (PaperdollSlotId | null)[][] = [
   ["amulet", "weapon", "ring", null],
   ["helmet", "armor", "legs", "boots"],
   ["backpack", "shield", "ammo", null],
 ];
+
+/** Index of the column whose spacer the bound-items button replaces. */
+const BACKPACK_COLUMN = 2;
 
 interface EquipmentPaperdollProps {
   equipment: Equipment;
@@ -30,6 +37,7 @@ interface EquipmentPaperdollProps {
   onDrop?(slot: EquipmentSlotId): void;
   onDropInBackpack?(): void;
   onOpenBackpack?(): void;
+  onOpenBound?(): void;
 }
 
 export function EquipmentPaperdoll({
@@ -40,8 +48,10 @@ export function EquipmentPaperdoll({
   onDrop,
   onDropInBackpack,
   onOpenBackpack,
+  onOpenBound,
 }: EquipmentPaperdollProps) {
   const { t } = useAppTranslation();
+  const bound = equipment.bound;
 
   return (
     <section
@@ -55,8 +65,25 @@ export function EquipmentPaperdoll({
         {SLOT_GRID.map((column, i) => (
           <div
             key={i}
-            className={`flex flex-col gap-2 ${i !== 1 ? "pt-10" : ""}`}
+            className={`flex flex-col gap-2 ${
+              i !== 1 && !(i === BACKPACK_COLUMN && bound) ? "pt-10" : ""
+            }`}
           >
+            {i === BACKPACK_COLUMN && bound && (
+              <button
+                type="button"
+                title={t("inventory.boundItems")}
+                aria-label={t("inventory.boundItems")}
+                onClick={onOpenBound}
+                className="flex h-8 w-16 items-center justify-center overflow-hidden rounded-lg border border-ui-stone/35 bg-black/30 shadow-inner shadow-black/55 transition-[border-color,background-color] hover:border-ui-gold/40 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
+              >
+                <SpriteIcon
+                  spriteId={bound.spriteId}
+                  clientId={bound.clientId}
+                  scale={1}
+                />
+              </button>
+            )}
             {column.map(
               (slot) =>
                 slot && (

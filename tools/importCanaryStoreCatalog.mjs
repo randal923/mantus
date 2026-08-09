@@ -69,18 +69,20 @@ const ITEM_ID_CORRECTIONS = [
 
 /**
  * Deliberate deviations from Canary's catalog, applied by offer name. This
- * server sells Canary's Gold Pouch as the Item Pouch: a movable container
- * with slots that never run out, holding items of any kind, that carried
- * loot flows into (see server/src/item/plan/planItemPouchPlacement.ts).
- * The description is stored post-`cleanDescription`, already in the store's
- * marker format.
+ * server ships Canary's Gold Pouch as the Loot Pouch: a character-bound
+ * container with slots that never run out that carried loot flows into (see
+ * server/src/item/plan/planItemPouchPlacement.ts). It is renamed here so the
+ * generated data matches the item, but it is NOT sold anymore — every
+ * character owns one from creation, and storeCatalog.ts filters the product
+ * out by its item type id. The description is stored post-`cleanDescription`,
+ * already in the store's marker format.
  */
 const OFFER_OVERRIDES = [
   {
     name: "Gold Pouch",
-    rename: "Item Pouch",
+    rename: "Loot Pouch",
     description:
-      "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{storeinbox}\n{once}\n{useicon} use it to open it\n{info} while it is in your backpack, all looted items go straight into it",
+      "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{once}\n{useicon} use it to open it\n{info} all looted items go straight into it",
   },
 ];
 

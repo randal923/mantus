@@ -20,7 +20,7 @@ export function planUnequip(input: {
   readonly destination?: ItemContainerDestination;
 }): CarriedPlan | null {
   const { characterId, catalog, items, slot } = input;
-  if (slot === "backpack") return null;
+  if (slot === "backpack" || slot === "bound") return null;
   const item = items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
   if (
@@ -47,6 +47,12 @@ export function planUnequip(input: {
     }
     const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (
+      container.location.kind === "equipment" &&
+      container.location.slot === "bound"
+    ) {
+      return null;
+    }
     const itemsById = new Map(items.map((entry) => [entry.id, entry]));
     if (!containerPlacementAllowed(items, itemsById, item.id, container)) {
       return null;

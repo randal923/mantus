@@ -110,6 +110,7 @@ export function createGameWindowStore({
       ignoredNames: [],
       mapMarkers: [],
       levelUpNotice: null,
+      portableSellerNotice: null,
       chatState: initialChatState,
       chatFocusRequestId: 0,
       characterBusy: false,
@@ -272,6 +273,13 @@ export function createGameWindowStore({
       setLevelUpNotice: (value) =>
         set((state) => ({
           levelUpNotice: resolveStateAction(value, state.levelUpNotice),
+        })),
+      setPortableSellerNotice: (value) =>
+        set((state) => ({
+          portableSellerNotice: resolveStateAction(
+            value,
+            state.portableSellerNotice,
+          ),
         })),
       dispatchChat: (action) =>
         set((state) => ({ chatState: chatReducer(state.chatState, action) })),

@@ -36,6 +36,7 @@ import { CurrencyConservationRunner } from "./economy/CurrencyConservationRunner
 import type { CurrencyReconciler } from "./economy/CurrencyReconciler";
 import { ShopRestockRunner } from "./economy/ShopRestockRunner";
 import { ShopStockCache } from "./economy/ShopStockCache";
+import { PortableSellerService } from "./economy/PortableSellerService";
 import { ShopService } from "./economy/ShopService";
 import type { EconomyPersistStore } from "./economy/EconomyPersistStore";
 import type { ShopStore } from "./economy/ShopStore";
@@ -268,6 +269,7 @@ export class GameServer {
   private readonly spellTeacher: SpellTeacherService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
+  private readonly portableSeller: PortableSellerService;
   private readonly shopStock = new ShopStockCache();
   private readonly shopRestock: ShopRestockRunner;
   private readonly currencyConservation: CurrencyConservationRunner;
@@ -811,6 +813,12 @@ export class GameServer {
       creatureContent?.shopCatalogs ?? new Map(),
       this.shopStock,
       deps.shop,
+    );
+    this.portableSeller = new PortableSellerService(
+      this.registry,
+      this.items,
+      deps.itemCatalog,
+      deps.economyPersist,
     );
     this.currencyConservation = new CurrencyConservationRunner(
       deps.currencyReconciler,
@@ -1465,6 +1473,7 @@ export class GameServer {
       this.mapCleanup?.tick(now);
       this.depot.tick(now);
       this.shopRestock.tick(now);
+      this.portableSeller.tick(now);
       this.currencyConservation.tick(now);
       this.market.tick(now);
       this.trade.tick(now);
@@ -1576,6 +1585,7 @@ export class GameServer {
     this.spawns?.releaseSummonsOf(playerId);
     this.parties.detachCharacter(playerId, now);
     this.trade.detachCharacter(playerId, now);
+    this.portableSeller.detachCharacter(playerId);
     this.rewards.detachCharacter(playerId);
     this.guilds.detachCharacter(playerId);
     this.houses.detachCharacter(playerId);
@@ -1738,6 +1748,7 @@ export class GameServer {
         // Canary registers the watch action by item id, ahead of the generic
         // item-use path; it only reads the world clock.
         if (this.clocks.handleUseItem(session, intent)) return;
+        if (this.portableSeller.handleUseItem(session, intent, now)) return;
         this.items.handle(session, intent, now);
         return;
       case "equip-item":

@@ -11,6 +11,12 @@ export const EQUIPMENT_SLOTS = [
   "boots",
   "ring",
   "ammo",
+  /**
+   * The character-bound items root (Canary's store-inbox slot): a container
+   * every character owns that can never be unequipped, whose direct children
+   * never leave it. Not a paperdoll gear slot — no item type equips here.
+   */
+  "bound",
 ] as const;
 
 export const equipmentSlotSchema = z.enum(EQUIPMENT_SLOTS);
@@ -108,6 +114,8 @@ export const itemUseKindSchema = z.enum([
   "read",
   "food",
   "useWith",
+  /** Devices a right-click triggers server-side (the Portable Seller). */
+  "activate",
 ]);
 
 export const inventoryItemPresentationSchema = z
@@ -192,6 +200,7 @@ const equipmentSchema = z
     boots: inventoryItemSchema.optional(),
     ring: inventoryItemSchema.optional(),
     ammo: inventoryItemSchema.optional(),
+    bound: inventoryItemSchema.optional(),
   })
   .strict();
 

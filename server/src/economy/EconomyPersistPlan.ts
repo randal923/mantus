@@ -63,6 +63,14 @@ export type EconomyPersistAudit =
       readonly amount: number;
       readonly toCharacterId: string;
       readonly balanceAfter: number;
+    }
+  | {
+      /** One Portable Seller sweep over the loot pouch's contents. */
+      readonly kind: "portable-seller-sale";
+      readonly itemCount: number;
+      readonly stackCount: number;
+      readonly totalProceeds: number;
+      readonly balanceAfter: number;
     };
 
 /**

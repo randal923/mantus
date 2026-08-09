@@ -1,4 +1,6 @@
 import type { ItemOverride } from "./ItemOverride";
+import { boundItems } from "./utilities/bound-items";
+import { lootPouch } from "./utilities/loot-pouch";
 
 /**
  * Hand-edited item stats, applied over the generated catalog at load.
@@ -16,4 +18,7 @@ import type { ItemOverride } from "./ItemOverride";
  * };
  * ```
  */
-export const ITEM_OVERRIDES: ReadonlyArray<ItemOverride> = [];
+export const ITEM_OVERRIDES: ReadonlyArray<ItemOverride> = [
+  lootPouch,
+  boundItems,
+];

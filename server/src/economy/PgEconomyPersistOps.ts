@@ -14,6 +14,7 @@ import type { EconomyPersistStore } from "./EconomyPersistStore";
 import { lockBankBalance } from "./lockBankBalance";
 import { runSerializableTransaction } from "./runSerializableTransaction";
 import { insertBankDepositAuditQuery } from "./sql/insertBankDepositAuditQuery";
+import { insertPortableSellerSaleAuditQuery } from "./sql/insertPortableSellerSaleAuditQuery";
 import { insertBankTransferAuditQuery } from "./sql/insertBankTransferAuditQuery";
 import { insertBankWithdrawAuditQuery } from "./sql/insertBankWithdrawAuditQuery";
 import { insertShopPurchaseAuditQuery } from "./sql/insertShopPurchaseAuditQuery";
@@ -165,6 +166,16 @@ export class PgEconomyPersistOps implements EconomyPersistStore {
         audit.subtype ?? null,
         audit.currencyItemTypeId ?? null,
         audit.bankCredited,
+      ]);
+      return;
+    }
+    if (audit.kind === "portable-seller-sale") {
+      await client.query(insertPortableSellerSaleAuditQuery, [
+        characterId,
+        audit.itemCount,
+        audit.stackCount,
+        audit.totalProceeds,
+        audit.balanceAfter,
       ]);
       return;
     }

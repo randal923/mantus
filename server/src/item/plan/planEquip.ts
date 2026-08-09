@@ -5,6 +5,7 @@ import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
+import { isBoundLockedItem } from "./isBoundLockedItem";
 
 export function planEquip(input: {
   readonly characterId: string;
@@ -20,6 +21,7 @@ export function planEquip(input: {
   const item = items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
   if (item.location.kind !== "container") return null;
+  if (isBoundLockedItem(items, item)) return null;
   const type = catalog.require(item.typeId);
   if (type.equipmentSlot !== slot) return null;
   if (

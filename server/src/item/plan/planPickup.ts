@@ -146,6 +146,14 @@ export function planPickup(input: {
     }
     const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    // Ground pickups may aim at containers inside the bound container (the
+    // pouch), never at the bound container itself.
+    if (
+      container.location.kind === "equipment" &&
+      container.location.slot === "bound"
+    ) {
+      return null;
+    }
     if (
       input.destination.placement === "front" &&
       input.destination.slot !== 0

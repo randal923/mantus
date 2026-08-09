@@ -84,6 +84,14 @@ export function planLoot(input: {
     }
     const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    // Loot may be aimed at the pouch inside the bound container, never at the
+    // bound container itself — its direct children are character-bound.
+    if (
+      container.location.kind === "equipment" &&
+      container.location.slot === "bound"
+    ) {
+      return null;
+    }
     if (
       input.destination.placement === "front" &&
       input.destination.slot !== 0

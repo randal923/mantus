@@ -1,4 +1,5 @@
 import type { Language, ServerErrorCode } from "@tibia/protocol";
+import { i18n } from "../../../i18n/i18n";
 import type { WorldRenderer } from "../../../lib/render/WorldRenderer";
 import type { GameWindowStore } from "../types/GameWindowStore";
 
@@ -29,6 +30,15 @@ export function handleGameClientError(
     if (state.ownCharacter) {
       renderer.showLocalMagicEffect(state.ownCharacter.position, 3);
     }
+    return;
+  }
+  // A refused seller trigger is ordinary gameplay feedback: log line, no
+  // blocking banner.
+  if (
+    code === "portable-seller-cooldown" ||
+    code === "portable-seller-empty"
+  ) {
+    state.appendCombatLog(i18n.t(`serverErrors.${code}`));
     return;
   }
   if (code === "language-update-failed") {

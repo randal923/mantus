@@ -37,6 +37,7 @@ import type { MinimapMarker } from "@tibia/protocol";
 import type { HouseToast } from "./HouseToast";
 import type { ItemTextState } from "./ItemTextState";
 import type { LevelUpNotice } from "./LevelUpNotice";
+import type { PortableSellerSaleNotice } from "./PortableSellerSaleNotice";
 import type { LootSessionState } from "./LootSessionState";
 import type { MailboxSessionState } from "./MailboxSessionState";
 import type { MapContextMenuState } from "./MapContextMenuState";
@@ -88,6 +89,9 @@ export interface GameWindowStoreActions {
   /** Appends one server-authored line to the system log. */
   appendCombatLog: (text: string) => void;
   setLevelUpNotice: (value: SetStateAction<LevelUpNotice | null>) => void;
+  setPortableSellerNotice: (
+    value: SetStateAction<PortableSellerSaleNotice | null>,
+  ) => void;
   dispatchChat: (action: ChatAction) => void;
   requestChatFocus: () => void;
   setCharacterBusy: (value: SetStateAction<boolean>) => void;

@@ -16,7 +16,7 @@ const PREMIUM_30 = { id: "premium-30", price: 250 };
 const GOLD_CONVERTER = { id: "charges-23722-500", price: 5 };
 const GREAT_HEALTH_250 = { id: "item-239-250", price: 41 };
 const DEMON_EXERCISE_DUMMY_KIT = { id: "house-item-28561-1", price: 900 };
-const GOLD_POUCH = { id: "item-23721-1", price: 900 };
+const PORTABLE_SELLER = { id: "item-60109-1", price: 900 };
 const ARMOURED_WAR_HORSE = { id: "mount-23", price: 870 };
 const WILDCARDS_5 = { id: "prey-wildcard-5", price: 50 };
 const PREY_SLOT = { id: "prey-slot", price: 900 };
@@ -421,13 +421,13 @@ databaseDescribe("PgMantusStore integration", () => {
     const first = await store.purchase({
       accountId,
       characterId,
-      offerId: GOLD_POUCH.id,
+      offerId: PORTABLE_SELLER.id,
       requestId: randomUUID(),
     });
     const second = await store.purchase({
       accountId,
       characterId,
-      offerId: GOLD_POUCH.id,
+      offerId: PORTABLE_SELLER.id,
       requestId: randomUUID(),
     });
 
@@ -437,7 +437,7 @@ databaseDescribe("PgMantusStore integration", () => {
       "SELECT mantus_coins FROM accounts WHERE id = $1",
       [accountId],
     );
-    expect(account.rows[0]?.mantus_coins).toBe(String(2_000 - GOLD_POUCH.price));
+    expect(account.rows[0]?.mantus_coins).toBe(String(2_000 - PORTABLE_SELLER.price));
   });
 
   it("grants an outfit for the buyer's own sex and refuses buying it twice", async () => {
@@ -806,7 +806,7 @@ databaseDescribe("PgMantusStore integration", () => {
     await store.purchase({
       accountId,
       characterId,
-      offerId: GOLD_POUCH.id,
+      offerId: PORTABLE_SELLER.id,
       requestId: randomUUID(),
     });
     await store.purchase({
@@ -816,9 +816,9 @@ databaseDescribe("PgMantusStore integration", () => {
       requestId: randomUUID(),
     });
 
-    const facts = await store.facts(characterId, [23721, 23722]);
+    const facts = await store.facts(characterId, [60109, 23722]);
 
-    expect(facts.ownedUniqueItemTypeIds).toEqual([23721]);
+    expect(facts.ownedUniqueItemTypeIds).toEqual([60109]);
     expect(facts.xpBoostPurchasesToday).toBe(1);
   });
 });

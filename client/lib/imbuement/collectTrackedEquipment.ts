@@ -29,6 +29,8 @@ export function collectTrackedEquipment(
 ): ReadonlyArray<TrackedEquipment> {
   const tracked: TrackedEquipment[] = [];
   for (const slot of EQUIPMENT_SLOTS) {
+    // The bound-items root is a storage container, not worn gear.
+    if (slot === "bound") continue;
     const item = inventory.equipment[slot];
     if (!item) continue;
     const imbuements = item.imbuements ?? [];

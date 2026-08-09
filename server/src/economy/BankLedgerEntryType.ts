@@ -28,4 +28,5 @@ export type BankLedgerEntryType =
   | "hunting-task-cancel"
   | "boss-slot-remove"
   | "forge"
-  | "imbuement";
+  | "imbuement"
+  | "portable-seller-sale";

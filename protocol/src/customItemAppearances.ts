@@ -49,4 +49,10 @@ export const CUSTOM_ITEM_APPEARANCES: ReadonlyArray<CustomItemAppearance> = [
   { typeId: 60_106, appearanceOf: 35_288, tint: "dark-orange" },
   { typeId: 60_107, appearanceOf: 35_289, tint: "dark-orange" },
   { typeId: 60_108, appearanceOf: 35_290, tint: "dark-orange" },
+  /**
+   * The Portable Seller, drawn as a stock watch on the map as a fallback;
+   * the DOM item icon replaces it with its own 4-frame sheet
+   * (client/public/assets/store/items/portable_seller.png).
+   */
+  { typeId: 60_109, appearanceOf: 2_906 },
 ];

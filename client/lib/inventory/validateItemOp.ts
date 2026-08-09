@@ -4,6 +4,7 @@ import type {
   Position,
   ViewRange,
 } from "@tibia/protocol";
+import { BOUND_ITEM_TYPE_IDS } from "./boundItemTypeIds";
 import { exceedsCapacity } from "./exceedsCapacity";
 import { findInventoryItem } from "./findInventoryItem";
 import type { PendingItemOp } from "./PendingItemOp";
@@ -15,6 +16,7 @@ export type ItemOpRejection =
   | "two-handed-conflict"
   | "shield-conflict"
   | "invalid-destination"
+  | "bound-item"
   | "out-of-range"
   | "too-far"
   | "too-heavy";
@@ -55,6 +57,21 @@ function isWithinItem(
         ?.parentContainerId ?? null;
   }
   return false;
+}
+
+function parentContainerId(
+  inventory: InventoryState,
+  itemId: string,
+): string | null {
+  if (inventory.items.some((entry) => entry.item.id === itemId)) {
+    return inventory.equipment.backpack?.id ?? null;
+  }
+  for (const container of inventory.containers ?? []) {
+    if (container.items.some((entry) => entry.item.id === itemId)) {
+      return container.container.id;
+    }
+  }
+  return null;
 }
 
 function slotOccupied(
@@ -126,7 +143,25 @@ export function validateItemOp(
     return null;
   }
   if (op.kind === "move") {
-    if (!findInventoryItem(inventory, op.itemId)) return null;
+    const item = findInventoryItem(inventory, op.itemId);
+    if (!item) return null;
+    const boundRootId = inventory.equipment.bound?.id;
+    if (boundRootId !== undefined) {
+      // Direct children of the bound root never leave it; only its own item
+      // types ever enter it. Grandchildren (pouch contents) are unaffected.
+      if (
+        parentContainerId(inventory, op.itemId) === boundRootId &&
+        op.destinationContainerId !== boundRootId
+      ) {
+        return "bound-item";
+      }
+      if (
+        op.destinationContainerId === boundRootId &&
+        !BOUND_ITEM_TYPE_IDS.has(item.typeId)
+      ) {
+        return "bound-item";
+      }
+    }
     const capacity = containerCapacity(inventory, op.destinationContainerId);
     if (capacity === null) return null;
     if (op.destinationSlot >= capacity) return "invalid-destination";

@@ -4316,3 +4316,93 @@ regeneration figures (single-channel protocol shape — TODO.md); the
 per-path crit-chance source inconsistency predates this work and is now
 recorded in TODO.md; cooldowns already running when premium is bought are
 not retroactively shortened (decided at proc/cast time only).
+
+## 2026-08-08 — Bound container, Loot Pouch rework, and the Portable Seller
+
+**Problem**: the Item Pouch was a 900-coin store purchase living loose in the
+backpack tree, and there was no concept of character-bound items. Wanted: the
+pouch renamed Loot Pouch, free for every character, locked to a new
+character-bound container (opened from a button above the backpack slot), and
+a new store item — the Portable Seller (900 Mantus Coins) — that vendors the
+pouch's contents automatically every 10 minutes or on right-click with a
+1-minute cooldown, playing its sale animation when it fires.
+
+**What changed**:
+- New `bound` equipment slot (Canary's store-inbox slot): a per-character
+  container (23396, renamed "bound items") whose direct children are
+  character-bound. Planner guards deny moving them out (reorder inside is
+  fine), swaps that would displace them outward, drop/equip/split/
+  depot-deposit/stash/trade, and any ingress except the allowlisted types
+  (pouch 23721, seller 60109 — a one-way door via `BOUND_ITEM_TYPE_IDS`).
+  Pouch contents (grandchildren) stay fully normal. `planTradeReservation`
+  also gained the guard — it accepted equipment rows and never checked
+  `movable`, so the whole bound tree was tradeable without it.
+- Loot Pouch: renamed in semantics + regenerated catalogs, identity also
+  pinned by a new `ITEM_OVERRIDES` entry (name/description/capacity 500/
+  `movable:false`) so `items:convert` can no longer revert it at runtime;
+  store offer removed via a type-id filter in `storeCatalog.ts` (survives
+  `store:catalog`, which was re-run); granted inside the bound container by
+  the starter set; `planItemPouchPlacement` now finds the pouch anywhere
+  equipment-rooted instead of only the backpack tree.
+- Portable Seller: custom item type 60109 (aliases watch 2906 for the
+  engine; the DOM icon renders its own 4-frame 32px PNG strip at
+  `client/public/assets/store/items/portable_seller.png`), hand-authored
+  store product `useful-things-portable-seller` (900, unique, home page),
+  `useKind: "activate"`. `PortableSellerService` in the tick loop: 10-min
+  auto sweep per online character, 5s busy-retry, manual trigger with
+  server-enforced 60s cooldown; the sale plan mirrors NPC bulk-sale
+  exclusions (no rarity-graded items, no filled containers, `npcValue`
+  pricing), credits the bank, and persists deletes + bank leg +
+  `portable-seller-sale` audit in one serializable transaction (new
+  `CarriedDestructionReason`, `EconomyPersistAudit` variant,
+  `BankLedgerEntryType`, audit/bank CHECK restated in migration 076 with the
+  `bound` slot). A `portable-seller-triggered` message (sent only on real
+  sales, per-session monotonic saleId) drives the client's one-shot
+  frame 1→2→idle animation, a combat-log proceeds line, and bank refresh.
+- Client: bound button above the backpack slot (paperdoll's spacer slot),
+  bound window is view-only at the root (no drag-out/no drops, pouch inside
+  opens and behaves normally), `validateItemOp` pre-rejects hopeless bound
+  moves ("bound-item" rejection), `SpriteIcon` dispatches to a custom-art
+  renderer for 60109 everywhere (slots, store, tooltips), locale strings in
+  en + pt-BR.
+- Backfill `yarn db:backfill-bound` (server/scripts/backfillBoundContainers
+  .ts): per-character serializable transaction, creates the bound container,
+  moves an existing pouch into it (same row id — no dupe window) or creates
+  one, audits as `bound-backfill`, refuses to run with players online,
+  idempotent.
+
+**Files**: protocol/src/{item,portableSeller,serverMessages,
+customItemAppearances,index}.ts; server/db/migrations/076_*.sql;
+server/src/item/{boundItemTypeIds,boundContainerTypeId,getItemUseKind,
+getStarterSet,StarterSet,CarriedPersistPlan}.ts, item/plan/{findBoundRoot,
+isBoundLockedItem,planItemPouchPlacement,planMoveToContainer,planSplitStack,
+planDrop,planEquip,planUnequip,planLoot,planPickup}.ts, item/custom/*,
+item/overrides/*; server/src/economy/{PortableSellerService,
+EconomyPersistPlan,PgEconomyPersistOps,BankLedgerEntryType}.ts,
+economy/plan/planPortableSellerSale.ts, economy/sql/
+insertPortableSellerSaleAuditQuery.ts; server/src/trade/
+planTradeReservation.ts; server/src/depot/planDepotDeposit.ts;
+server/src/character/insertStarterSet.ts; server/src/store/
+{storeCatalog,PORTABLE_SELLER_PRODUCT}.ts; server/src/GameServer.ts;
+server/scripts/backfillBoundContainers.ts; tools/importCanaryStoreCatalog
+.mjs; content/canary-item-semantics.json (+ regenerated item-catalog,
+wiki-items, storeCatalogData); client: EquipmentPaperdoll, InventoryPanel,
+SpriteIcon → Atlas/CustomArt split, getCustomItemArt, validateItemOp,
+handleCommerceMessage, handleGameClientError, game-window store/types,
+locales.
+
+**Verified**: 19 new planner/plan tests (bound exploit paths, sale rules) +
+6 PortableSellerService tests (interval, cooldown, busy-retry, empty sweep)
++ 4 new validateItemOp tests; full suites green (server 3871, client 445,
+3× typecheck); PgMantusStore integration suite passes against local docker
+Pg with the new offer; migration 076 + backfill exercised end-to-end on a
+scratch DB (legacy pouch moved keeping its row id, re-run is a no-op). The
+`PgCharacterStore` "conjuring audit" integration failure reproduces
+identically on main (pre-existing, unrelated); `yarn parity:check` remains
+red on main from the unpinned buildItemCatalog hash (TODO.md).
+
+**Residual risk / deferred** (all in TODO.md): Portable Seller timers are
+in-memory (relog re-arms auto, clears manual cooldown — judged benign);
+seller is delivered to the store inbox rather than straight into the bound
+container; wiki-items.json regeneration would resurface the old pouch name
+until the semantics converter gains an override table.

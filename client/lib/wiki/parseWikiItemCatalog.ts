@@ -82,11 +82,14 @@ function isWikiItem(value: unknown): value is WikiItem {
   ) {
     return false;
   }
+  // "bound" is a protocol slot but never a wearable one — no wiki item
+  // legitimately claims it.
   if (
     value.equipmentSlot !== undefined &&
-    !EQUIPMENT_SLOTS.includes(
-      value.equipmentSlot as (typeof EQUIPMENT_SLOTS)[number],
-    )
+    (value.equipmentSlot === "bound" ||
+      !EQUIPMENT_SLOTS.includes(
+        value.equipmentSlot as (typeof EQUIPMENT_SLOTS)[number],
+      ))
   ) {
     return false;
   }

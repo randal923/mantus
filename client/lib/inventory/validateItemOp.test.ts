@@ -57,6 +57,15 @@ const SHIELD = makeItem("00000000-0000-4000-8000-000000000004", {
 const HELMET = makeItem("00000000-0000-4000-8000-000000000005", {
   equipmentSlot: "helmet",
 });
+const BOUND_ROOT = makeItem("00000000-0000-4000-8000-00000000000d", {
+  typeId: 23_396,
+  containerCapacity: 20,
+});
+const LOOT_POUCH = makeItem("00000000-0000-4000-8000-00000000000e", {
+  typeId: 23_721,
+  containerCapacity: 500,
+});
+const GEM = makeItem("00000000-0000-4000-8000-00000000000f");
 
 const makeState = (overrides: Partial<InventoryState> = {}): InventoryState => ({
   revision: 1,
@@ -92,6 +101,31 @@ const KNIGHT = {
   vocation: "Knight",
   position: { x: 100, y: 100, z: 7 },
 } as const;
+
+const makeBoundState = () =>
+  makeState({
+    equipment: { backpack: BACKPACK, bound: BOUND_ROOT },
+    containers: [
+      {
+        container: POUCH,
+        parentContainerId: BACKPACK.id,
+        capacity: 8,
+        items: [],
+      },
+      {
+        container: BOUND_ROOT,
+        parentContainerId: null,
+        capacity: 20,
+        items: [{ slot: 0, item: LOOT_POUCH }],
+      },
+      {
+        container: LOOT_POUCH,
+        parentContainerId: BOUND_ROOT.id,
+        capacity: 500,
+        items: [{ slot: 0, item: GEM }],
+      },
+    ],
+  });
 
 describe("validateItemOp", () => {
   it("allows equipping an item that meets every requirement", () => {
@@ -204,6 +238,66 @@ describe("validateItemOp", () => {
           destinationSlot: 5,
         },
         makeState(),
+        KNIGHT,
+      ),
+    ).toBeNull();
+  });
+
+  it("rejects moving a bound-root child anywhere outside the bound root", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "move",
+          itemId: LOOT_POUCH.id,
+          destinationContainerId: BACKPACK.id,
+          destinationSlot: 6,
+        },
+        makeBoundState(),
+        KNIGHT,
+      ),
+    ).toBe("bound-item");
+  });
+
+  it("rejects moving an ordinary item into the bound root", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "move",
+          itemId: SWORD.id,
+          destinationContainerId: BOUND_ROOT.id,
+          destinationSlot: 1,
+        },
+        makeBoundState(),
+        KNIGHT,
+      ),
+    ).toBe("bound-item");
+  });
+
+  it("allows reordering a bound item within the bound root", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "move",
+          itemId: LOOT_POUCH.id,
+          destinationContainerId: BOUND_ROOT.id,
+          destinationSlot: 1,
+        },
+        makeBoundState(),
+        KNIGHT,
+      ),
+    ).toBeNull();
+  });
+
+  it("allows moving a pouch grandchild out to the backpack", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "move",
+          itemId: GEM.id,
+          destinationContainerId: BACKPACK.id,
+          destinationSlot: 6,
+        },
+        makeBoundState(),
         KNIGHT,
       ),
     ).toBeNull();

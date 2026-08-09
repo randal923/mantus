@@ -10,6 +10,7 @@ import type { ItemCatalog } from "../ItemCatalog";
 import { appendMergeTargetPersist } from "./appendMergeTargetPersist";
 import type { CarriedPlan } from "./CarriedPlan";
 import { findWorldMergeTarget } from "./findWorldMergeTarget";
+import { isBoundLockedItem } from "./isBoundLockedItem";
 import { firstFreeWorldStackIndex } from "./firstFreeWorldStackIndex";
 import { trashDestructionEffectId, trashholderTypeAt } from "./isTrashholderTile";
 import { planTrashDrop } from "./planTrashDrop";
@@ -28,6 +29,7 @@ export function planDrop(input: {
   const { characterId, catalog, carried, world, position } = input;
   const item = carried.items.find((candidate) => candidate.id === input.itemId);
   if (!item || item.version !== input.expectedVersion) return null;
+  if (isBoundLockedItem(carried.items, item)) return null;
   const type = catalog.require(item.typeId);
   if (!type.movable) return null;
   const count = input.requestedCount ?? item.count;

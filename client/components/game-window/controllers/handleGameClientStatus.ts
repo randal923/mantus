@@ -44,6 +44,7 @@ export function handleGameClientStatus(
     }
     state.setWorldLoading(false);
     state.setLevelUpNotice(null);
+    state.setPortableSellerNotice(null);
     state.setVisibleCreatures([]);
     state.setFightState(null);
     state.setSpells([]);
