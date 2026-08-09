@@ -4795,3 +4795,38 @@ counter can transiently disagree if a daily-reward claim races a queued store
 persist (DB converges — both writes are relative/capped); recorded in
 TODO.md. A persist assertion failure disconnects the buyer (deliberate: the
 session's memory was wrong).
+
+## 2026-08-09 — Right-click on quest chests stolen by neighbouring furniture sprites
+
+**Problem**: Right-clicking the Carlin cultist key box in the real client did
+nothing (user report, reproduced in a browser e2e): the client sent use-map
+for (32377,31802) — one tile east of the box. `resolveInteractiveTile`
+redirects clicks to the anchor of a "covering" multi-tile sprite even when
+the clicked tile itself holds the item the player sees; here the
+neighbouring house's wide counter sprite stole the click through the wall,
+so the server never saw the box use. The sewer-grate special case was an
+earlier instance of the same bug.
+
+**What changed**: `resolveInteractiveTile` takes a `hasDirectTarget`
+predicate; `MapView.interactiveTileFor` passes "the clicked tile holds a
+server-tracked item" (`topServerItem`). A tile with a dynamic world item
+(chest, door, dropped loot) now keeps the click; tiles with only static
+scenery still redirect to covering 2x2 gates as before.
+
+**Files**: `client/lib/render/resolveInteractiveTile.ts`,
+`client/lib/render/MapView.ts`, `client/lib/render/resolveInteractiveTile.test.ts`,
+`client/e2e/questChestRightClick.e2e.test.tsx` (new browser e2e: mounts the
+real GameWindow against the real server, teleports beside the box,
+dispatches an actual right-click on the canvas, asserts "You have found a
+bone key." then "The box is empty.").
+
+**Verified**: the new e2e passes repeatedly (fresh account+character per run
+— the e2e DB persists and the box is once-per-character); client unit suite
+452 passing; client typecheck clean.
+
+**Residual risk**: a click on the visible pixels of a 2x2 gate that overlap
+a tile holding a dropped item now prefers the dropped item's tile; that
+matches "click what you see on the tile" but differs from the old
+always-redirect. E2e camera gotcha for future scenarios: compute click
+offsets from the live own position at click time (the /goto lands via
+intermediate movement messages), and the camera centers the live tile.
