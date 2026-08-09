@@ -336,7 +336,7 @@ export class MantusStoreService {
                 this.applyEffect(characterId, result.effect, committedAt);
               }
               for (const item of result.deliveredItems) {
-                this.hooks?.injectDelivery(characterId, item);
+                this.hooks?.injectDelivery(characterId, item, committedAt);
               }
               // The purchase changed what this character owns, so the greyed
               // -out state the client is showing is now stale.
@@ -349,7 +349,7 @@ export class MantusStoreService {
                 accountTier: status.accountTier,
                 premiumDaysRemaining: status.premiumDaysRemaining,
                 ...(result.deliveredItems.length > 0
-                  ? { deliveredToInbox: true }
+                  ? { deliveredToBound: true }
                   : {}),
               });
             });

@@ -246,8 +246,8 @@ export const storePurchaseCompletedMessageSchema = z
     balance: mantusCoinBalanceSchema,
     accountTier: z.enum(["free", "premium"]),
     premiumDaysRemaining: z.number().int().min(0).max(100_000),
-    /** True when the product was delivered to the buyer's inbox. */
-    deliveredToInbox: z.boolean().optional(),
+    /** True when the product was delivered to the buyer's bound container. */
+    deliveredToBound: z.boolean().optional(),
   })
   .strict();
 

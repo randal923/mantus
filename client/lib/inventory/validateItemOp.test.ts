@@ -102,6 +102,12 @@ const KNIGHT = {
   position: { x: 100, y: 100, z: 7 },
 } as const;
 
+/** A store purchase sitting in the bound root, waiting to be picked up. */
+const DELIVERED = {
+  ...GEM,
+  id: "fefefefe-fefe-4efe-8efe-fefefefefefe",
+};
+
 const makeBoundState = () =>
   makeState({
     equipment: { backpack: BACKPACK, bound: BOUND_ROOT },
@@ -116,7 +122,10 @@ const makeBoundState = () =>
         container: BOUND_ROOT,
         parentContainerId: null,
         capacity: 20,
-        items: [{ slot: 0, item: LOOT_POUCH }],
+        items: [
+          { slot: 0, item: LOOT_POUCH },
+          { slot: 1, item: DELIVERED },
+        ],
       },
       {
         container: LOOT_POUCH,
@@ -271,6 +280,21 @@ describe("validateItemOp", () => {
         KNIGHT,
       ),
     ).toBe("bound-item");
+  });
+
+  it("allows taking a store delivery out of the bound root", () => {
+    expect(
+      validateItemOp(
+        {
+          kind: "move",
+          itemId: DELIVERED.id,
+          destinationContainerId: BACKPACK.id,
+          destinationSlot: 6,
+        },
+        makeBoundState(),
+        KNIGHT,
+      ),
+    ).toBeNull();
   });
 
   it("allows reordering a bound item within the bound root", () => {

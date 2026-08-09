@@ -631,7 +631,11 @@ export const moveItemMessageSchema = ownedItemIntentSchema
     type: z.literal("move-item"),
     destinationContainerId: z.string().uuid(),
     destinationRevision: z.number().int().positive(),
-    destinationSlot: z.number().int().min(0).max(99),
+    destinationSlot: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_CONTAINER_CAPACITY - 1),
     destinationPlacement: z.literal("front").optional(),
     count: z.number().int().positive().max(100).optional(),
   })

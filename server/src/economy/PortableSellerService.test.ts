@@ -192,7 +192,14 @@ describe("PortableSellerService", () => {
     expect(
       service.handleUseItem(session as unknown as Session, intent, start + 1_000),
     ).toBe(true);
-    expect(session.sendError).toHaveBeenCalledWith("portable-seller-cooldown");
+    expect(
+      session.send.mock.calls
+        .map(([message]) => message)
+        .find((message) => message.type === "portable-seller-cooldown"),
+    ).toEqual({
+      type: "portable-seller-cooldown",
+      remainingMs: PORTABLE_SELLER_MANUAL_COOLDOWN_MS - 1_000,
+    });
     expect(
       session.send.mock.calls.filter(
         ([message]) => message.type === "portable-seller-triggered",

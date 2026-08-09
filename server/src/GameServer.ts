@@ -644,8 +644,20 @@ export class GameServer {
         xpBoostUntilMs: (characterId) => this.daily.xpBoostUntilMs(characterId),
         applyXpBoost: (characterId, untilMs, nowMs) =>
           this.daily.applyXpBoost(characterId, untilMs, nowMs),
-        injectDelivery: (characterId, item) =>
-          this.depot.injectDelivery(characterId, item),
+        injectDelivery: (characterId, item, nowMs) => {
+          if (item.location.kind === "container") {
+            const session = this.registry.sessionFor(characterId);
+            if (!session) return;
+            this.items.applyCommittedMutation(
+              session,
+              characterId,
+              { after: [item] },
+              nowMs,
+            );
+            return;
+          }
+          this.depot.injectDelivery(characterId, item);
+        },
         applySexChange: (characterId, sex, lookType) =>
           this.applyStoreSexChange(characterId, sex, lookType),
         canTempleTeleport: (characterId) =>

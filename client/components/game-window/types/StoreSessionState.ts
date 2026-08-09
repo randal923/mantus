@@ -28,5 +28,7 @@ export interface StoreSessionState {
   readonly pending: boolean;
   readonly pendingOfferId: string | null;
   readonly purchasedOfferId: string | null;
+  /** True when the last purchase dropped an item into the bound container. */
+  readonly purchaseDeliveredToBound?: boolean;
   readonly error: StoreActionFailedReason | null;
 }

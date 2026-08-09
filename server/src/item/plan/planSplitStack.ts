@@ -27,12 +27,6 @@ export function planSplitStack(input: {
     (candidate) => candidate.id === sourceContainerId,
   );
   if (!container) return null;
-  if (
-    container.location.kind === "equipment" &&
-    container.location.slot === "bound"
-  ) {
-    return null;
-  }
   const destinationSlot = firstFreeContainerSlot(catalog, items, container);
   if (destinationSlot === null) return null;
   const destination: ItemLocation = {

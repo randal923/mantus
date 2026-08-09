@@ -83,6 +83,8 @@ describe("item intent schemas", () => {
   });
 
   it("bounds destination slots and rejects invalid item ids", () => {
+    // Slots run to MAX_CONTAINER_CAPACITY - 1 (the pouch and bound
+    // container declare 500); the first out-of-range value is 500.
     expect(
       clientMessageSchema.safeParse({
         type: "move-item",
@@ -90,7 +92,17 @@ describe("item intent schemas", () => {
         revision: 1,
         destinationContainerId: CONTAINER_ID,
         destinationRevision: 1,
-        destinationSlot: 100,
+        destinationSlot: 499,
+      }).success,
+    ).toBe(true);
+    expect(
+      clientMessageSchema.safeParse({
+        type: "move-item",
+        itemId: ITEM_ID,
+        revision: 1,
+        destinationContainerId: CONTAINER_ID,
+        destinationRevision: 1,
+        destinationSlot: 500,
       }).success,
     ).toBe(false);
     expect(

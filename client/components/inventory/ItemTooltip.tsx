@@ -98,6 +98,7 @@ export function ItemTooltip({ item }: ItemTooltipProps) {
         </div>
         <SpriteIcon
           spriteId={item.spriteId}
+          clientId={item.clientId}
           scale={2}
           className="shrink-0 drop-shadow-[0_4px_6px_rgba(0,0,0,0.7)]"
         />

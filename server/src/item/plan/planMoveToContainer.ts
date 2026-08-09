@@ -33,12 +33,19 @@ export function planMoveToContainer(input: {
   }
   if (item.location.kind !== "container") return null;
   if (item.id === destination.id) return null;
-  // Character-bound placement: direct children of the bound container only
-  // ever move within it, and only the bound item types may enter it.
+  // Character-bound placement: the bound item types (pouch, seller) never
+  // leave the bound container, and only they may enter it — store deliveries
+  // sitting inside move out freely, but nothing else moves in.
   const boundRoot = findBoundRoot(items);
   if (boundRoot) {
     const sourceInBound = item.location.containerId === boundRoot.id;
-    if (sourceInBound && destination.id !== boundRoot.id) return null;
+    if (
+      sourceInBound &&
+      destination.id !== boundRoot.id &&
+      BOUND_ITEM_TYPE_IDS.has(item.typeId)
+    ) {
+      return null;
+    }
     if (
       destination.id === boundRoot.id &&
       !sourceInBound &&
@@ -340,7 +347,8 @@ function planSwap(
     boundRoot &&
     slotTarget.location.kind === "container" &&
     slotTarget.location.containerId === boundRoot.id &&
-    sourceLocation.containerId !== boundRoot.id
+    sourceLocation.containerId !== boundRoot.id &&
+    BOUND_ITEM_TYPE_IDS.has(slotTarget.typeId)
   ) {
     return null;
   }

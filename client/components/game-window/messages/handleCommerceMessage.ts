@@ -27,6 +27,7 @@ export function handleCommerceMessage(
       pending: false,
       pendingOfferId: null,
       purchasedOfferId: null,
+      purchaseDeliveredToBound: false,
       error: null,
     });
     return true;
@@ -72,6 +73,7 @@ export function handleCommerceMessage(
             pending: false,
             pendingOfferId: null,
             purchasedOfferId: message.offerId,
+            purchaseDeliveredToBound: message.deliveredToBound === true,
             error: null,
           }
         : current,
@@ -135,6 +137,16 @@ export function handleCommerceMessage(
       if (message.reason === "out-of-range") return null;
       return { ...current, pending: false, error: message.reason };
     });
+    return true;
+  }
+
+  if (message.type === "portable-seller-cooldown") {
+    state.showScreenMessage(
+      i18n.t("inventory.portableSellerCooldown", {
+        seconds: Math.ceil(message.remainingMs / 1_000),
+      }),
+      "status",
+    );
     return true;
   }
 

@@ -312,7 +312,34 @@ describe("bound slot rules", () => {
     ).toBeNull();
   });
 
-  it("never splits a stack sitting directly in the bound container", () => {
+  it("moves a store delivery out of the bound container", () => {
+    const items = fixture().map((item) =>
+      item.id === SWORD_ID
+        ? {
+            ...item,
+            location: {
+              kind: "container" as const,
+              containerId: BOUND_ID,
+              slot: 3,
+            },
+          }
+        : item,
+    );
+    expect(
+      planMoveToContainer({
+        characterId: CHARACTER_ID,
+        catalog,
+        items,
+        itemId: SWORD_ID,
+        expectedVersion: 1,
+        destinationContainerId: BACKPACK_ID,
+        destinationVersion: 1,
+        destinationSlot: 1,
+      }),
+    ).not.toBeNull();
+  });
+
+  it("splits a delivered stack inside the bound container", () => {
     const items = [
       ...fixture(),
       {
@@ -333,10 +360,10 @@ describe("bound slot rules", () => {
         expectedVersion: 1,
         count: 3,
       }),
-    ).toBeNull();
+    ).not.toBeNull();
   });
 
-  it("never equips a bound direct child", () => {
+  it("equips a store delivery straight from the bound container", () => {
     const items = fixture().map((item) =>
       item.id === SWORD_ID
         ? {
@@ -360,7 +387,7 @@ describe("bound slot rules", () => {
         expectedVersion: 1,
         slot: "weapon",
       }),
-    ).toBeNull();
+    ).not.toBeNull();
   });
 
   it("never trade-reserves the bound container or its direct children", () => {

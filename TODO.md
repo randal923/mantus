@@ -97,14 +97,15 @@ limitations accepted during a session are recorded in the owning feature file
   matters: store both as epoch-ms rows like `character_spell_cooldowns`
   (migration 073), flushed on disconnect.
 
-- **The Portable Seller is delivered to the store inbox, not the bound
-  container** (2026-08-08). Purchases use the standard `deliverInboxItem`
-  path; the buyer withdraws the seller and may move it into the bound
-  container (a one-way door via `BOUND_ITEM_TYPE_IDS`). It works from
-  anywhere in the carried tree, so this is UX friction only. A direct
-  bound-container delivery would need a new grant kind whose item leg lands
-  in the carried tree of a possibly-online character — deliberately not
-  built (memory-locked carried items vs. store transaction).
+- **Store item deliveries write carried rows outside the item lane**
+  (2026-08-08). `deliverBoundItem` inserts bound-container children inside
+  the purchase transaction while the buyer is online; the in-memory cache is
+  updated in-tick afterwards (`injectDelivery` → `applyCommittedMutation`).
+  A player move racing the same bound slot loses on the
+  (container_id, slot_index) unique index and resyncs — rare (only the
+  pouch/seller may be player-moved into the bound root) and self-healing,
+  but it is the one place two writers share a container. Revisit if resync
+  poisonings ever show up in logs around purchases.
 
 - **`yarn items:catalog` fails at its last step** (pre-existing, observed
   2026-08-07). The script still chains `node tools/buildItemAnimations.mjs`,

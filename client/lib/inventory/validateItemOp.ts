@@ -147,9 +147,11 @@ export function validateItemOp(
     if (!item) return null;
     const boundRootId = inventory.equipment.bound?.id;
     if (boundRootId !== undefined) {
-      // Direct children of the bound root never leave it; only its own item
-      // types ever enter it. Grandchildren (pouch contents) are unaffected.
+      // The bound item types (pouch, seller) never leave the bound root, and
+      // only they ever enter it. Store deliveries inside move out freely;
+      // grandchildren (pouch contents) are unaffected.
       if (
+        BOUND_ITEM_TYPE_IDS.has(item.typeId) &&
         parentContainerId(inventory, op.itemId) === boundRootId &&
         op.destinationContainerId !== boundRootId
       ) {
