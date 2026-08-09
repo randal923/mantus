@@ -256,6 +256,7 @@ export function InventoryContainerView({
               <ItemSlot
                 key={item?.id ?? `empty-${slot}`}
                 item={item}
+                drawOpen={boundRootInView}
                 onActivate={item ? () => activateItem(item) : undefined}
                 onDragStart={
                   item &&

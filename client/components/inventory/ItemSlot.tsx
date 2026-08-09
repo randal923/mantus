@@ -13,6 +13,11 @@ interface ItemSlotProps {
   /** Item drawn flipped in this empty slot — a two-handed weapon's off-hand. */
   mirrorOf?: InventoryItem;
   placeholderSpriteId?: number;
+  /**
+   * Draws an empty slot open (hover glow) even when it takes no drops — the
+   * bound trunk's slots, which only the server fills.
+   */
+  drawOpen?: boolean;
   onActivate?: () => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
@@ -24,6 +29,7 @@ export function ItemSlot({
   item,
   mirrorOf,
   placeholderSpriteId,
+  drawOpen = false,
   onActivate,
   onDragStart,
   onDragEnd,
@@ -54,7 +60,7 @@ export function ItemSlot({
         tooltip={item && !optimistic ? item.tooltip : undefined}
         rarity={rarity}
         dimmed={optimistic}
-        disabled={!item && !onDrop}
+        disabled={!item && !onDrop && !drawOpen}
         draggable={Boolean(item && onDragStart && !optimistic)}
         title={
           item

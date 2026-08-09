@@ -375,6 +375,10 @@ export const BoundTrunkRendersOnlyUsedRows: Story = {
     );
     await expect(grid?.children).toHaveLength(8);
 
+    // Empty trunk slots draw open like the pouch's even though they take no
+    // drops — only the server fills them.
+    await expect(grid?.querySelectorAll("button:disabled")).toHaveLength(0);
+
     // Browse into the pouch before any server confirm (it has no entry in
     // `containers`): the stack/sort row must survive that frame so the
     // capacity bar does not jump while the container opens.

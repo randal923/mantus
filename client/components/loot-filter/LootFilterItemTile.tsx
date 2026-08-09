@@ -28,6 +28,7 @@ export function LootFilterItemTile({
   return (
     <ItemCell
       spriteId={entry.spriteId}
+      clientId={entry.typeId}
       count={entry.count}
       tooltip={entry.tooltip}
       rarity={entry.rarity}
