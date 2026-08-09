@@ -14,11 +14,14 @@ import type {
   HouseStore,
   HouseTextListRecord,
   PlaceHouseBidResult,
+  ProcessHouseAbsenceResult,
   PurchaseHouseResult,
   SetHouseAccessResult,
   SetHouseTextListResult,
   TransferHouseResult,
 } from "./HouseStore";
+
+const DAY_MS = 24 * 3600 * 1000;
 
 interface MemoryHouseRow {
   ownerCharacterId: string;
@@ -26,6 +29,8 @@ interface MemoryHouseRow {
   tenancyId: string;
   paidUntilMs: number;
   rentWarnings: number;
+  /** The lastSeenAt the absence warning was mailed for; null before it. */
+  absenceWarnedForMs: number | null;
 }
 
 interface MemoryAuctionRow {
@@ -52,6 +57,8 @@ export class MemoryHouseStore implements HouseStore {
   private readonly auctions = new Map<number, MemoryAuctionRow>();
   private readonly levels = new Map<string, number>();
   private readonly premiumUntil = new Map<string, number>();
+  /** Absence anchor per character; absent entries are never absence-due. */
+  private readonly lastSeen = new Map<string, number>();
   private readonly access = new Map<number, MemoryAccessRow[]>();
   private readonly textLists = new Map<number, HouseTextListRecord[]>();
   private readonly guildOwners = new Map<string, string>();
@@ -67,7 +74,11 @@ export class MemoryHouseStore implements HouseStore {
   registerCharacter(
     characterId: string,
     name: string,
-    eligibility?: { level?: number; premiumUntilMs?: number },
+    eligibility?: {
+      level?: number;
+      premiumUntilMs?: number;
+      lastSeenAtMs?: number;
+    },
   ): void {
     this.characterNames.set(characterId, name);
     this.levels.set(characterId, eligibility?.level ?? 1_000);
@@ -75,6 +86,14 @@ export class MemoryHouseStore implements HouseStore {
       characterId,
       eligibility?.premiumUntilMs ?? Number.MAX_SAFE_INTEGER,
     );
+    if (eligibility?.lastSeenAtMs !== undefined) {
+      this.lastSeen.set(characterId, eligibility.lastSeenAtMs);
+    }
+  }
+
+  /** Mirrors the last durable save that maintains characters.last_seen_at. */
+  setLastSeen(characterId: string, lastSeenAtMs: number): void {
+    this.lastSeen.set(characterId, lastSeenAtMs);
   }
 
   setBalance(characterId: string, balance: number): void {
@@ -128,6 +147,7 @@ export class MemoryHouseStore implements HouseStore {
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
+      absenceWarnedForMs: null,
     });
     this.access.set(input.houseId, []);
     return { status: "purchased", snapshot: this.snapshotOf(input.houseId)! };
@@ -171,6 +191,7 @@ export class MemoryHouseStore implements HouseStore {
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
+      absenceWarnedForMs: null,
     });
     this.access.set(input.houseId, []);
     return { status: "purchased", snapshot: this.snapshotOf(input.houseId)! };
@@ -240,6 +261,7 @@ export class MemoryHouseStore implements HouseStore {
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
+      absenceWarnedForMs: null,
     });
     this.access.set(input.houseId, []);
     this.textLists.delete(input.houseId);
@@ -459,6 +481,7 @@ export class MemoryHouseStore implements HouseStore {
       tenancyId: randomUUID(),
       paidUntilMs: input.paidUntilMs,
       rentWarnings: 0,
+      absenceWarnedForMs: null,
     });
     this.access.set(input.houseId, []);
     return {
@@ -539,6 +562,114 @@ export class MemoryHouseStore implements HouseStore {
         attributes: {
           text: input.warningLetterText(
             Math.max(input.maxWarnings - warnings, 0),
+          ),
+        },
+        version: 1,
+        location: {
+          kind: "inbox",
+          characterId: row.ownerCharacterId,
+          slot: inbox.length,
+        },
+      };
+      inbox.push(letter);
+      this.inboxes.set(row.ownerCharacterId, inbox);
+    }
+    return {
+      status: "warned",
+      snapshot: this.snapshotOf(input.houseId)!,
+      letter,
+    };
+  }
+
+  async listAbsenceDueHouseIds(input: {
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    limit: number;
+  }): Promise<ReadonlyArray<number>> {
+    const nowMs = input.now.getTime();
+    return [...this.rows.entries()]
+      .filter(([, row]) => {
+        if (row.guildId) return false;
+        const lastSeenMs = this.lastSeen.get(row.ownerCharacterId);
+        if (lastSeenMs === undefined) return false;
+        const absenceMs = nowMs - lastSeenMs;
+        if (absenceMs < input.warnAfterDays * DAY_MS) return false;
+        if (row.absenceWarnedForMs !== lastSeenMs) return true;
+        const premium =
+          (this.premiumUntil.get(row.ownerCharacterId) ?? 0) > nowMs;
+        const evictAfterDays = premium
+          ? input.premiumEvictAfterDays
+          : input.evictAfterDays;
+        return absenceMs >= evictAfterDays * DAY_MS;
+      })
+      .sort(
+        (left, right) =>
+          (this.lastSeen.get(left[1].ownerCharacterId) ?? 0) -
+          (this.lastSeen.get(right[1].ownerCharacterId) ?? 0),
+      )
+      .slice(0, input.limit)
+      .map(([houseId]) => houseId);
+  }
+
+  async processAbsence(input: {
+    houseId: number;
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    mapName: string;
+    tilePositions: ReadonlyArray<Position>;
+    warningLetterText: (daysLeft: number) => string;
+  }): Promise<ProcessHouseAbsenceResult> {
+    const row = this.rows.get(input.houseId);
+    // Guildhalls never expire from absence.
+    if (!row || row.guildId) return { status: "skip" };
+    const lastSeenMs = this.lastSeen.get(row.ownerCharacterId);
+    if (lastSeenMs === undefined) return { status: "skip" };
+    const absenceMs = input.now.getTime() - lastSeenMs;
+    const premium =
+      (this.premiumUntil.get(row.ownerCharacterId) ?? 0) >
+      input.now.getTime();
+    const evictAfterDays = premium
+      ? input.premiumEvictAfterDays
+      : input.evictAfterDays;
+    if (absenceMs >= evictAfterDays * DAY_MS) {
+      const evicted = this.evictItems(
+        input.houseId,
+        row.tenancyId,
+        row.ownerCharacterId,
+        input.tilePositions,
+      );
+      this.rows.delete(input.houseId);
+      this.access.delete(input.houseId);
+      this.textLists.delete(input.houseId);
+      return {
+        status: "evicted",
+        ownerCharacterId: row.ownerCharacterId,
+        evicted,
+      };
+    }
+    if (
+      absenceMs < input.warnAfterDays * DAY_MS ||
+      row.absenceWarnedForMs === lastSeenMs
+    ) {
+      return { status: "skip" };
+    }
+    row.absenceWarnedForMs = lastSeenMs;
+    const key = `house-absence-letter:${input.houseId}:${row.tenancyId}:${lastSeenMs}`;
+    let letter: Item | null = null;
+    if (!this.deliveredKeys.has(key)) {
+      this.deliveredKeys.add(key);
+      const inbox = this.inboxes.get(row.ownerCharacterId) ?? [];
+      letter = {
+        id: randomUUID(),
+        typeId: STAMPED_LETTER_TYPE_ID,
+        count: 1,
+        attributes: {
+          text: input.warningLetterText(
+            Math.max(evictAfterDays - Math.floor(absenceMs / DAY_MS), 0),
           ),
         },
         version: 1,

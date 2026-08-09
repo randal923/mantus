@@ -352,6 +352,7 @@ export class CharacterPersistence {
       mana: player.mana,
       soul: player.progression.soul,
       stamina: player.stamina,
+      blessings: player.blessingsMask,
       // App wall-clock of this save; the next login measures offline time from
       // it (server clock only — never a client-reported timestamp).
       lastSeenAt: new Date(now),

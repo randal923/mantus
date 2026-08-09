@@ -102,6 +102,8 @@ import { NpcHandler } from "./npc/NpcHandler";
 import type { NpcTravelStore } from "./npc/NpcTravelStore";
 import type { PromotionStore } from "./npc/PromotionStore";
 import { PromotionService } from "./npc/PromotionService";
+import { BlessService } from "./npc/BlessService";
+import type { BlessStore } from "./npc/BlessStore";
 import { SpellTeacherService } from "./npc/SpellTeacherService";
 import type { SpellTeacherStore } from "./npc/SpellTeacherStore";
 import { TravelService } from "./npc/TravelService";
@@ -181,6 +183,7 @@ export interface GameServerDeps {
   npcTravel?: NpcTravelStore;
   promotion?: PromotionStore;
   spellTeacher?: SpellTeacherStore;
+  bless?: BlessStore;
   bank?: BankStore;
   shop?: ShopStore;
   /** Commits memory-first shop and bank operations in one transaction. */
@@ -267,6 +270,7 @@ export class GameServer {
   private readonly travel: TravelService;
   private readonly promotion: PromotionService;
   private readonly spellTeacher: SpellTeacherService;
+  private readonly bless: BlessService;
   private readonly bank: BankService;
   private readonly shops: ShopService;
   private readonly portableSeller: PortableSellerService;
@@ -784,6 +788,12 @@ export class GameServer {
       this.items,
       deps.spellTeacher,
     );
+    this.bless = new BlessService(
+      this.world,
+      this.persistence,
+      this.items,
+      deps.bless,
+    );
     this.bank = new BankService(
       this.world,
       this.items,
@@ -838,6 +848,7 @@ export class GameServer {
       this.promotion,
       this.spellTeacher,
       this.quests,
+      this.bless,
     );
     this.houses = new HouseService(
       this.world,
@@ -1403,6 +1414,7 @@ export class GameServer {
       this.travel.applyResolvedOutcomes(now);
       this.promotion.applyResolvedOutcomes(now);
       this.spellTeacher.applyResolvedOutcomes(now);
+      this.bless.applyResolvedOutcomes(now);
       this.bank.applyResolvedOutcomes(now);
       this.depot.applyResolvedOutcomes();
       this.persistResync.applyResolvedOutcomes();
@@ -2074,6 +2086,8 @@ export class GameServer {
     this.promotion.applyResolvedOutcomes(monotonicNow());
     await this.spellTeacher.stop();
     this.spellTeacher.applyResolvedOutcomes(monotonicNow());
+    await this.bless.stop();
+    this.bless.applyResolvedOutcomes(monotonicNow());
     await this.bank.stop();
     this.bank.applyResolvedOutcomes(monotonicNow());
     // The shop writes nothing of its own: its transactions ride the shared item

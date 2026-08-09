@@ -1,18 +1,14 @@
--- The character-bound items slot: a per-character container (Canary's
--- store-inbox slot) rooted at equipment_slot 'bound'. Its direct children are
--- character-bound (the loot pouch, the Portable Seller) and never leave it.
--- The Portable Seller vendors the loot pouch's contents; each sweep destroys
--- the sold rows and credits the bank in one transaction, audited as
--- 'portable-seller-sale' (charter rules 2 and 11).
+-- Feature 72 slice: blessing acquisition (VIP full bless). Blessings persist
+-- as Canary's bitmask (bit `id - 1` per blessing, ids 1..8), so the whole set
+-- is one small column and reads need no join. Every existing character has
+-- none, so the 0 default is correct for old rows. Buying blessings from the
+-- Inquisition NPC is a money-touching permanent grant: one transaction takes
+-- the money (carried coins first, bank remainder), ORs the mask, bumps the
+-- character version, and appends the audit trail (charter rules 2/11).
 
-alter table items
-  drop constraint items_equipment_slot_check,
-  add constraint items_equipment_slot_check check (
-    equipment_slot in (
-      'helmet', 'amulet', 'backpack', 'armor', 'weapon', 'shield',
-      'legs', 'boots', 'ring', 'ammo', 'bound'
-    )
-  );
+alter table characters
+  add column blessings smallint not null default 0
+    check (blessings between 0 and 255);
 
 alter table audit_log
   drop constraint audit_log_event_type_check,
@@ -82,7 +78,7 @@ alter table audit_log
       'quest-reward',
       'imbuement-scroll-create',
       'imbuement-scroll-apply',
-      'portable-seller-sale'
+      'bless-purchase'
     )
   );
 
@@ -119,6 +115,6 @@ alter table bank_ledger
       'boss-slot-remove',
       'forge',
       'imbuement',
-      'portable-seller-sale'
+      'bless-purchase'
     )
   );

@@ -53,6 +53,7 @@ const saveSnapshot = (
   mana: character.mana,
   soul: character.soul,
   stamina: character.stamina,
+  blessings: character.blessings,
   lastSeenAt: character.lastSeenAt ?? character.createdAt,
   skills: character.skills,
   skillsChanged: true,

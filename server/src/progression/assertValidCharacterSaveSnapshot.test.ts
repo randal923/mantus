@@ -21,6 +21,7 @@ describe("assertValidCharacterSaveSnapshot", () => {
       mana: player.mana,
       soul: player.progression.soul,
       stamina: player.stamina,
+      blessings: player.blessingsMask,
       lastSeenAt: new Date(0),
       skills: player.progression.skills,
       skillsChanged: true,

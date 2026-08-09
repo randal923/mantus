@@ -4317,6 +4317,121 @@ per-path crit-chance source inconsistency predates this work and is now
 recorded in TODO.md; cooldowns already running when premium is bought are
 not retroactively shortened (decided at proc/cast time only).
 
+## 2026-08-08 — VIP benefit: house absence eviction (7 days free / 10 premium)
+
+**Problem**: the `/vip-account` page advertised "House Absence" as coming
+soon with nothing behind it. Houses were only ever lost through missed rent;
+nothing evicted an owner for staying logged out, so there was no rule for
+premium to relax (`todo/vip-house-absence.md`, now deleted). Canary ships
+this as `houseLoseAfterInactivity` (30 days in `config.lua.dist`, checked in
+`payHouses` against `lastLoginSaved`) plus an all-or-nothing `vipKeepHouse`
+exemption; the adopted design is the tiered middle ground: 7 days offline
+for free accounts, 10 for premium, judged at scan time.
+
+**What changed**: three new `HOUSE_LIMITS` constants
+(`absenceWarningDays: 5`, `absenceEvictionDays: 7`,
+`premiumAbsenceEvictionDays: 10`) feed both the server scan and the public
+page. `HouseService.scanAbsence` (same off-tick shape as the rent scan,
+60 s interval, batch of 20) asks the store for absence-due houses —
+`characters.last_seen_at` (the Feature 18 save anchor) joined with
+`accounts.premium_until`, guildhalls excluded — and skips any owner with a
+live session, because `last_seen_at` goes stale for online-but-idle players.
+`processAbsence` (Pg + Memory stores) re-reads the anchor and the premium
+tier inside one serializable transaction: past the tier threshold it evicts
+through the existing `evictItems`/`deleteHouseQuery` path with a
+`house-eviction` audit row (`reason: "absence"`, no new event type needed);
+past day 5 it mails one stamped warning letter per absence episode
+(delivery key and new `houses.absence_warned_for` column both carry the
+`last_seen_at` they warned for, so replays skip and a fresh login re-arms).
+Migration `076_house_absence.sql` adds the column. The `/vip-account` row
+flipped to live and renders both day counts from `HOUSE_LIMITS`.
+
+**Files**: `protocol/src/house.ts`, `server/db/migrations/076_house_absence.sql`,
+`server/src/house/{HouseService,HouseStore,PgHouseStore,MemoryHouseStore,absenceWarningLetterText}.ts`,
+`server/src/house/sql/{absenceDueHouseIdsQuery,houseOwnerAbsenceQuery,updateHouseAbsenceWarnedQuery,houseRowForUpdateQuery}.ts`,
+`client/components/public-site/VipAccountPage.tsx`,
+`client/locales/{en,pt-BR}.json`, tests.
+
+**Verified**: 5 new unit tests in `HouseService.test.ts` (free-tier warning
+at day 5 once per episode + eviction at exactly day 7 with items mailed and
+replay no-op; premium 10-day window with re-warn on a new episode; premium
+lapse mid-absence judged by the free rule at scan time; online owner with a
+30-day-stale anchor never evicted or warned; guildhall exemption at the
+store). 3 new Pg integration tests in `PgHouseStore.integration.test.ts`
+(warn/evict/audit-reason/item-conservation/replay; premium tier at scan
+time incl. lapse; guildhall never listed) — full integration file 16/16
+against the local docker Postgres. Server suite 3,850 passed /
+266 skipped; protocol + server + client typecheck clean; client page lint
+clean.
+
+**Residual risk**: recorded in `TODO.md` — the online-owner protection is
+the in-process session registry (multi-process worlds would need shared
+presence), and an owner already past the threshold who logs in during the
+scan's commit window is still evicted (correct outcome, abrupt timing).
+No client-side countdown is shown for an absent owner (absence is not in
+`houseStateSchema`); the warning letter is the only in-game notice.
+
+## 2026-08-08 — Blessing purchases + VIP full bless (Feature 72 slice)
+
+**Problem**: blessing *acquisition* did not exist. The math library
+(`blessings.ts` catalog/curves, `getDeathLossPercent.ts` 8%-per-bless
+discount) was typed data with zero producers: `Player.blessings` was
+hard-coded to 0, there was no DB column, no NPC dialogue action, and the
+`fullBless` VIP benefit sat "coming soon" on `/vip-account`
+(`todo/vip-full-bless.md`).
+
+**What changed**: blessings persist as Canary's bitmask in a new
+`characters.blessings` column (migration 077, plus `bless-purchase`
+audit/ledger types), load with the character, ride the save snapshot, and
+are consumed on death right after `applyDeathPenalty` reads the count
+(ids 2–8 spent, Twist of Fate bit kept — its PvP semantics stay with the
+PvP path). A new `bless` dialogue action (`DialogueGraph`/loader/executor),
+`BlessService`, and `PgBlessStore` mirror the spell-teacher purchase shape:
+every gate re-checked at execution time, price recomputed from the locked
+DB row (level + mask, already-held ids skipped and never charged), carried
+coins before bank, mask OR + version bump + audit row in one SERIALIZABLE
+transaction. Henricus (already spawned at the Thais inquisition post) got a
+reviewed dialogue: the five regular blessings sold singly at the plain
+Canary price to everyone, and a premium-only **full bless** bundle granting
+all missing ones at Canary's Inquisition price (singles × missing × 1.1 —
+the advertised 110000 gold at level 120). `|BLESSCOST|` renders the
+execution-time quote in dialogue. `/vip-account` flips `fullBless` to live
+(en/pt-BR copy updated). Canary's Inquisition-quest gate is intentionally
+dropped (quest not imported); premium is our own gate — Canary has no VIP
+bless benefit at all.
+
+**Files**: `server/db/migrations/077_blessings.sql`,
+`server/src/progression/planBlessingPurchase.ts` (new),
+`server/src/npc/{BlessService,BlessStore,PgBlessStore,findBlessAction}.ts`
+(new), `server/src/npc/{DialogueGraph,loadNpcDialogueGraphs,NpcDialogueExecutor,NpcHandler,renderNpcDialogueText}.ts`,
+`server/src/{Player,GameServer,index}.ts`,
+`server/src/combat/DeathHandler.ts`,
+`server/src/character/{Character,CharacterRow,toCharacter,CharacterPersistence,PgCharacterStore,CharacterService}.ts`
++ `sql/{characterColumns,updateCharacterSnapshotQuery}.ts`,
+`server/src/progression/assertValidCharacterSaveSnapshot.ts`,
+`server/src/economy/BankLedgerEntryType.ts`,
+`content/npcs/canary-dialogues.json` (reviewed henricus def),
+`client/components/public-site/VipAccountPage.tsx`,
+`client/locales/{en,pt-BR}.json`.
+
+**Verified**: new tests — `planBlessingPurchase.test.ts` (curves, skip-owned,
+110000 parity, floor), `BlessService.test.ts` (execution-time premium gate,
+already-blessed, commit/fail outcome paths), `henricusBlessContent.test.ts`
+(offer shape, keyword reachability, |BLESSCOST| quotes),
+`PgBlessStore.integration.test.ts` (carried+bank split, missing-only charge,
+insufficient funds leaves nothing, already-blessed, racing confirmations
+charge once), death-consumption case in `deathPenalty.test.ts`. Server suite
+3,860 passed / 268 skipped; client 441 passed; both typechecks clean.
+`PgCharacterStore.integration.test.ts` "commits conjuring resources" fails
+identically on main (pre-existing, unrelated).
+
+**Residual risk**: equipment/container drop into a player corpse still does
+not exist (no player corpses yet) — the `equipmentLossChancePercent` table
+remains consumer-less; Amulet of Loss and Twist of Fate PvP-death semantics
+unimplemented; temple single-bless NPCs (27 `StdModule.bless` keyword
+imports) still unconverted, so the parity-gate ceiling is unchanged. All
+recorded under the TODO.md blessings entry (owner: Feature 72).
+
 ## 2026-08-08 — Bound container, Loot Pouch rework, and the Portable Seller
 
 **Problem**: the Item Pouch was a 900-coin store purchase living loose in the

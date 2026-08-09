@@ -3054,7 +3054,7 @@
       },
       "fullBless": {
         "name": "Full Bless",
-        "description": "When buying bless from the Inquisition NPC, the character will receive all blessings."
+        "description": "The Inquisition NPC Henricus offers VIP characters the full bless: one purchase grants every missing blessing at once."
       },
       "loginPriority": {
         "name": "Login Priority",
@@ -3062,7 +3062,7 @@
       },
       "houseAbsence": {
         "name": "House Absence",
-        "description": "VIP players can stay offline longer without losing their house."
+        "description": "Stay offline for up to {{premiumDays}} days without losing your house, versus {{freeDays}} days for free accounts."
       }
     },
     "includedTitle": "Also part of VIP",

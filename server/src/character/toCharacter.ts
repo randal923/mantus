@@ -31,6 +31,7 @@ export function toCharacter(
     mana: row.mana,
     soul: row.soul,
     stamina: row.stamina,
+    blessings: row.blessings,
     lastSeenAt: row.last_seen_at,
     skills,
     progressionDefinitionVersion: row.progression_definition_version,

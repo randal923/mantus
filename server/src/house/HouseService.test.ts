@@ -129,6 +129,8 @@ interface Harness {
     level?: number,
     accountTier?: AccountTier,
   ): TestPlayer;
+  /** Drops the live session, as a logout would; the absence clock starts. */
+  disconnect(id: string): void;
   flush(now?: number): Promise<void>;
 }
 
@@ -224,6 +226,9 @@ function makeHarness(): Harness {
       } as unknown as Session;
       sessions.set(id, session);
       return { player, session, sent };
+    },
+    disconnect(id) {
+      sessions.delete(id);
     },
     async flush(now = 0) {
       for (let round = 0; round < 3; round += 1) {
@@ -708,6 +713,201 @@ describe("HouseService", () => {
     harness.service.tick(clock.now);
     await harness.flush(clock.now);
     expect(harness.store.inboxOf(A)).toHaveLength(delivered);
+  });
+
+  it("warns an offline free owner at day 5, once per absence episode, and evicts at exactly day 7", async () => {
+    const harness = makeHarness();
+    const clock = { now: 1_000_000 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 25_000);
+    await buyHouseOne(harness, alice, clock);
+    harness.store.registerWorldItem({
+      id: "itm-bed",
+      typeId: 42,
+      count: 1,
+      attributes: {},
+      version: 1,
+      location: {
+        kind: "world",
+        position: { x: 50, y: 50, z: 7 },
+        stackIndex: 1,
+      },
+    });
+    // Premium lapsed at logout: the free 7-day rule applies.
+    harness.store.registerCharacter(A, "Alice", { premiumUntilMs: clock.now });
+    harness.store.setLastSeen(A, clock.now);
+    harness.disconnect(A);
+    const loggedOutAt = clock.now;
+
+    // Day 5: one warning letter, mailed exactly once per episode.
+    clock.now = loggedOutAt + 5 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    const letters = () =>
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === STAMPED_LETTER_TYPE_ID);
+    expect(letters()).toHaveLength(1);
+    expect(letters()[0]?.attributes.text).toContain("2 day(s)");
+    harness.service.tick(clock.now + 61_000);
+    await harness.flush(clock.now);
+    expect(letters()).toHaveLength(1);
+
+    // Just short of 7 days (61s, so the next scan clears the interval):
+    // still owned.
+    clock.now = loggedOutAt + 7 * DAY_MS - 61_000;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).not.toBeNull();
+
+    // Exactly 7 days: evicted, items mailed home, tiles locked.
+    clock.now = loggedOutAt + 7 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).toBeNull();
+    expect(
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === 42)
+        .map((item) => item.id),
+    ).toEqual(["itm-bed"]);
+    expect(harness.service.canUseHouseTile(A, { x: 50, y: 50, z: 7 })).toBe(
+      false,
+    );
+    // A replayed scan after the eviction is a no-op.
+    const delivered = harness.store.inboxOf(A).length;
+    harness.service.tick(clock.now + 61_000);
+    await harness.flush(clock.now);
+    expect(harness.store.inboxOf(A)).toHaveLength(delivered);
+  });
+
+  it("gives a premium owner 10 days and re-warns on a new absence episode", async () => {
+    const harness = makeHarness();
+    const clock = { now: 1_000_000 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 25_000);
+    await buyHouseOne(harness, alice, clock);
+    harness.store.setLastSeen(A, clock.now);
+    harness.disconnect(A);
+    const loggedOutAt = clock.now;
+
+    // Day 5 warning reflects the premium tier: 5 days left, not 2.
+    clock.now = loggedOutAt + 5 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    const letters = () =>
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === STAMPED_LETTER_TYPE_ID);
+    expect(letters()).toHaveLength(1);
+    expect(letters()[0]?.attributes.text).toContain("5 day(s)");
+
+    // Day 8 would evict a free account; premium keeps the house.
+    clock.now = loggedOutAt + 8 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).not.toBeNull();
+
+    // The owner returns briefly (a save advances last_seen_at), then logs
+    // out again: a fresh episode warns again 5 days later.
+    harness.store.setLastSeen(A, clock.now);
+    const secondLogoutAt = clock.now;
+    clock.now = secondLogoutAt + 5 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(letters()).toHaveLength(2);
+
+    // Exactly 10 days into the second episode: evicted.
+    clock.now = secondLogoutAt + 10 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).toBeNull();
+  });
+
+  it("uses the premium tier at scan time when premium lapses mid-absence", async () => {
+    const harness = makeHarness();
+    const clock = { now: 1_000_000 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 25_000);
+    await buyHouseOne(harness, alice, clock);
+    // Premium covers the first 6 days of the absence, then lapses.
+    harness.store.registerCharacter(A, "Alice", {
+      premiumUntilMs: clock.now + 6 * DAY_MS,
+    });
+    harness.store.setLastSeen(A, clock.now);
+    harness.disconnect(A);
+    const loggedOutAt = clock.now;
+
+    // Day 8: the lapsed account is judged by the free 7-day rule.
+    clock.now = loggedOutAt + 8 * DAY_MS;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).toBeNull();
+  });
+
+  it("never evicts an online owner, however stale the save anchor is", async () => {
+    const harness = makeHarness();
+    const clock = { now: 1_000_000 };
+    await harness.flush();
+    const alice = harness.join(A, "Alice", { x: 50, y: 51, z: 7 });
+    harness.store.setBalance(A, 25_000);
+    await buyHouseOne(harness, alice, clock);
+    // Online but idle: the durable save anchor lags far past the threshold.
+    harness.store.registerCharacter(A, "Alice", { premiumUntilMs: clock.now });
+    harness.store.setLastSeen(A, clock.now - 30 * DAY_MS);
+
+    clock.now += 61_000;
+    harness.service.tick(clock.now);
+    await harness.flush(clock.now);
+    expect(await harness.store.loadSnapshot(1)).not.toBeNull();
+    expect(
+      harness.store
+        .inboxOf(A)
+        .filter((item) => item.typeId === STAMPED_LETTER_TYPE_ID),
+    ).toHaveLength(0);
+    expect(
+      messagesOf(alice, "house-event").some((event) => event.kind === "evicted"),
+    ).toBe(false);
+  });
+
+  it("exempts guildhalls from absence eviction at the store", async () => {
+    const store = new MemoryHouseStore();
+    const now = 1_000_000;
+    store.registerCharacter(A, "Alice", { premiumUntilMs: now });
+    store.registerGuild("guild-1", A, 1_000_000);
+    await store.purchaseGuildhall({
+      houseId: 3,
+      characterId: A,
+      guildId: "guild-1",
+      price: 300_000,
+      paidUntilMs: now + 30 * DAY_MS,
+    });
+    store.setLastSeen(A, now - 30 * DAY_MS);
+    const thresholds = {
+      warnAfterDays: HOUSE_LIMITS.absenceWarningDays,
+      evictAfterDays: HOUSE_LIMITS.absenceEvictionDays,
+      premiumEvictAfterDays: HOUSE_LIMITS.premiumAbsenceEvictionDays,
+    };
+    expect(
+      await store.listAbsenceDueHouseIds({
+        now: new Date(now),
+        ...thresholds,
+        limit: 20,
+      }),
+    ).toEqual([]);
+    const result = await store.processAbsence({
+      houseId: 3,
+      now: new Date(now),
+      ...thresholds,
+      mapName: "house-test",
+      tilePositions: HOUSE_TILES.get(3) ?? [],
+      warningLetterText: () => "unused",
+    });
+    expect(result.status).toBe("skip");
+    expect(await store.loadSnapshot(3)).not.toBeNull();
   });
 
   it("keeps house lists public-only and scopes state to the viewer", async () => {

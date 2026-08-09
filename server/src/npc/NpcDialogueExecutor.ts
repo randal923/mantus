@@ -10,6 +10,7 @@ import type { NpcConversation } from "./NpcConversation";
 import type { NpcConversations } from "./NpcConversations";
 import type { NpcDialogueFlow } from "./NpcDialogueFlow";
 import { parseBankKeywordAmount } from "./parseBankKeywordAmount";
+import type { BlessService } from "./BlessService";
 import { sendNpcDialogueResponses } from "./sendNpcDialogueResponses";
 import type { SpellTeacherService } from "./SpellTeacherService";
 import type { QuestService } from "../quest/QuestService";
@@ -26,6 +27,7 @@ export class NpcDialogueExecutor {
     private readonly promotion?: PromotionService,
     private readonly spellTeacher?: SpellTeacherService,
     private readonly quests?: QuestService,
+    private readonly bless?: BlessService,
   ) {}
 
   executeNode(
@@ -115,6 +117,59 @@ export class NpcDialogueExecutor {
         graph,
         conversation,
         [learnSpellFailureText(result, action.minimumLevel, action.price)],
+      );
+      return;
+    }
+    if (action?.kind === "bless") {
+      conversation.pendingAction = true;
+      const result = this.bless?.start(
+        session,
+        npc,
+        action.blessingIds,
+        action.surchargePercent,
+        action.premium,
+        now,
+        (committedAt) => {
+          conversation.pendingAction = false;
+          if (!this.conversations.isCurrent(conversation)) return;
+          this.applyEffects(player, node);
+          conversation.currentNodeId = node.nextNodeId ?? graph.rootNodeId;
+          conversation.expiresAt = committedAt + graph.timeoutMs;
+          sendNpcDialogueResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            node.responses,
+            node,
+          );
+        },
+        (failedAt, reason) => {
+          conversation.pendingAction = false;
+          if (!this.conversations.isCurrent(conversation)) return;
+          conversation.currentNodeId = graph.rootNodeId;
+          conversation.expiresAt = failedAt + graph.timeoutMs;
+          sendNpcDialogueResponses(
+            session,
+            player,
+            npc,
+            graph,
+            conversation,
+            [blessFailureText(reason)],
+          );
+        },
+      ) ?? "unavailable";
+      if (result === "started") return;
+      conversation.pendingAction = false;
+      conversation.currentNodeId = graph.rootNodeId;
+      sendNpcDialogueResponses(
+        session,
+        player,
+        npc,
+        graph,
+        conversation,
+        [blessFailureText(result)],
       );
       return;
     }
@@ -412,6 +467,18 @@ export class NpcDialogueExecutor {
       }
     }
   }
+}
+
+function blessFailureText(reason: string): string {
+  if (reason === "already-blessed") return "You already have been blessed!";
+  if (reason === "insufficient-funds") {
+    return "Come back when you have enough money.";
+  }
+  if (reason === "premium-required") {
+    return "The full blessing is an honour reserved for premium adventurers.";
+  }
+  if (reason === "busy") return "Please wait until your other action is finished.";
+  return "I cannot bless you right now.";
 }
 
 function learnSpellFailureText(

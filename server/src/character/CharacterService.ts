@@ -115,6 +115,7 @@ export class CharacterService {
         PROGRESSION_DEFINITION_VERSION,
       ).maxSoul,
       stamina: MAX_STAMINA_MINUTES,
+      blessings: 0,
       lastSeenAt: null,
       skills: createInitialSkills(),
       progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,

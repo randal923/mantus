@@ -33,6 +33,7 @@ export function makeCharacter(id: string, displayName = id): Character {
     mana: stats.maxMana,
     soul: getVocation("Knight").maxSoul,
     stamina: MAX_STAMINA_MINUTES,
+    blessings: 0,
     lastSeenAt: null,
     skills: createInitialSkills(),
     progressionDefinitionVersion: PROGRESSION_DEFINITION_VERSION,

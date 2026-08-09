@@ -29,4 +29,5 @@ export type BankLedgerEntryType =
   | "boss-slot-remove"
   | "forge"
   | "imbuement"
+  | "bless-purchase"
   | "portable-seller-sale";

@@ -133,6 +133,20 @@ export type ChargeHouseRentResult =
     }
   | { readonly status: "skip" };
 
+export type ProcessHouseAbsenceResult =
+  | {
+      readonly status: "warned";
+      readonly snapshot: HouseSnapshot;
+      /** The absence warning letter mailed; null when it did not fit. */
+      readonly letter: Item | null;
+    }
+  | {
+      readonly status: "evicted";
+      readonly ownerCharacterId: string;
+      readonly evicted: HouseEvictionDelivery;
+    }
+  | { readonly status: "skip" };
+
 /**
  * Durable house storage. Every mutation is one ACID transaction that
  * re-verifies ownership and funds from database truth at execution time
@@ -257,4 +271,38 @@ export interface HouseStore {
      */
     warningLetterText: (warningsLeft: number) => string;
   }): Promise<ChargeHouseRentResult>;
+  /**
+   * House ids whose offline owner is past the absence warning threshold and
+   * still owes a warning letter or the eviction itself, oldest absence first
+   * (read-only scan). Guildhalls are never absence-due.
+   */
+  listAbsenceDueHouseIds(input: {
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    limit: number;
+  }): Promise<ReadonlyArray<number>>;
+  /**
+   * Processes one absence-due house inside its own transaction. The owner's
+   * last_seen_at and premium tier are re-read from database truth at
+   * execution time (charter rule 4): past the tier's eviction threshold the
+   * house is repossessed like a rent eviction; past the warning threshold a
+   * letter is mailed once per absence episode (keyed on the last_seen_at it
+   * warned for), so replays and restarts never mail or evict twice.
+   */
+  processAbsence(input: {
+    houseId: number;
+    now: Date;
+    warnAfterDays: number;
+    evictAfterDays: number;
+    premiumEvictAfterDays: number;
+    mapName: string;
+    tilePositions: ReadonlyArray<Position>;
+    /**
+     * Builds the absence warning letter's text from the days the owner has
+     * left to log in. Pure and synchronous — it runs inside the transaction.
+     */
+    warningLetterText: (daysLeft: number) => string;
+  }): Promise<ProcessHouseAbsenceResult>;
 }

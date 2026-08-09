@@ -17,6 +17,7 @@ import {
   deriveCharacterStats,
   type DerivedStatModifier,
 } from "./progression/deriveCharacterStats";
+import { lossReducingBlessingCount } from "./progression/blessings";
 import { getDeathLossPercent } from "./progression/getDeathLossPercent";
 import { getExperienceForLevel } from "./progression/getExperienceForLevel";
 import { getVocation } from "./progression/getVocation";
@@ -126,6 +127,7 @@ export class Player extends Creature<Character["outfit"]> {
     this.skull = character.skull;
     this.skullExpiresAt = character.skullExpiresAt?.getTime() ?? null;
     this.lastLoginAt = character.lastLoginAt;
+    this.blessingsMaskValue = character.blessings;
     this.version = character.version;
     this.storageValues = { ...character.storageValues };
     const offlineSeconds =
@@ -493,12 +495,39 @@ export class Player extends Creature<Character["outfit"]> {
   }
 
   /**
-   * Blessings carried into a death; each one reduces the penalty by 8% and,
-   * once Feature 72 ships their purchase and persistence, protects carried
-   * items. Nothing grants them yet, so this is 0 for every character.
+   * Blessings held, as Canary's bitmask (bit `id - 1`, ids 1..8). Granted by
+   * NPC purchases through `BlessService` (which persists the same OR in its
+   * transaction) and cleared by death.
+   */
+  private blessingsMaskValue: number;
+
+  get blessingsMask(): number {
+    return this.blessingsMaskValue;
+  }
+
+  /** Applied only after the purchase transaction committed durably. */
+  grantBlessings(mask: number): void {
+    if (!Number.isInteger(mask) || mask < 0 || mask > 255) {
+      throw new Error("blessing mask is out of range");
+    }
+    this.blessingsMaskValue |= mask;
+  }
+
+  /**
+   * Canary's PvE death consumption: blessings 2..8 are spent, Twist of Fate
+   * (bit 0) is not — its PvP-only semantics live with the PvP death path.
+   */
+  consumeBlessingsOnDeath(): void {
+    this.blessingsMaskValue &= 0b1;
+  }
+
+  /**
+   * Blessings carried into a death; each one reduces the penalty by 8% and
+   * protects carried items. Twist of Fate never discounts the penalty, so it
+   * is excluded from the count exactly as Canary's `getLostPercent` does.
    */
   get blessings(): number {
-    return 0;
+    return lossReducingBlessingCount(this.blessingsMaskValue);
   }
 
   get capacity(): number {

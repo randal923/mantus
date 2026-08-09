@@ -20,6 +20,7 @@ const EXECUTABLE_ACTIONS: ReadonlyArray<DialogueAction["kind"]> = [
   "bank",
   "bank-keyword",
   "learn-spell",
+  "bless",
   "hint",
 ];
 const CONDITION_KINDS = ["storage", "level", "premium"];
