@@ -2697,7 +2697,9 @@
     "equipment": "Equipamento de {{vocation}}",
     "requirements": "Requisitos",
     "none": "Nenhum",
-    "trackOnMap": "Rastrear o caminho no mapa ao vivo",
+    "trackOnMap": "Rastrear caminho no mapa",
+    "tracking": "Rastreando no mapa ao vivo",
+    "stopTracking": "Parar de rastrear",
     "filters": {
       "level": "Seu Nível",
       "vocation": "Vocação",

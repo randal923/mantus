@@ -43,8 +43,8 @@ export const Catalog: Story = {
       within(dialog).getByRole("button", { name: "Hunt route" }),
     );
     await userEvent.click(
-      within(dialog).getByRole("checkbox", {
-        name: "Track the path on the live map",
+      within(dialog).getByRole("button", {
+        name: "Track path on the map",
       }),
     );
     await expect(args.onTrackedRouteChange).toHaveBeenCalledWith(
@@ -77,8 +77,8 @@ export const TracksTheChosenCave: Story = {
       }),
     );
     await userEvent.click(
-      within(dialog).getByRole("checkbox", {
-        name: "Track the path on the live map",
+      within(dialog).getByRole("button", {
+        name: "Track path on the map",
       }),
     );
     await expect(args.onTrackedRouteChange).toHaveBeenCalledWith(
@@ -86,5 +86,29 @@ export const TracksTheChosenCave: Story = {
         name: "Darashia Rotworm Caves · North Cave",
       }),
     );
+  },
+};
+
+/**
+ * The hunt the live map is tracking is pinned in its own section above the
+ * catalog, and its card leaves the grid below so it appears exactly once.
+ */
+export const TrackedHuntPinned: Story = {
+  args: {
+    trackedRoute: {
+      name: "Darashia Rotworm Caves · North Cave",
+      coordinates: {},
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = await canvas.findByRole("dialog", { name: "Hunt Finder" });
+    await expect(
+      await within(dialog).findByText("Tracking on the live map"),
+    ).toBeVisible();
+    const cards = await within(dialog).findAllByRole("button", {
+      name: /Darashia Rotworm Caves/,
+    });
+    await expect(cards).toHaveLength(1);
   },
 };

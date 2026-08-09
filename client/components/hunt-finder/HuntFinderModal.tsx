@@ -6,6 +6,7 @@ import { useHuntingPlaces } from "../../hooks/useHuntingPlaces";
 import { useWikiItems } from "../../hooks/useWikiItems";
 import type {
   HuntingPlace,
+  HuntingSpot,
   HuntingTeamSize,
   HuntingVocation,
 } from "../../lib/hunt-finder/HuntingPlace";
@@ -13,9 +14,13 @@ import {
   filterHuntingPlaces,
   type HuntingGuideSort,
 } from "../../lib/hunt-finder/filterHuntingPlaces";
+import { findTrackedPlace } from "../../lib/hunt-finder/findTrackedPlace";
+import { huntingSpots } from "../../lib/hunt-finder/huntingSpots";
 import { normalizeHuntName } from "../../lib/hunt-finder/normalizeHuntName";
+import { trackedSpotRoute } from "../../lib/hunt-finder/trackedSpotRoute";
 import type { MinimapRoute } from "../../lib/minimap/MinimapRoute";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { HuntFinderFilters } from "./HuntFinderFilters";
 import { HuntingPlaceCard } from "./HuntingPlaceCard";
@@ -57,6 +62,7 @@ export function HuntFinderModal({
   const [sort, setSort] = useState<HuntingGuideSort>("balanced");
   const [search, setSearch] = useState("");
   const [selectedPlace, setSelectedPlace] = useState<HuntingPlace | null>(null);
+  const [spotName, setSpotName] = useState<string | null>(null);
   const places = useMemo(
     () =>
       filterHuntingPlaces(catalog.places, {
@@ -85,14 +91,62 @@ export function HuntFinderModal({
       ),
     [creatures],
   );
+  const trackedPlace = useMemo(
+    () => findTrackedPlace(catalog.places, trackedRoute?.name ?? null),
+    [catalog.places, trackedRoute],
+  );
+  const untrackedPlaces = trackedPlace
+    ? places.filter((place) => place.Name !== trackedPlace.Name)
+    : places;
   const selectedVocation =
     vocation !== "all" && selectedPlace?.Vocation.includes(vocation)
       ? vocation
       : (selectedPlace?.Vocation[0] ?? baseVocation(characterVocation));
+  const spots = useMemo(
+    () => (selectedPlace ? huntingSpots(selectedPlace) : []),
+    [selectedPlace],
+  );
+  const spot = spots.find((candidate) => candidate.Name === spotName) ?? spots[0];
+  const tracked =
+    selectedPlace !== null &&
+    spot !== undefined &&
+    trackedRoute?.name === trackedSpotRoute(selectedPlace, spot).name;
+
+  const openPlace = (place: HuntingPlace | null): void => {
+    setSelectedPlace(place);
+    setSpotName(null);
+  };
+  // Switching cave while the live map follows this hunt moves the drawn path
+  // with it: tracking is "show me the way to what I am reading".
+  const selectSpot = (picked: HuntingSpot): void => {
+    setSpotName(picked.Name);
+    if (tracked && selectedPlace) {
+      onTrackedRouteChange(trackedSpotRoute(selectedPlace, picked));
+    }
+  };
 
   return (
     <Modal size="full" title={t("huntFinder.title")} onClose={onClose}>
       <div className="flex min-h-full min-w-0 flex-col gap-4">
+        {selectedPlace && (
+          <Button
+            size="sm"
+            variant={tracked ? "primary" : "secondary"}
+            aria-pressed={tracked}
+            className="self-end"
+            onClick={() =>
+              onTrackedRouteChange(
+                !tracked && spot
+                  ? trackedSpotRoute(selectedPlace, spot)
+                  : null,
+              )
+            }
+          >
+            {tracked
+              ? t("huntFinder.stopTracking")
+              : t("huntFinder.trackOnMap")}
+          </Button>
+        )}
         <HuntFinderFilters
           level={level}
           vocation={vocation}
@@ -123,24 +177,39 @@ export function HuntFinderModal({
             mapName={mapName}
             itemsByName={itemsByName}
             creaturesByName={creaturesByName}
-            trackedName={trackedRoute?.name ?? null}
-            onTrackChange={onTrackedRouteChange}
-            onBack={() => setSelectedPlace(null)}
+            spots={spots}
+            spot={spot}
+            onSelectSpot={selectSpot}
+            onBack={() => openPlace(null)}
           />
         )}
         {!catalog.pending && !catalog.error && !selectedPlace && (
           <>
+            {trackedPlace && (
+              <section className="flex min-w-0 flex-col gap-3">
+                <p className="text-xs tracking-widest text-cyan-200 uppercase">
+                  {t("huntFinder.tracking")}
+                </p>
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                  <HuntingPlaceCard
+                    place={trackedPlace}
+                    creaturesByName={creaturesByName}
+                    onSelect={() => openPlace(trackedPlace)}
+                  />
+                </div>
+              </section>
+            )}
             <p className="text-xs tracking-widest text-ui-muted uppercase">
-              {t("huntFinder.results", { count: places.length })}
+              {t("huntFinder.results", { count: untrackedPlaces.length })}
             </p>
-            {places.length > 0 ? (
+            {untrackedPlaces.length > 0 ? (
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                {places.map((place) => (
+                {untrackedPlaces.map((place) => (
                   <HuntingPlaceCard
                     key={place.Name}
                     place={place}
                     creaturesByName={creaturesByName}
-                    onSelect={() => setSelectedPlace(place)}
+                    onSelect={() => openPlace(place)}
                   />
                 ))}
               </div>

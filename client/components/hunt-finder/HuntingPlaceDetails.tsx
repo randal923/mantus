@@ -1,15 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { BestiaryCreatureEntry } from "@tibia/protocol";
 import type {
   HuntingPath,
   HuntingPlace,
+  HuntingSpot,
   HuntingVocation,
 } from "../../lib/hunt-finder/HuntingPlace";
-import { huntingSpots } from "../../lib/hunt-finder/huntingSpots";
-import { trackedSpotRoute } from "../../lib/hunt-finder/trackedSpotRoute";
-import type { MinimapRoute } from "../../lib/minimap/MinimapRoute";
 import type { WikiItem } from "../../lib/wiki/WikiItem";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
@@ -27,9 +25,10 @@ interface HuntingPlaceDetailsProps {
   mapName: string;
   itemsByName: ReadonlyMap<string, WikiItem>;
   creaturesByName: ReadonlyMap<string, BestiaryCreatureEntry>;
-  /** Name of the route the live map is drawing, if any. */
-  trackedName: string | null;
-  onTrackChange: (route: MinimapRoute | null) => void;
+  spots: ReadonlyArray<HuntingSpot>;
+  /** The cave being read; the live map tracks this one when tracking is on. */
+  spot: HuntingSpot | undefined;
+  onSelectSpot: (spot: HuntingSpot) => void;
   onBack: () => void;
 }
 
@@ -39,24 +38,13 @@ export function HuntingPlaceDetails({
   mapName,
   itemsByName,
   creaturesByName,
-  trackedName,
-  onTrackChange,
+  spots,
+  spot,
+  onSelectSpot,
   onBack,
 }: HuntingPlaceDetailsProps) {
   const { t } = useAppTranslation();
   const [routeView, setRouteView] = useState<RouteView>("way");
-  const spots = useMemo(() => huntingSpots(place), [place]);
-  const [spotName, setSpotName] = useState<string | null>(null);
-  const spot = spots.find((candidate) => candidate.Name === spotName) ?? spots[0];
-  const tracked =
-    spot !== undefined && trackedName === trackedSpotRoute(place, spot).name;
-
-  // Switching cave while the live map follows this hunt moves the drawn path
-  // with it: tracking is "show me the way to what I am reading".
-  const selectSpot = (picked: (typeof spots)[number]): void => {
-    setSpotName(picked.Name);
-    if (tracked) onTrackChange(trackedSpotRoute(place, picked));
-  };
   const path: HuntingPath =
     routeView === "way" ? (spot?.WayPath ?? place.WayPath) : (spot?.RoutePath ?? place.RoutePath);
   const imbues =
@@ -218,7 +206,7 @@ export function HuntingPlaceDetails({
                   mapName={mapName}
                   spots={spots}
                   selectedName={spot?.Name ?? null}
-                  onSelect={selectSpot}
+                  onSelect={onSelectSpot}
                 />
               </div>
             )}
@@ -277,22 +265,6 @@ export function HuntingPlaceDetails({
               <p className="text-xs text-ui-muted">{t("huntFinder.none")}</p>
             )}
           </section>
-
-          <label className="flex cursor-pointer items-center gap-3 rounded-sm border border-cyan-300/25 bg-cyan-300/8 px-3 py-2.5 text-sm text-cyan-100">
-            <input
-              type="checkbox"
-              checked={tracked}
-              onChange={(event) =>
-                onTrackChange(
-                  event.currentTarget.checked && spot
-                    ? trackedSpotRoute(place, spot)
-                    : null,
-                )
-              }
-              className="size-4 accent-cyan-300"
-            />
-            {t("huntFinder.trackOnMap")}
-          </label>
         </div>
       </div>
     </div>
