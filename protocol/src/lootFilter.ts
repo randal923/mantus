@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { itemDisplayRaritySchema, itemTooltipSchema } from "./item";
+import {
+  CRYSTAL_COIN_TYPE_ID,
+  GOLD_COIN_TYPE_ID,
+  PLATINUM_COIN_TYPE_ID,
+} from "./money";
 
 /**
  * How many item types one character may list. Generous enough for a full
@@ -44,10 +49,34 @@ export const lootFilterSchema = z
   })
   .strict();
 
+/**
+ * Placeholder shape used before a real filter is known (session/store
+ * initial state). What a character actually starts with is
+ * `createDefaultLootFilter()`.
+ */
 export const DEFAULT_LOOT_FILTER = {
   enabled: false,
   pickupRules: [],
 } as const satisfies z.infer<typeof lootFilterSchema>;
+
+/**
+ * The pick-up list every character starts with: the three coin
+ * denominations. Coins never roll a rarity grade, so the rules carry no
+ * `rarities` narrowing. Players remove them like any other rule; migration
+ * 080 seeded the same list into pre-existing characters.
+ */
+export const DEFAULT_LOOT_PICKUP_TYPE_IDS = [
+  GOLD_COIN_TYPE_ID,
+  PLATINUM_COIN_TYPE_ID,
+  CRYSTAL_COIN_TYPE_ID,
+] as const;
+
+export function createDefaultLootFilter(): z.infer<typeof lootFilterSchema> {
+  return {
+    enabled: false,
+    pickupRules: DEFAULT_LOOT_PICKUP_TYPE_IDS.map((typeId) => ({ typeId })),
+  };
+}
 
 /**
  * One cell of the loot-filter window. `count` is present on the carried

@@ -193,6 +193,25 @@ describe("CharacterService", () => {
     await expect(service.list("account-a")).resolves.toHaveLength(5);
   });
 
+  it("starts new characters with the coin pick-up defaults, sweep disabled", async () => {
+    const service = makeService();
+    const [summary] = await service.create("account-a", {
+      displayName: "Alice",
+      vocation: "Knight",
+      sex: "male",
+    });
+    expect(summary).toBeDefined();
+    const character = await service.findForSelection(
+      "account-a",
+      summary?.id ?? "",
+    );
+
+    expect(character?.lootFilter).toEqual({
+      enabled: false,
+      pickupRules: [{ typeId: 3031 }, { typeId: 3035 }, { typeId: 3043 }],
+    });
+  });
+
   it("rejects reserved staff names", async () => {
     const service = makeService();
 
