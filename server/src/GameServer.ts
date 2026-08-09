@@ -49,6 +49,7 @@ import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
 import { ClockHandler } from "./action/ClockHandler";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
+import { loadDoorKeyActions } from "./action/loadDoorKeyActions";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
 import { PressurePlateRegistry } from "./action/PressurePlateRegistry";
 import { ExerciseTrainingHandler } from "./action/ExerciseTrainingHandler";
@@ -1057,6 +1058,7 @@ export class GameServer {
         this.persistence,
       ),
       new WorldActionRng(config.combatSeed ^ 0x5f37_5a86),
+      loadDoorKeyActions(this.world.mapName),
       (typeName, position, now) => {
         spawns?.spawnEventMonsterNear(typeName, position, now);
       },

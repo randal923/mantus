@@ -4650,3 +4650,82 @@ conservative, never overshoots `maxSessions`. Queue positions push only on
 change (no periodic re-send; the WS heartbeat covers liveness). The public
 API still reports `maxPlayers` only — queue length is deliberately not
 exposed.
+
+## 2026-08-09 — Quest-chest/key-door Canary parity (cultist key chain live)
+
+**Problem**: Using the Carlin cultist-key box (Theater Avenue, Canary
+ChestUnique 5018) — and quest chests generally — diverged from Canary. The
+chest table shipped (Feature 50) but: key rewards were granted without their
+door ActionId (`isKey`/`keyAction` parsed then dropped at load); Canary's
+`door_key.lua` startup table (door-position → ActionId) was never imported,
+and there was no key-on-door unlock flow at all, so the cemetery crypt doors
+were dead ends; reward messages lacked articles/plurals ("You have found
+gold coin.") and the already-looted reply was a generic "It is empty.";
+Canary's quest_system1 (aid 2000: map item's contents ARE the reward, uid =
+storage) and quest_system2 (aid 2001: inline config) had no implementation —
+147 + 36 stamped map chests failed closed; and `WorldContainerViews.open`
+would open a quest-registered container as plain storage, letting the first
+player steal the embedded reward items outright.
+
+**What changed**:
+- Importer/parser: `isKey` now stamps `keyActionId` from the chest storage
+  (Canary's `setActionId(storage)`); rewards carry per-item `actionId`
+  (key-type ids only) — `chests.json` regenerated, 26 key rewards stamped.
+- `ChestDefinition`/`loadChestDefinitions`: per-reward `actionId`/`text`
+  (text ≤ 3500 chars; items.attributes jsonb caps at 4096 bytes), and the
+  loader now merges `quest-chests.json` beside `chests.json` (position
+  conflicts throw).
+- `ChestService`/`PgChestStore`: attributed rewards grant as their own rows
+  (never merged into stacks) with attributes persisted; Canary message
+  parity — "You have found a bone key." / "You have found 3 gold coins."
+  (plural defaults to name+"s") / "The box is empty." / weight and no-room
+  variants.
+- Door keys: `tools/importCanaryDoorKeys.mjs` + `parseCanaryDoorKeys.mjs`
+  import `door_key.lua` (35 actions, 49 door positions) into
+  `server/data/door-keys.json`; `loadDoorKeyActions` feeds `ToolUseHandler`.
+- Key-on-door: key item ids (2967–2973, 21392) are use-with tools now;
+  `handleKeyUse` mirrors Canary `key_door.lua` — matching key opens a locked
+  door, re-locks a closed/open one, mismatch says "The key does not match.",
+  no ActionId fails closed.
+- quest_system1/2: `server/scripts/buildQuestChests.ts` (+ pure
+  `buildQuestChestDefinitions`) generates chest definitions from the map's
+  own aid-2000/2001 items (contents → rewards incl. actionId/text; bag 2853 /
+  backpack 2854 / self-copy wrap rules; specialQuests aids resolved;
+  Canary's uid-before-aid dispatch honored by skipping ChestUnique-shadowed
+  positions) joined with `tools/importQuestSystem2.mjs`'s parsed config
+  (13/31 entries importable) → `server/data/quest-chests.json`, 45 live
+  chests, every skip reasoned.
+- Exploit fix: `isQuestRegisteredSource` blocks world-container opening of
+  quest-registered containers (aid 2000/2001/specialQuests, uid in
+  quest-reward ranges) in `WorldContainerViews`.
+- Parity ledger: quest_system1/2 flipped to implemented (25 total).
+
+**Files**: `tools/{parseCanaryChestTables,importCanaryChests,
+parseCanaryDoorKeys,importCanaryDoorKeys,parseQuestSystem2,
+importQuestSystem2,classifyWorldActionRegistration}.mjs` (+tests),
+`server/src/action/{ChestDefinition,loadChestDefinitions,loadDoorKeyActions,
+handleKeyUse,ToolUseHandler}.ts`, `server/src/chest/{ChestService,ChestStore,
+PgChestStore,buildQuestChestDefinitions}.ts` (+tests),
+`server/src/item/{getToolDefinition,isQuestRegisteredSource,
+WorldContainerViews}.ts`, `server/src/GameServer.ts`,
+`server/scripts/buildQuestChests.ts`,
+`server/src/playtest/scenarios/cultistKeyChest.ts`,
+`server/data/{chests,quest-chests,door-keys}.json`,
+`content/items/{canary-chests,canary-door-keys,canary-quest-system2}.json`,
+`content/{source-manifest,canary-world-action-parity}.json`.
+
+**Verified**: `yarn playtest:cultist-key` end to end (box → "You have found
+a bone key." → key with ActionId 3520 in backpack → "The box is empty." →
+crypt door 6248 "It is locked." → key unlocks to 6250 → walk through); live
+probe of generated chest 9281 ("You have found a bag." / "The chest is
+empty."); server suite 3909 passing + 17 new builder tests + 4 key-door
+tests + container-guard test; `PgChestStore` integration suite incl. new
+ActionId-persistence case; tools tests 125 passing; server typecheck clean.
+
+**Residual risk**: TODO.md 2026-08-09 entries — 22 non-mutable quest-item
+hosts (needs MUTABLE_ITEM_IDS + map reconvert), six importable
+quest_system2 uids with no map host, pre-change keys lacking ActionIds
+(prod backfill note), deferred quest_system2 state-machine entries and
+quest_system1 side tables (tutorial/hota/quest-log/pit-door), and the
+deferred-ChestUnique shadow-check blind spot. Canary's `parity:check`
+buildItemCatalog hash drift pre-exists on main and is untouched.

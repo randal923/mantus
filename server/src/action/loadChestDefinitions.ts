@@ -10,11 +10,14 @@ import type {
 const CHESTS_PATH = fileURLToPath(
   new URL("../../data/chests.json", import.meta.url),
 );
+const QUEST_CHESTS_PATH = fileURLToPath(
+  new URL("../../data/quest-chests.json", import.meta.url),
+);
 
 function requireRewards(value: unknown, label: string): ChestReward[] {
   if (!Array.isArray(value)) throw new Error(`chests.json ${label} is invalid`);
   return value.map((entry) => {
-    const { typeId, count } = entry as Record<string, unknown>;
+    const { typeId, count, actionId, text } = entry as Record<string, unknown>;
     if (
       !Number.isInteger(typeId) ||
       Number(typeId) <= 0 ||
@@ -23,7 +26,28 @@ function requireRewards(value: unknown, label: string): ChestReward[] {
     ) {
       throw new Error(`chests.json ${label} has an invalid reward`);
     }
-    return { typeId: Number(typeId), count: Number(count) };
+    if (
+      actionId !== undefined &&
+      (!Number.isInteger(actionId) ||
+        Number(actionId) <= 0 ||
+        Number(actionId) > 65_535)
+    ) {
+      throw new Error(`chests.json ${label} has an invalid reward action id`);
+    }
+    // The items table caps attributes jsonb at 4096 bytes; 3500 leaves room
+    // for the JSON envelope and a key ActionId beside the text.
+    if (
+      text !== undefined &&
+      (typeof text !== "string" || text.length === 0 || text.length > 3_500)
+    ) {
+      throw new Error(`chests.json ${label} has an invalid reward text`);
+    }
+    return {
+      typeId: Number(typeId),
+      count: Number(count),
+      ...(actionId === undefined ? {} : { actionId: Number(actionId) }),
+      ...(text === undefined ? {} : { text }),
+    };
   });
 }
 
@@ -51,28 +75,41 @@ function requireStorageWrites(
 }
 
 /**
- * Placed quest chests keyed by tile position, imported from Canary's otservbr
- * startup tables (Canary stamps these unique ids onto the map at startup, so
- * they are not in the OTBM). Maps other than the one the data was authored
- * for get an empty table, which keeps every chest fail-closed there.
+ * Placed quest chests keyed by tile position: Canary's ChestUnique startup
+ * table (chests.json) plus the quest_system1/2 chests generated from the
+ * map's own actionId 2000/2001 items (quest-chests.json). Canary stamps the
+ * ChestUnique ids onto the map at startup, so they are not in the OTBM. Maps
+ * other than the one the data was authored for get an empty table, which
+ * keeps every chest fail-closed there.
  */
 export function loadChestDefinitions(
   mapName: string,
 ): ReadonlyMap<string, ChestDefinition> {
-  const parsed: unknown = JSON.parse(readFileSync(CHESTS_PATH, "utf8"));
+  const chests = new Map<string, ChestDefinition>();
+  readChestFile(CHESTS_PATH, "chests.json", mapName, chests);
+  readChestFile(QUEST_CHESTS_PATH, "quest-chests.json", mapName, chests);
+  return chests;
+}
+
+function readChestFile(
+  path: string,
+  label: string,
+  mapName: string,
+  chests: Map<string, ChestDefinition>,
+): void {
+  const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
   if (
     !parsed ||
     typeof parsed !== "object" ||
     (parsed as { formatVersion?: unknown }).formatVersion !== 1
   ) {
-    throw new Error("chests.json has an unsupported format version");
+    throw new Error(`${label} has an unsupported format version`);
   }
   const document = parsed as { mapName?: unknown; chests?: unknown };
-  if (document.mapName !== mapName) return new Map();
+  if (document.mapName !== mapName) return;
   if (!Array.isArray(document.chests)) {
-    throw new Error("chests.json has no chest list");
+    throw new Error(`${label} has no chest list`);
   }
-  const chests = new Map<string, ChestDefinition>();
   for (const entry of document.chests) {
     const {
       uniqueId,
@@ -94,7 +131,7 @@ export function loadChestDefinitions(
       !Array.isArray(positions) ||
       positions.length === 0
     ) {
-      throw new Error("chests.json has an invalid chest entry");
+      throw new Error(`${label} has an invalid chest entry`);
     }
     const definition: ChestDefinition = {
       uniqueId: Number(uniqueId),
@@ -132,13 +169,16 @@ export function loadChestDefinitions(
         !Number.isInteger(y) ||
         !Number.isInteger(z)
       ) {
-        throw new Error("chests.json has an invalid chest position");
+        throw new Error(`${label} has an invalid chest position`);
       }
-      chests.set(
-        positionKey({ x: Number(x), y: Number(y), z: Number(z) }),
-        definition,
-      );
+      const key = positionKey({ x: Number(x), y: Number(y), z: Number(z) });
+      const existing = chests.get(key);
+      if (existing && existing.uniqueId !== definition.uniqueId) {
+        throw new Error(
+          `chests ${existing.uniqueId} and ${definition.uniqueId} both claim position ${key}`,
+        );
+      }
+      chests.set(key, definition);
     }
   }
-  return chests;
 }

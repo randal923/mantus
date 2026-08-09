@@ -6,6 +6,12 @@ export interface ChestRewardGrant {
   readonly count: number;
   readonly stackable: boolean;
   readonly maxCount: number;
+  /**
+   * Attributes stamped on the granted rows (key ActionIds, written text).
+   * Attributed rewards are granted as their own rows and never merge into
+   * existing stacks.
+   */
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }
 
 /**

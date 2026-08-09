@@ -15,6 +15,7 @@ import type { ProgressionSystem } from "../progression/ProgressionSystem";
 import { Session } from "../Session";
 import { SessionRegistry } from "../SessionRegistry";
 import { Npc } from "../creature/Npc";
+import { positionKey } from "../positionKey";
 import { makeCharacter } from "../test/makeCharacter";
 import { makeNpcType } from "../test/makeNpcType";
 import { Visibility } from "../Visibility";
@@ -43,6 +44,11 @@ const CRUSHABLE_STONE = 20_135;
 const FINE_GRAVEL = 20_133;
 const CRUSHED_STONE = 20_134;
 const WATER = 4_597;
+const BONE_KEY = 2_973;
+const LOCKED_DOOR = 1_628;
+const CLOSED_DOOR = 1_629;
+const OPEN_DOOR = 1_630;
+const KEY_ITEM_ID = "33333333-3333-4333-8333-333333333333";
 const ROPE_SPOT = { x: 5, y: 4, z: 7 } as const;
 const ROPE_DESTINATION = { x: 5, y: 5, z: 6 } as const;
 /** An open hole beside the actor; the rope reaches through it downward. */
@@ -59,12 +65,17 @@ beforeAll(async () => {
   catalog = await loadItemCatalog();
 });
 
-function carriedItem(id: string, typeId: number, characterId: string): Item {
+function carriedItem(
+  id: string,
+  typeId: number,
+  characterId: string,
+  attributes: Readonly<Record<string, unknown>> = {},
+): Item {
   return {
     id,
     typeId,
     count: 1,
-    attributes: {},
+    attributes,
     version: 1,
     location: { kind: "container", containerId: BACKPACK_ID, slot: 0 },
   };
@@ -126,6 +137,7 @@ async function makeHarness(
     items?: ReadonlyArray<{ position: Position; item: MapItem }>;
     seed?: number;
     protectionZones?: ReadonlyArray<readonly [number, number, number]>;
+    doorKeys?: ReadonlyMap<string, number>;
   } = {},
 ) {
   const world = new World(
@@ -208,6 +220,7 @@ async function makeHarness(
       persistence,
     ),
     new WorldActionRng(options.seed ?? 1_234),
+    options.doorKeys ?? new Map(),
     (typeName, position) => {
       spawned.push({ typeName, position: { ...position } });
     },
@@ -831,5 +844,94 @@ describe("ToolUseHandler", () => {
 
     expect(consumed).toBe(true);
     expect(stuck.position).toEqual(BELOW_ROPE_HOLE);
+  });
+
+  it("opens a locked door with the matching key", async () => {
+    const harness = await makeHarness(
+      [carriedItem(KEY_ITEM_ID, BONE_KEY, "actor", { actionId: 3_520 })],
+      {
+        items: [seededAt(LOCKED_DOOR, PILE)],
+        doorKeys: new Map([[positionKey(PILE), 3_520]]),
+      },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith(KEY_ITEM_ID, 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      OPEN_DOOR,
+    ]);
+  });
+
+  it("refuses a mismatched key on a locked door", async () => {
+    const harness = await makeHarness(
+      [carriedItem(KEY_ITEM_ID, BONE_KEY, "actor", { actionId: 4_600 })],
+      {
+        items: [seededAt(LOCKED_DOOR, PILE)],
+        doorKeys: new Map([[positionKey(PILE), 3_520]]),
+      },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith(KEY_ITEM_ID, 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      LOCKED_DOOR,
+    ]);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      text: "The key does not match.",
+    });
+  });
+
+  it("re-locks a closed door with the matching key", async () => {
+    const harness = await makeHarness(
+      [carriedItem(KEY_ITEM_ID, BONE_KEY, "actor", { actionId: 3_520 })],
+      {
+        items: [seededAt(CLOSED_DOOR, PILE)],
+        doorKeys: new Map([[positionKey(PILE), 3_520]]),
+      },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith(KEY_ITEM_ID, 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      LOCKED_DOOR,
+    ]);
+  });
+
+  it("fails closed when the target door carries no ActionId", async () => {
+    const harness = await makeHarness(
+      [carriedItem(KEY_ITEM_ID, BONE_KEY, "actor", { actionId: 3_520 })],
+      { items: [seededAt(LOCKED_DOOR, PILE)] },
+    );
+
+    const consumed = harness.toolUse.handle(
+      harness.session,
+      useWith(KEY_ITEM_ID, 1, PILE),
+      1000,
+    );
+
+    expect(consumed).toBe(true);
+    expect(harness.world.getMapItems(PILE).map((item) => item.itemId)).toEqual([
+      LOCKED_DOOR,
+    ]);
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "error",
+      code: "item-action-failed",
+    });
   });
 });

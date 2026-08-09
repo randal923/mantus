@@ -32,6 +32,20 @@ const chestSource = manifest.sources.canaryChests;
 const storages = parseStorageConstants(await readPinned(storagesSource));
 const parsed = parseChestUnique(await readPinned(chestSource), storages);
 
+// The key type ids Canary's quest_reward_common stamps an ActionId onto
+// (playerAddItem's isKey branch checks ItemType:isKey() or 21392).
+const doorsDocument = JSON.parse(
+  await readFile(join(repoRoot, "content/items/canary-doors.json"), "utf8"),
+);
+const keyItemIds = new Set(doorsDocument.keyItemIds);
+
+const stampKeyRewards = (rewards, keyActionId) =>
+  rewards.map((reward) =>
+    keyItemIds.has(reward.typeId)
+      ? { ...reward, actionId: keyActionId }
+      : reward,
+  );
+
 const chests = [];
 const skipped = [];
 for (const chest of parsed) {
@@ -40,20 +54,22 @@ for (const chest of parsed) {
     skipped.push({ uniqueId: chest.uniqueId, status, reason });
     continue;
   }
+  const keyActionId = chest.keyActionId;
   chests.push({
     uniqueId: chest.uniqueId,
     itemTypeId: chest.itemTypeId,
     positions: chest.positions,
     lootedKey: chestLootedKey(chest),
-    reward: chest.reward,
+    reward:
+      keyActionId === null
+        ? chest.reward
+        : stampKeyRewards(chest.reward, keyActionId),
     ...(chest.randomReward.length > 0
       ? { randomReward: chest.randomReward }
       : {}),
     ...(chest.containerTypeId === null
       ? {}
       : { containerTypeId: chest.containerTypeId }),
-    ...(chest.isKey ? { isKey: true } : {}),
-    ...(chest.keyActionId === null ? {} : { keyActionId: chest.keyActionId }),
     ...(chest.timeHours === null ? {} : { cooldownHours: chest.timeHours }),
   });
 }

@@ -15,6 +15,8 @@
     "items:foods": "node tools/importCanaryFoods.mjs",
     "items:stowable": "node tools/importCanaryStowableItems.mjs",
     "chests:import": "node tools/importCanaryChests.mjs",
+    "door-keys:import": "node tools/importCanaryDoorKeys.mjs",
+    "quest-system2:import": "node tools/importQuestSystem2.mjs",
     "raids:import": "node tools/importCanaryRaids.mjs",
     "item:override": "node tools/createItemOverride.mjs",
     "items:catalog": "node tools/buildItemCatalog.mjs && node tools/buildWikiItemCatalog.mjs && yarn workspace server creature-loot:build && node tools/buildProficiencySprites.mjs && node tools/buildItemAnimations.mjs",

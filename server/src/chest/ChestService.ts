@@ -55,7 +55,14 @@ export class ChestService {
       return;
     }
     if (!this.hasRoomFor(player, request)) {
-      this.say(session, "You have no room to take it.");
+      // Canary's checkWeightAndBackpackRoom capacity refusal, announcing the
+      // find it could not hand over.
+      this.say(
+        session,
+        `${this.foundPhrase(request)}. Weighing ${this.rewardOunces(
+          request,
+        )} oz, it is too heavy for you to carry.`,
+      );
       return;
     }
     session.itemOperationPending = true;
@@ -78,14 +85,21 @@ export class ChestService {
             for (const write of chest.storageWrites ?? []) {
               this.quests?.setStorageValue(player, write.key, write.value);
             }
-            this.say(session, this.rewardMessage(request));
+            this.say(session, `${this.foundPhrase(request)}.`);
             return;
           }
           if (result.status === "already-looted") {
-            this.say(session, "It is empty.");
+            const chestName = this.catalog.get(chest.itemTypeId)?.name;
+            this.say(
+              session,
+              chestName ? `The ${chestName} is empty.` : "It is empty.",
+            );
             return;
           }
-          this.say(session, "You have no room to take it.");
+          this.say(
+            session,
+            `${this.foundPhrase(request)}, but you have no room to take it.`,
+          );
         });
       },
       (cause: unknown) => {
@@ -119,11 +133,16 @@ export class ChestService {
     for (const reward of rolled) {
       const type = this.catalog.get(reward.typeId);
       if (!type || !type.pickupable) return null;
+      const attributes = {
+        ...(reward.actionId === undefined ? {} : { actionId: reward.actionId }),
+        ...(reward.text === undefined ? {} : { text: reward.text }),
+      };
       rewards.push({
         typeId: reward.typeId,
         count: reward.count,
         stackable: type.stackable,
         maxCount: Math.max(1, type.maxCount),
+        ...(Object.keys(attributes).length === 0 ? {} : { attributes }),
       });
     }
     if (rewards.length === 0) return null;
@@ -174,11 +193,41 @@ export class ChestService {
     );
   }
 
-  private rewardMessage(request: ChestLootRequest): string {
-    const first = request.container
-      ? this.catalog.get(request.container.typeId)?.name
-      : this.catalog.get(request.rewards[0]?.typeId ?? 0)?.name;
-    return `You have found ${first ?? "something"}.`;
+  /**
+   * Canary's find announcement, without the trailing period: the bag for
+   * container chests, else the first reward with its count/plural or article
+   * ("You have found 23 gold coins" / "You have found a bone key").
+   */
+  private foundPhrase(request: ChestLootRequest): string {
+    if (request.container) {
+      const type = this.catalog.get(request.container.typeId);
+      const article = type?.article ? `${type.article} ` : "";
+      return `You have found ${article}${type?.name ?? "something"}`;
+    }
+    const first = request.rewards[0];
+    const type = first ? this.catalog.get(first.typeId) : undefined;
+    if (!first || !type) return "You have found something";
+    if (first.stackable && first.count > 1) {
+      // Canary's getPluralName defaults to name + "s" when items.xml has none.
+      const plural = type.plural ?? `${type.name}s`;
+      return `You have found ${first.count} ${plural}`;
+    }
+    const article = type.article ? `${type.article} ` : "";
+    return `You have found ${article}${type.name}`;
+  }
+
+  /** Total reward weight in Tibia's display ounces (two decimals). */
+  private rewardOunces(request: ChestLootRequest): string {
+    const rewardWeight = request.rewards.reduce(
+      (total, reward) =>
+        total + (this.catalog.get(reward.typeId)?.weight ?? 0) * reward.count,
+      0,
+    );
+    const containerWeight =
+      request.container === undefined
+        ? 0
+        : (this.catalog.get(request.container.typeId)?.weight ?? 0);
+    return ((rewardWeight + containerWeight) / 100).toFixed(2);
   }
 
   private say(session: Session, text: string): void {

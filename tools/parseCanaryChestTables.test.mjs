@@ -100,6 +100,9 @@ test("parses ChestUnique entries without touching ChestAction", () => {
   assert.deepEqual(plain.reward, [{ typeId: 2972, count: 1 }]);
   assert.equal(plain.storageKey, 103);
   assert.equal(plain.isKey, true);
+  // isKey stamps the key's ActionId from the chest storage, as Canary's
+  // quest_reward_common does with setActionId(storage).
+  assert.equal(plain.keyActionId, 103);
   assert.equal(bagged.containerTypeId, 2853);
   assert.equal(bagged.keyActionId, 3801);
   assert.equal(bagged.storageKey, 40031);

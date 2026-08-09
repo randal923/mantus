@@ -4,6 +4,7 @@ import type { World } from "../World";
 import { isNear } from "./isNear";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
+import { isQuestRegisteredSource } from "./isQuestRegisteredSource";
 import { materializeWorldSource } from "./plan/materializeWorldSource";
 import { projectWorldContainer } from "./projectWorldContainer";
 
@@ -255,6 +256,7 @@ export class WorldContainerViews {
       .getMapItems(position)
       .some(
         (mapItem) =>
+          !isQuestRegisteredSource(mapItem.source?.attributes) &&
           (this.catalog.get(
             this.world.getWorldItem(mapItem.instanceId)?.typeId ??
               mapItem.itemId,
@@ -273,6 +275,9 @@ export class WorldContainerViews {
       (left, right) => right.stackIndex - left.stackIndex,
     );
     for (const mapItem of mapItems) {
+      // A quest-registered container never opens as plain storage — its
+      // contents are the reward the chest action hands out per character.
+      if (isQuestRegisteredSource(mapItem.source?.attributes)) continue;
       const root = this.world.getWorldItem(mapItem.instanceId);
       if (root) {
         if (

@@ -87,6 +87,20 @@ const FILE_DISPOSITIONS = [
     reason: "quest chests ship in ChestService with a durable looted gate",
   },
   {
+    match: /^data-otservbr-global\/scripts\/actions\/other\/others\/quest_system1\.lua$/,
+    status: "implemented",
+    owner: "todo-13 Feature 50",
+    reason:
+      "aid-2000 map chests are generated into quest-chests.json by buildQuestChests and served by ChestService; non-mutable hosts and side tables (tutorial, hota, quest-log) stay in TODO.md",
+  },
+  {
+    match: /^data-otservbr-global\/scripts\/actions\/other\/others\/quest_system2\.lua$/,
+    status: "implemented",
+    owner: "todo-13 Feature 50",
+    reason:
+      "importable aid-2001 config entries are generated into quest-chests.json; storage-state-machine entries stay deferred in canary-quest-system2.json",
+  },
+  {
     match: /^data\/scripts\/actions\/items\/(foods|potions)\.lua$/,
     status: "implemented",
     owner: "todo-5 items",

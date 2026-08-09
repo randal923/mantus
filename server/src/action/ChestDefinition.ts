@@ -2,6 +2,13 @@
 export interface ChestReward {
   readonly typeId: number;
   readonly count: number;
+  /**
+   * ActionId stamped on the granted item (Canary's key chests: the key's
+   * ActionId doubles as the door lock it opens).
+   */
+  readonly actionId?: number;
+  /** Written text stamped on the granted item (letters, notes, scripts). */
+  readonly text?: string;
 }
 
 /**

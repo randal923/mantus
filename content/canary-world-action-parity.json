@@ -15,8 +15,8 @@
  },
  "counts": {
   "registrations": 313,
-  "implemented": 23,
-  "deferred": 263,
+  "implemented": 25,
+  "deferred": 261,
   "excluded": 27,
   "unclassified": 0
  },
@@ -3260,9 +3260,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": true,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "todo-13 Feature 50",
+   "reason": "aid-2000 map chests are generated into quest-chests.json by buildQuestChests and served by ChestService; non-mutable hosts and side tables (tutorial, hota, quest-log) stay in TODO.md"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/other/others/quest_system2.lua",
@@ -3276,9 +3276,9 @@
    ],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "todo-13 Feature 50",
+   "reason": "importable aid-2001 config entries are generated into quest-chests.json; storage-state-machine entries stay deferred in canary-quest-system2.json"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/other/outfit_memorial.lua",

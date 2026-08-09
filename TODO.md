@@ -1255,3 +1255,38 @@ limitations accepted during a session are recorded in the owning feature file
   if the profiler ever shows it hot, memoize it and thread stable
   (useCallback + store.getState()) callbacks down from
   `GameInventoryOverlays`. Owner: client inventory UI.
+
+- 2026-08-09: `server/scripts/buildQuestChests.ts` (quest_system1/2 map-chest
+  import) knowingly defers two data gaps. (1) 22 quest items with aid
+  2000/2001 are classified interactive scenery, not mutable, in the converted
+  map (cauldrons, gemmed lamps, obelisks, "search" spots — full instance list
+  is printed by `yarn workspace server quest-chests:build` and recorded in
+  `server/data/quest-chests.json` `skipped` as "map item is not mutable...").
+  They include four importable quest_system2 rewards (uids 4010, 9255, 9277,
+  50112). Fix: add their type ids to the converter's `MUTABLE_ITEM_IDS`, rerun
+  `map:convert`, rerun `quest-chests:build`. (2) The 43 deferred ChestUnique
+  entries from `content/items/canary-chests.json` carry no positions, so the
+  builder's shadow check (skip aid chests where a uniqueId chest action exists,
+  matching Canary's uid-before-aid dispatch) only sees the 344 implemented
+  chests; a quest-system chest could theoretically generate at a deferred
+  ChestUnique position that Canary would shadow. None observed; revisit if
+  those deferred chests are imported. Owner: quest chests (agents/
+  quest-chest-key-parity).
+
+- 2026-08-09: key rewards now carry their door ActionId (`chests.json` reward
+  `actionId`, stamped by `quest_reward_common`'s isKey/keyAction semantics),
+  but keys granted by chests *before* this change have no `actionId` in their
+  item attributes and cannot open their doors. If any such keys exist in
+  production, backfill them with `UPDATE items SET attributes =
+  jsonb_set(attributes, '{actionId}', to_jsonb(<keyNumber>)) WHERE
+  item_type_id IN (2967..2973, 21392) AND attributes = '{}'` after mapping
+  each key type to its chest's storage number — or tell players to relog and
+  re-loot nothing (the chest gate stays claimed). Owner: quest chests
+  (agents/quest-chest-key-parity).
+
+- 2026-08-09: six importable quest_system2 entries (uids 9136 Deeper Fibula
+  key, 20002, 20003, 65201, 65208, 65210) have config rewards but no aid-2001
+  map item was found for their uid in the converted map, so no chest was
+  generated. Likely the host items fell into the 22 non-mutable instances or
+  the OTBM never stamps those uids on this map edition. Revisit together with
+  the MUTABLE_ITEM_IDS reconvert noted above. Owner: quest chests.
