@@ -1804,7 +1804,7 @@
     "spell-vocation-restricted": "Sua vocação não pode lançar essa magia.",
     "spell-weapon-required": "Você precisa equipar uma arma para lançar essa magia.",
     "item-action-failed": "Não foi possível concluir essa ação de item.",
-    "portable-seller-empty": "Sua bolsa de saque não tem nada que um mercador compraria.",
+    "portable-seller-empty": "Sua bolsa de saque não tem nada para vender.",
     "potion-exhausted": "Aguarde um momento antes de usar outra poção.",
     "potion-level-restricted": "Seu nível é muito baixo para usar essa poção.",
     "potion-vocation-restricted": "Sua vocação não pode usar essa poção.",
