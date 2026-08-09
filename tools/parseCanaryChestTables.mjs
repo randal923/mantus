@@ -181,6 +181,16 @@ export function parseChestUnique(lua, storages) {
     if (chest.positions.length === 0) {
       throw new Error(`chest ${uniqueId} has no position`);
     }
+    // Canary's quest_reward_common stamps the key's ActionId from the chest's
+    // storage when isKey is set; keyAction only overrides it for keys granted
+    // inside a container.
+    if (
+      chest.isKey &&
+      chest.keyActionId === null &&
+      Number.isInteger(chest.storageKey)
+    ) {
+      chest.keyActionId = chest.storageKey;
+    }
     chests.push(chest);
   }
   if (chests.length === 0) throw new Error("no chests parsed");

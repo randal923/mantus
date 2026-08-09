@@ -13,6 +13,7 @@ import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 import { handleFishingUse } from "./handleFishingUse";
+import { handleKeyUse } from "./handleKeyUse";
 import { handleMacheteUse } from "./handleMacheteUse";
 import { handlePickUse } from "./handlePickUse";
 import { handleScytheUse } from "./handleScytheUse";
@@ -44,6 +45,7 @@ export class ToolUseHandler {
     private readonly progression: ProgressionSystem,
     private readonly ropePull: RopePullHandler,
     private readonly rng: WorldActionRng,
+    private readonly doorKeys: ReadonlyMap<string, number> = new Map(),
     private readonly spawnMonster?: (
       typeName: string,
       position: Position,
@@ -86,6 +88,20 @@ export class ToolUseHandler {
     }
     if (session.itemOperationPending || session.itemPersistsPending > 0) {
       session.sendError("item-action-failed");
+      return true;
+    }
+    if (tool.kind === "key") {
+      const keyActionId = item.attributes.actionId;
+      const context = this.makeContext(session, player, target, now);
+      if (
+        !handleKeyUse(
+          context,
+          typeof keyActionId === "number" ? keyActionId : undefined,
+          this.doorKeys,
+        )
+      ) {
+        session.sendError("item-action-failed");
+      }
       return true;
     }
     if (!this.runTool(tool.kind, session, player, target, now)) {

@@ -141,11 +141,23 @@ describe("Canary world-action parity report", () => {
   it("only claims chest uid ranges the imported chest table actually fills", () => {
     const chests = loadChestDefinitions("otservbr");
     expect(chests.size).toBeGreaterThan(0);
+    // Chests outside the ChestUnique uid ranges come from the generated
+    // quest_system1/2 table, whose ids are the map items' own storage uids.
+    const questChests = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL("../../data/quest-chests.json", import.meta.url)),
+        "utf8",
+      ),
+    ) as { chests: Array<{ uniqueId: number }> };
+    const questChestUids = new Set(
+      questChests.chests.map((chest) => chest.uniqueId),
+    );
     for (const chest of chests.values()) {
       expect(
-        report.implementedChestUidRanges.some(
-          ([from, to]) => chest.uniqueId >= from && chest.uniqueId <= to,
-        ),
+        questChestUids.has(chest.uniqueId) ||
+          report.implementedChestUidRanges.some(
+            ([from, to]) => chest.uniqueId >= from && chest.uniqueId <= to,
+          ),
         `chest ${chest.uniqueId}`,
       ).toBe(true);
     }

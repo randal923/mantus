@@ -122,6 +122,31 @@ databaseDescribe("PgChestStore integration", () => {
     });
   });
 
+  it("persists a key reward's ActionId on the granted row", async () => {
+    const result = await store.loot(
+      characterId,
+      request({
+        rewards: [
+          {
+            typeId: KEY_RING,
+            count: 1,
+            stackable: false,
+            maxCount: 1,
+            attributes: { actionId: 3_520 },
+          },
+        ],
+      }),
+    );
+
+    expect(result.status).toBe("committed");
+    const rows = await pool.query<{ attributes: unknown }>(
+      "SELECT attributes FROM items WHERE item_type_id = $1",
+      [KEY_RING],
+    );
+    expect(rows.rowCount).toBe(1);
+    expect(rows.rows[0]?.attributes).toEqual({ actionId: 3_520 });
+  });
+
   it("refuses a replayed use, leaving exactly one grant", async () => {
     await store.loot(characterId, request());
     const replay = await store.loot(characterId, request());

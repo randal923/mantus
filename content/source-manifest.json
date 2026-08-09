@@ -139,6 +139,21 @@
       "path": "data-otservbr-global/lib/core/quests/catalog/init.lua",
       "commit": "a879c9312e34381e8eedf397b8ed44510698b689",
       "sha256": "3aa5d65945fe182cf17dc2e747464bf71d6abfec9fbfd52f420a426b114ff0e1"
+    },
+    "canaryDoorKeys": {
+      "path": "data-otservbr-global/startup/tables/door_key.lua",
+      "sha256": "882f30c06c7d636b9204b26c9ca2ee2f1cbdd2c97566f9be89139a8372bc175e",
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689"
+    },
+    "canaryQuestSystem1": {
+      "path": "data-otservbr-global/scripts/actions/other/others/quest_system1.lua",
+      "sha256": "3f1b533736a29c2846c2d6e03dedb79d49ab2c5782ebb56e1f9628e0a7159bc7",
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689"
+    },
+    "canaryQuestSystem2": {
+      "path": "data-otservbr-global/scripts/actions/other/others/quest_system2.lua",
+      "sha256": "e9f0c4674ed977088105fbdc1fc0817f4e5cf2ef7ddd4ff94278d0851ca9ab29",
+      "commit": "a879c9312e34381e8eedf397b8ed44510698b689"
     }
   },
   "balanceDefinitions": {
@@ -320,6 +335,8 @@
     "appearanceFlags": 1,
     "imbuements": 1,
     "proficiencies": 1,
-    "quests": 1
+    "quests": 1,
+    "doorKeys": 1,
+    "questSystemChests": 1
   }
 }

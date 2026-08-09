@@ -94,8 +94,14 @@ async function makeHarness(
   options: {
     readonly loot?: ReadonlyArray<{ typeId: number; count: number }>;
     readonly carriedItems?: ReadonlyArray<Item>;
+    /** OTBM attributes on the seeded chest (quest stamps and the like). */
+    readonly chestAttributes?: Readonly<Record<string, unknown>>;
   } = {},
 ) {
+  const seededChest: WorldItemSource = {
+    ...chestSource,
+    attributes: options.chestAttributes ?? chestSource.attributes,
+  };
   const world = new World(
     gridMapData({
       name: MAP_NAME,
@@ -110,7 +116,7 @@ async function makeHarness(
             itemId: CHEST_TYPE,
             stackIndex: 0,
             mutable: true,
-            source: chestSource,
+            source: seededChest,
           },
         },
       ],
@@ -498,6 +504,23 @@ describe("quick loot", () => {
 });
 
 describe("pristine map chests", () => {
+  it("never opens a quest-registered container as plain storage", async () => {
+    const harness = await makeHarness({
+      chestAttributes: { actionId: 2_000, uniqueId: 9_298 },
+    });
+
+    // The quest chest action owns this tile; the open must fall through so
+    // the use resolves (and fails closed) in the world-action path instead.
+    expect(
+      harness.items.handleMapOpen(harness.looter.session, CHEST_POSITION),
+    ).toBe(false);
+    expect(
+      harness.looter.sent.some(
+        (message) => message.type === "world-container-state",
+      ),
+    ).toBe(false);
+  });
+
   it("materializes a seeded chest on open without writing any row", async () => {
     const harness = await makeHarness();
 

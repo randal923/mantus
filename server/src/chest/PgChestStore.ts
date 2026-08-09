@@ -54,27 +54,33 @@ export class PgChestStore implements ChestStore {
         ? await this.grantContainer(coinOps, after, backpack, request.container)
         : backpack;
       for (const reward of request.rewards) {
-        const granted = reward.stackable
-          ? (await coinOps.grantStackable(
-              // A fresh reward bag has nothing to top up, and a chest reward
-              // must not silently merge into the looter's existing stacks
-              // when it is bagged; the flat case may top up.
-              request.container ? [] : coinOps.rowsOfType(owned, reward.typeId),
-              reward.count,
-              reward.typeId,
-              reward.maxCount,
-              GRANT_REASON,
-              after,
-              [],
-              destination,
-            )) === 0
-          : await coinOps.grantSingles(
-              reward.count,
-              reward.typeId,
-              GRANT_REASON,
-              after,
-              destination,
-            );
+        // Attributed rewards (keys with ActionIds, written texts) get their
+        // own rows so the attribute can never merge into a plain stack.
+        const granted =
+          reward.stackable && reward.attributes === undefined
+            ? (await coinOps.grantStackable(
+                // A fresh reward bag has nothing to top up, and a chest
+                // reward must not silently merge into the looter's existing
+                // stacks when it is bagged; the flat case may top up.
+                request.container
+                  ? []
+                  : coinOps.rowsOfType(owned, reward.typeId),
+                reward.count,
+                reward.typeId,
+                reward.maxCount,
+                GRANT_REASON,
+                after,
+                [],
+                destination,
+              )) === 0
+            : await coinOps.grantSingles(
+                reward.count,
+                reward.typeId,
+                GRANT_REASON,
+                after,
+                destination,
+                reward.attributes ?? {},
+              );
         if (!granted) {
           throw new TransactionRollback<ChestLootResult>({
             status: "no-space",

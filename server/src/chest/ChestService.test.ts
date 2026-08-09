@@ -107,8 +107,45 @@ describe("ChestService", () => {
     expect(calls[0]?.cooldownSeconds).toBeUndefined();
     expect(harness.sent.at(-1)).toMatchObject({
       type: "combat-log",
-      text: "You have found gold coin.",
+      text: "You have found 3 gold coins.",
     });
+  });
+
+  it("announces a single find with its catalog article", async () => {
+    const { store } = recordingStore();
+    const harness = await makeHarness(store);
+    harness.chests.loot(
+      harness.session,
+      harness.player,
+      chest({ reward: [{ typeId: 2_973, count: 1, actionId: 3_520 }] }),
+    );
+    await nextTurn();
+    harness.chests.applyResolvedOutcomes(1_000);
+
+    expect(harness.sent.at(-1)).toMatchObject({
+      type: "combat-log",
+      text: "You have found a bone key.",
+    });
+  });
+
+  it("stamps a key reward's ActionId onto the granted rows", async () => {
+    const { store, calls } = recordingStore();
+    const harness = await makeHarness(store);
+    harness.chests.loot(
+      harness.session,
+      harness.player,
+      chest({ reward: [{ typeId: 2_973, count: 1, actionId: 3_520 }] }),
+    );
+    await nextTurn();
+
+    expect(calls[0]?.rewards).toMatchObject([
+      {
+        typeId: 2_973,
+        count: 1,
+        stackable: false,
+        attributes: { actionId: 3_520 },
+      },
+    ]);
   });
 
   it("reports an already-claimed gate as empty and grants nothing", async () => {
@@ -121,7 +158,7 @@ describe("ChestService", () => {
     expect(calls).toHaveLength(1);
     expect(harness.sent.at(-1)).toMatchObject({
       type: "combat-log",
-      text: "It is empty.",
+      text: "The chest is empty.",
     });
   });
 
@@ -200,7 +237,7 @@ describe("ChestService", () => {
     expect(calls).toHaveLength(0);
     expect(harness.sent.at(-1)).toMatchObject({
       type: "combat-log",
-      text: "You have no room to take it.",
+      text: "You have found 100 gold coins. Weighing 10.00 oz, it is too heavy for you to carry.",
     });
   });
 
