@@ -7,8 +7,11 @@ import type { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
 import { World } from "../World";
 import { MantusStoreService } from "./MantusStoreService";
+import type { Item } from "../item/Item";
 import type { ItemCatalog } from "../item/ItemCatalog";
+import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import type { MantusStoreStore } from "./MantusStoreStore";
+import { STORE_OFFERS_BY_ID } from "./storeCatalog";
 import type { StoreLiveHooks } from "./StoreLiveHooks";
 
 const CHARACTER_ID = "00000000-0000-4000-8000-000000000001";
@@ -16,8 +19,12 @@ const ACCOUNT_ID = "00000000-0000-4000-8000-000000000002";
 
 const storeWith = (
   purchase: MantusStoreStore["purchase"],
+  persistPurchase: MantusStoreStore["persistPurchase"] = vi.fn(
+    async () => undefined,
+  ),
 ): MantusStoreStore => ({
   purchase,
+  persistPurchase,
   grant: vi.fn(),
   refund: vi.fn(),
   history: vi.fn(async () => []),
@@ -31,10 +38,14 @@ function hooksWith(overrides: Partial<StoreLiveHooks> = {}): StoreLiveHooks {
   return {
     entitlementsFor: () => ({ outfits: [], mounts: [] }),
     refreshOutfits: vi.fn(),
+    applyOutfitGrant: vi.fn(),
+    applyMountGrant: vi.fn(),
     wildcardsOf: () => 0,
     applyWildcardBalance: vi.fn(),
     preySlotsUnlocked: () => false,
     huntingSlotsUnlocked: () => false,
+    nextLockedPreySlot: () => 1,
+    nextLockedHuntingSlot: () => 1,
     applyPreySlotUnlock: vi.fn(),
     applyHuntingSlotUnlock: vi.fn(),
     xpBoostUntilMs: () => 0,
@@ -47,9 +58,16 @@ function hooksWith(overrides: Partial<StoreLiveHooks> = {}): StoreLiveHooks {
   };
 }
 
-/** Only `require().spriteId` is reached when projecting an item icon. */
+/** Icon projection reads sprite ids; delivery planning reads item physics. */
 const itemCatalog = {
-  require: (itemTypeId: number) => ({ spriteId: itemTypeId }),
+  require: (itemTypeId: number) => ({
+    spriteId: itemTypeId,
+    clientId: itemTypeId,
+    name: `item-${itemTypeId}`,
+    pickupable: true,
+    maxCount: 100,
+    containerCapacity: 30,
+  }),
 } as unknown as ItemCatalog;
 
 function makeWorld(): { world: World; player: Player } {
@@ -97,6 +115,65 @@ function registryFor(session: Session): SessionRegistry {
     sessionFor: (characterId: string) =>
       characterId === CHARACTER_ID ? session : undefined,
   } as unknown as SessionRegistry;
+}
+
+/** A live-cache stand-in: captures mutations and queued persist thunks. */
+function fakeItems(items: ReadonlyArray<Item> = []): {
+  handler: ItemIntentHandler;
+  persists: Array<() => Promise<void>>;
+  mutations: unknown[];
+} {
+  const persists: Array<() => Promise<void>> = [];
+  const mutations: unknown[] = [];
+  const handler = {
+    inventorySnapshot: () => ({ items, capacityMax: 1_000, bankBalance: 0 }),
+    applyCommittedMutation: (
+      _session: unknown,
+      _characterId: unknown,
+      mutation: unknown,
+    ) => {
+      mutations.push(mutation);
+    },
+    enqueuePersist: (
+      _session: unknown,
+      _characterId: unknown,
+      persist: () => Promise<void>,
+    ) => {
+      persists.push(persist);
+    },
+  } as unknown as ItemIntentHandler;
+  return { handler, persists, mutations };
+}
+
+/** Opens the store and settles the facts load, arming the memory-first path. */
+async function openStore(
+  service: MantusStoreService,
+  session: Session,
+): Promise<void> {
+  service.handle(session, { type: "store-open" }, 0);
+  await service.stop();
+  service.applyResolvedOutcomes(0);
+}
+
+function stackableOffer(): {
+  offerId: string;
+  price: number;
+  count: number;
+} {
+  const entry = [...STORE_OFFERS_BY_ID.values()].find(
+    ({ offer }) =>
+      offer.grant.kind === "stackable" &&
+      !offer.grant.unique &&
+      offer.grant.count > 100,
+  );
+  if (!entry || entry.offer.grant.kind !== "stackable") {
+    throw new Error("expected a multi-stack stackable offer in the catalog");
+  }
+  return {
+    offerId: entry.offer.id,
+    price: entry.offer.price,
+    count: entry.offer.grant.count,
+  };
 }
 
 describe("MantusStoreService", () => {
@@ -360,5 +437,181 @@ describe("MantusStoreService", () => {
     });
     if (description?.type !== "store-description-state") return;
     expect(description.description.length).toBeGreaterThan(0);
+  });
+
+  it("answers a stackable purchase from memory and queues one persist", async () => {
+    const { world } = makeWorld();
+    const sent: ServerMessage[] = [];
+    const session = makeSession(sent, 100_000);
+    const purchase = vi.fn<MantusStoreStore["purchase"]>();
+    const persistPurchase = vi
+      .fn<MantusStoreStore["persistPurchase"]>()
+      .mockResolvedValue(undefined);
+    const { handler, persists, mutations } = fakeItems();
+    const injected: Item[] = [];
+    const service = new MantusStoreService(
+      world,
+      registryFor(session),
+      itemCatalog,
+      storeWith(purchase, persistPurchase),
+      hooksWith({
+        injectDelivery: (_characterId, item) => {
+          injected.push(item);
+        },
+      }),
+      handler,
+    );
+    await openStore(service, session);
+    const offer = stackableOffer();
+
+    service.handle(
+      session,
+      { type: "store-purchase", offerId: offer.offerId },
+      1_000,
+    );
+
+    // Answered in the tick: storage was never asked to decide anything.
+    expect(purchase).not.toHaveBeenCalled();
+    expect(sent.at(-1)).toMatchObject({
+      type: "store-purchase-completed",
+      offerId: offer.offerId,
+      balance: 100_000 - offer.price,
+      deliveredToBound: true,
+    });
+    expect(session.account?.mantusCoins).toBe(100_000 - offer.price);
+    // The missing bound root was created in the carried inventory first.
+    expect(mutations).toHaveLength(1);
+    // One stack per maxCount, injected into the live caches.
+    expect(injected).toHaveLength(Math.ceil(offer.count / 100));
+    // Exactly one durable leg, queued on the persist lane with pinned rows.
+    expect(persists).toHaveLength(1);
+    await persists[0]!();
+    expect(persistPurchase).toHaveBeenCalledTimes(1);
+    const plan = persistPurchase.mock.calls[0]![0];
+    expect(plan).toMatchObject({
+      accountId: ACCOUNT_ID,
+      characterId: CHARACTER_ID,
+      offerId: offer.offerId,
+      price: offer.price,
+    });
+    expect(plan.boundDelivery?.createBoundRoot).toBe(true);
+    expect(plan.boundDelivery?.rows.map((row) => row.id)).toEqual(
+      injected.map((item) => item.id),
+    );
+  });
+
+  it("refuses in the tick once the balance is spent", async () => {
+    const { world } = makeWorld();
+    const sent: ServerMessage[] = [];
+    const offer = stackableOffer();
+    const session = makeSession(sent, offer.price);
+    const persistPurchase = vi
+      .fn<MantusStoreStore["persistPurchase"]>()
+      .mockResolvedValue(undefined);
+    const { handler, persists } = fakeItems();
+    const service = new MantusStoreService(
+      world,
+      registryFor(session),
+      itemCatalog,
+      storeWith(vi.fn(), persistPurchase),
+      hooksWith(),
+      handler,
+    );
+    await openStore(service, session);
+
+    service.handle(
+      session,
+      { type: "store-purchase", offerId: offer.offerId },
+      1_000,
+    );
+    expect(session.account?.mantusCoins).toBe(0);
+    service.handle(
+      session,
+      { type: "store-purchase", offerId: offer.offerId },
+      2_000,
+    );
+
+    expect(sent.at(-1)).toEqual({
+      type: "store-action-failed",
+      reason: "insufficient-coins",
+    });
+    expect(persists).toHaveLength(1);
+  });
+
+  it("falls back to the database purchase before facts are loaded", async () => {
+    const { world } = makeWorld();
+    const sent: ServerMessage[] = [];
+    const session = makeSession(sent);
+    const purchase = vi.fn<MantusStoreStore["purchase"]>().mockResolvedValue({
+      status: "committed",
+      balance: 4_750,
+      premiumUntil: null,
+      price: 250,
+      effect: null,
+      deliveredItems: [],
+    });
+    const persistPurchase = vi
+      .fn<MantusStoreStore["persistPurchase"]>()
+      .mockResolvedValue(undefined);
+    const { handler, persists } = fakeItems();
+    const service = new MantusStoreService(
+      world,
+      registryFor(session),
+      itemCatalog,
+      storeWith(purchase, persistPurchase),
+      hooksWith(),
+      handler,
+    );
+
+    // No store-open first: the facts cache is empty.
+    service.handle(
+      session,
+      { type: "store-purchase", offerId: "premium-30" },
+      0,
+    );
+    await service.stop();
+    service.applyResolvedOutcomes(0);
+
+    expect(purchase).toHaveBeenCalledTimes(1);
+    expect(persists).toHaveLength(0);
+    expect(session.account?.mantusCoins).toBe(4_750);
+  });
+
+  it("applies a mount purchase to live entitlements in the tick", async () => {
+    const { world } = makeWorld();
+    const sent: ServerMessage[] = [];
+    const session = makeSession(sent, 100_000);
+    const persistPurchase = vi
+      .fn<MantusStoreStore["persistPurchase"]>()
+      .mockResolvedValue(undefined);
+    const { handler, persists } = fakeItems();
+    const applyMountGrant = vi.fn();
+    const service = new MantusStoreService(
+      world,
+      registryFor(session),
+      itemCatalog,
+      storeWith(vi.fn(), persistPurchase),
+      hooksWith({ applyMountGrant }),
+      handler,
+    );
+    await openStore(service, session);
+
+    service.handle(
+      session,
+      { type: "store-purchase", offerId: "mount-23" },
+      1_000,
+    );
+
+    expect(applyMountGrant).toHaveBeenCalledWith(CHARACTER_ID, 23);
+    expect(sent.at(-1)).toMatchObject({
+      type: "store-purchase-completed",
+      offerId: "mount-23",
+    });
+    expect(persists).toHaveLength(1);
+    await persists[0]!();
+    expect(persistPurchase.mock.calls[0]![0]).toMatchObject({
+      offerId: "mount-23",
+      premiumUntil: null,
+    });
   });
 });

@@ -138,6 +138,45 @@ export class OutfitService {
     this.reload(characterId);
   }
 
+  /**
+   * Merges a memory-first store outfit grant into the live entitlements, so
+   * the wardrobe and the store's own greyed-out state update in the same tick
+   * the purchase was answered. The persist behind writes the durable rows; a
+   * snapshot still loading is left alone and picks the grant up from the
+   * database instead.
+   */
+  applyStoreGrant(characterId: string, lookType: number, addons: number): void {
+    const snapshot = this.snapshots.get(characterId);
+    if (!snapshot) return;
+    const owned = snapshot.outfits.find(
+      (entry) => entry.lookType === lookType,
+    );
+    this.snapshots.set(characterId, {
+      ...snapshot,
+      outfits: owned
+        ? snapshot.outfits.map((entry) =>
+            entry.lookType === lookType
+              ? { ...entry, addons: entry.addons | addons }
+              : entry,
+          )
+        : [...snapshot.outfits, { lookType, addons }],
+    });
+    const session = this.registry.sessionFor(characterId);
+    if (session) this.sendState(session, characterId);
+  }
+
+  /** The mount twin of `applyStoreGrant`. */
+  applyStoreMountGrant(characterId: string, mountId: number): void {
+    const snapshot = this.snapshots.get(characterId);
+    if (!snapshot || snapshot.mounts.includes(mountId)) return;
+    this.snapshots.set(characterId, {
+      ...snapshot,
+      mounts: [...snapshot.mounts, mountId],
+    });
+    const session = this.registry.sessionFor(characterId);
+    if (session) this.sendState(session, characterId);
+  }
+
   handle(session: Session, intent: OutfitIntent, now: number): void {
     const characterId = session.playerId;
     const player = characterId ? this.world.getPlayer(characterId) : undefined;

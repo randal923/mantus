@@ -1,6 +1,7 @@
 import type { StoreHistoryEntry } from "@tibia/protocol";
 import type { Item } from "../item/Item";
 import type { StorePurchaseEffect } from "./StorePurchaseEffect";
+import type { StorePurchasePersistPlan } from "./StorePurchasePlan";
 
 /** Everything the availability check needs that is not already in memory. */
 export interface StoreDbFacts {
@@ -45,7 +46,12 @@ export type MantusStoreGrantResult =
   | { readonly status: "balance-limit" | "unavailable" };
 
 export type MantusStoreRefundResult =
-  | { readonly status: "committed"; readonly balance: number }
+  | {
+      readonly status: "committed";
+      readonly balance: number;
+      /** The amount credited back, so live sessions can apply it relatively. */
+      readonly refunded: number;
+    }
   | {
       readonly status:
         | "entry-not-found"
@@ -70,6 +76,15 @@ export interface MantusStoreStore {
     /** Only meaningful for a name-change offer. */
     readonly newName?: string;
   }): Promise<MantusStorePurchaseResult>;
+  /**
+   * Makes a memory-first purchase durable: one transaction that re-asserts
+   * every rule the tick already decided from live caches, debits the coins
+   * relatively (never below zero), writes the planned delivery rows, the
+   * ledger row and the audit row. A replayed request key is a no-op; any
+   * assertion failing throws, which the caller's persist lane answers by
+   * resyncing the character from committed state.
+   */
+  persistPurchase(plan: StorePurchasePersistPlan): Promise<void>;
   /**
    * Operator-authorized coin grant. `grantKey` makes a retried grant a no-op;
    * the account is named by the caller's own resolved identity, never by a

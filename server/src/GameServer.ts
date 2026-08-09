@@ -635,6 +635,10 @@ export class GameServer {
         entitlementsFor: (characterId) =>
           this.outfits.entitlementsFor(characterId),
         refreshOutfits: (characterId) => this.outfits.refresh(characterId),
+        applyOutfitGrant: (characterId, lookType, addons) =>
+          this.outfits.applyStoreGrant(characterId, lookType, addons),
+        applyMountGrant: (characterId, mountId) =>
+          this.outfits.applyStoreMountGrant(characterId, mountId),
         wildcardsOf: (characterId) => this.prey.wildcardsOf(characterId),
         applyWildcardBalance: (characterId, balance) =>
           this.prey.applyWildcardBalance(characterId, balance),
@@ -642,6 +646,10 @@ export class GameServer {
           this.prey.allSlotsUnlocked(characterId),
         huntingSlotsUnlocked: (characterId) =>
           this.huntingTasks.allSlotsUnlocked(characterId),
+        nextLockedPreySlot: (characterId) =>
+          this.prey.nextLockedSlot(characterId),
+        nextLockedHuntingSlot: (characterId) =>
+          this.huntingTasks.nextLockedSlot(characterId),
         applyPreySlotUnlock: (characterId, slot) =>
           this.prey.applyStoreSlotUnlock(characterId, slot),
         applyHuntingSlotUnlock: (characterId, slot) =>
@@ -650,7 +658,12 @@ export class GameServer {
         applyXpBoost: (characterId, untilMs, nowMs) =>
           this.daily.applyXpBoost(characterId, untilMs, nowMs),
         injectDelivery: (characterId, item, nowMs) => {
-          if (item.location.kind === "container") {
+          // Bound-container deliveries: the container-located stacks and the
+          // equipment-located bound root both live in the carried inventory.
+          if (
+            item.location.kind === "container" ||
+            item.location.kind === "equipment"
+          ) {
             const session = this.registry.sessionFor(characterId);
             if (!session) return;
             this.items.applyCommittedMutation(
@@ -669,6 +682,7 @@ export class GameServer {
           this.canTempleTeleport(characterId),
         templeTeleport: (characterId) => this.templeTeleport(characterId),
       },
+      this.items,
     );
     this.wheelTracker = new WheelTracker(deps.wheel);
     this.gemTracker = new GemTracker(deps.gems);

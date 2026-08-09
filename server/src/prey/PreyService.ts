@@ -281,6 +281,14 @@ export class PreyService implements PreyHooks {
     return slots !== undefined && slots.every((slot) => slot.state !== "locked");
   }
 
+  /** The lowest still-locked slot — what the store's unlock opens next. */
+  nextLockedSlot(characterId: string): number | undefined {
+    const slots = this.slotsByCharacter.get(characterId);
+    const locked = slots?.filter((slot) => slot.state === "locked") ?? [];
+    if (locked.length === 0) return undefined;
+    return Math.min(...locked.map((slot) => slot.slot));
+  }
+
   /**
    * Applies a wildcard balance another transaction already committed (the
    * daily-reward claim); refresh-only, never a second grant.

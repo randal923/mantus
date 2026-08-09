@@ -4,6 +4,7 @@ import { Client, Pool } from "pg";
 import { loadItemCatalog } from "../item/loadItemCatalog";
 import { applyMigrations } from "../test/applyMigrations";
 import { PgMantusStore } from "./PgMantusStore";
+import type { StorePurchasePersistPlan } from "./StorePurchasePlan";
 
 const TEST_SCHEMA = "mantus_store_integration";
 const MIGRATION_LOCK_KEY = 7_281_033;
@@ -770,7 +771,11 @@ databaseDescribe("PgMantusStore integration", () => {
       operatorCharacterId: characterId,
     });
 
-    expect(first).toEqual({ status: "committed", balance: 250 });
+    expect(first).toEqual({
+      status: "committed",
+      balance: 250,
+      refunded: 250,
+    });
     expect(second).toEqual({ status: "already-refunded" });
     const account = await pool.query<{ mantus_coins: string }>(
       "SELECT mantus_coins FROM accounts WHERE id = $1",
@@ -827,5 +832,174 @@ databaseDescribe("PgMantusStore integration", () => {
 
     expect(facts.ownedUniqueItemTypeIds).toEqual([60109]);
     expect(facts.xpBoostPurchasesToday).toBe(1);
+  });
+
+  describe("persistPurchase", () => {
+    const boundPlanFor = (): StorePurchasePersistPlan => {
+      const requestKey = `store-purchase:${accountId}:${randomUUID()}`;
+      const boundRootId = randomUUID();
+      return {
+        accountId,
+        characterId,
+        offerId: GREAT_HEALTH_250.id,
+        requestKey,
+        price: GREAT_HEALTH_250.price,
+        premiumUntil: null,
+        boundDelivery: {
+          createBoundRoot: true,
+          boundRootId,
+          rows: [100, 100, 50].map((count, index) => ({
+            id: randomUUID(),
+            itemTypeId: 239,
+            count,
+            attributes: {},
+            slot: index,
+            deliveryKey: `${requestKey}:${index}`,
+          })),
+        },
+      };
+    };
+
+    it("writes the pinned rows, the debit, the ledger and the audit atomically", async () => {
+      await setCoins(100);
+      const plan = boundPlanFor();
+
+      await store.persistPurchase(plan);
+
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(59);
+      const children = await pool.query<{ id: string; slot_index: number }>(
+        `SELECT id, slot_index FROM items
+         WHERE container_id = $1 ORDER BY slot_index`,
+        [plan.boundDelivery!.boundRootId],
+      );
+      expect(children.rows.map((row) => row.id)).toEqual(
+        plan.boundDelivery!.rows.map((row) => row.id),
+      );
+      const ledger = await pool.query<{ amount: string; balance_after: string }>(
+        "SELECT amount, balance_after FROM mantus_coin_ledger WHERE request_key = $1",
+        [plan.requestKey],
+      );
+      expect(ledger.rows[0]).toMatchObject({ amount: "-41" });
+      expect(Number(ledger.rows[0]?.balance_after)).toBe(59);
+      const audit = await pool.query(
+        "SELECT 1 FROM audit_log WHERE event_type = 'store-purchase'",
+      );
+      expect(audit.rowCount).toBe(1);
+    });
+
+    it("treats a replayed plan as a no-op", async () => {
+      await setCoins(100);
+      const plan = boundPlanFor();
+
+      await store.persistPurchase(plan);
+      await store.persistPurchase(plan);
+
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(59);
+      const items = await pool.query(
+        "SELECT 1 FROM items WHERE container_id = $1",
+        [plan.boundDelivery!.boundRootId],
+      );
+      expect(items.rowCount).toBe(3);
+    });
+
+    it("rolls back the whole delivery rather than debit below zero", async () => {
+      await setCoins(40);
+      const plan = boundPlanFor();
+
+      await expect(store.persistPurchase(plan)).rejects.toThrow(
+        /insufficient/,
+      );
+
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(40);
+      const items = await pool.query("SELECT 1 FROM items");
+      expect(items.rowCount).toBe(0);
+      const ledger = await pool.query("SELECT 1 FROM mantus_coin_ledger");
+      expect(ledger.rowCount).toBe(0);
+    });
+
+    it("commits exactly one of two plans racing for the same balance", async () => {
+      await setCoins(GREAT_HEALTH_250.price);
+      const first = boundPlanFor();
+      const second = boundPlanFor();
+
+      const settled = await Promise.allSettled([
+        store.persistPurchase(first),
+        store.persistPurchase(second),
+      ]);
+
+      expect(
+        settled.filter((entry) => entry.status === "fulfilled"),
+      ).toHaveLength(1);
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(0);
+      const deliveries = await pool.query("SELECT 1 FROM inbox_deliveries");
+      expect(deliveries.rowCount).toBe(3);
+      const ledger = await pool.query("SELECT 1 FROM mantus_coin_ledger");
+      expect(ledger.rowCount).toBe(1);
+    });
+
+    it("dies on an XP boost counter it did not price from", async () => {
+      await setCoins(2_000);
+      const planXpBoost = (): StorePurchasePersistPlan => ({
+        accountId,
+        characterId,
+        offerId: XP_BOOST.id,
+        requestKey: `store-purchase:${accountId}:${randomUUID()}`,
+        price: 30,
+        premiumUntil: null,
+        xpBoostCountBefore: 0,
+      });
+
+      await store.persistPurchase(planXpBoost());
+      await expect(store.persistPurchase(planXpBoost())).rejects.toThrow(
+        /drifted/,
+      );
+
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(1_970);
+    });
+
+    it("refuses to charge for a mount the character already owns", async () => {
+      await setCoins(2_000);
+      const mountPlan = (): StorePurchasePersistPlan => ({
+        accountId,
+        characterId,
+        offerId: ARMOURED_WAR_HORSE.id,
+        requestKey: `store-purchase:${accountId}:${randomUUID()}`,
+        price: ARMOURED_WAR_HORSE.price,
+        premiumUntil: null,
+      });
+
+      await store.persistPurchase(mountPlan());
+      await expect(store.persistPurchase(mountPlan())).rejects.toThrow(
+        /refused/,
+      );
+
+      const account = await pool.query<{ mantus_coins: string }>(
+        "SELECT mantus_coins FROM accounts WHERE id = $1",
+        [accountId],
+      );
+      expect(Number(account.rows[0]?.mantus_coins)).toBe(
+        2_000 - ARMOURED_WAR_HORSE.price,
+      );
+    });
   });
 });
