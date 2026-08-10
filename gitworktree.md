@@ -21,7 +21,7 @@ worktree is created, merged, or removed.
 | `agents/store-bound-delivery`    | done        |
 | `agents/bound-button-art`        | done        |
 | `agents/portable-seller`         | done        |
-| `agents/world-lighting`          | in progress |
+| `agents/world-lighting`          | done        |
 | `agents/quest-touch-actions`     | done        |
 | `agents/vip-house-absence`       | done        |
 | `agents/vip-full-bless`          | done        |
