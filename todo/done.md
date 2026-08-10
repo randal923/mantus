@@ -4953,3 +4953,67 @@ on retraction (Canary moves them); a relocation whose destination is
 occupied leaves the creature in place (Canary push-moves); the extended
 bridge renders as a drawbridge item over the water ground rather than a
 ground transform (recorded in TODO.md).
+
+## 2026-08-09 — Quest e2e sweep: every chest, key door, and quest scenario driven end to end
+
+**Problem**: quest content shipped piecemeal (chest tables, door keys,
+levers, touches, gates) with spot-check playtests only; nobody had driven
+*all* of it end to end, so silently-dead content could hide in the data
+tables, and two of the three existing quest playtests had quietly rotted
+(cultist-key could no longer log in, gate could no longer pass).
+
+**What changed**:
+
+- New data-driven e2e `playtest:quest-chests`
+  (`server/src/playtest/scenarios/questChestSweep.ts`): sweeps every chest
+  in `chests.json` + `quest-chests.json` — teleports beside each placement,
+  uses it, classifies the outcome against the exact Canary lines
+  (found/empty/too-heavy/no-room), verifies the reward (or its wrapping
+  bag) lands in the inventory, re-uses expecting "The … is empty.", honors
+  shared-`lootedKey` pairs, and finishes by asserting the quest log over the
+  wire. Runs on a dropped-fresh `playtest_quest_sweep` DB, rotates
+  characters every 6 chests (slot pressure), `/heal`s through spawn aggro,
+  retries once when aggro drags the sweeper out of reach, and prints a
+  machine-readable findings report (`SWEEP_REPORT_JSON`).
+- New data-driven e2e `playtest:quest-doors`
+  (`server/src/playtest/scenarios/questDoorKeySweep.ts`): for all 35 doors
+  in `door-keys.json`, finds the chest rewarding the key with the matching
+  ActionId, loots it (opening the reward bag when the chest wraps its
+  rewards), uses the key on every door position, expects the transform, and
+  walks through cardinally-reachable doors. Fresh `playtest_quest_doors` DB.
+- Fixed `cultistKeyChest.ts`: fixed dev token filled its account's character
+  slots after a few runs; now per-run.
+- Fixed `gateOfExpertise.ts`: second use-map fell inside the 200 ms use
+  exhaust (silently degrades to a walk-click) and the persistent
+  character/world broke the level-1 leg on reruns; now waits out the
+  exhaust and runs on a dropped-fresh `playtest_gate` DB.
+- `todo/quests.md` (new): full verified findings backlog — 30 dead chest
+  placements (scenery hosts absent/classification-2 in `otservbr.items.bin`,
+  with the full host/position table and the `MUTABLE_POSITIONS` +
+  `map:convert` fix path), 10 key doors uncompletable behind those dead
+  chests, 3 doors that open but stay impassable (aids 4603/909/3600,
+  elimination notes included), 12 doors with no obtainable key, and the
+  e2e-confirmed fact that all 51 catalog quests are display-only (0
+  started quests after looting every working chest; nothing writes quest
+  storage yet).
+
+**Files**: `server/src/playtest/scenarios/questChestSweep.ts` (new),
+`server/src/playtest/scenarios/questDoorKeySweep.ts` (new),
+`server/src/playtest/scenarios/cultistKeyChest.ts`,
+`server/src/playtest/scenarios/gateOfExpertise.ts`, `server/package.json`
+(2 new scripts), `todo/quests.md` (new), `todo/status.md`, `TODO.md`.
+
+**Verified**: `playtest:rookgaard` PASS; `playtest:cultist-key` PASS;
+`playtest:gate` PASS; `playtest:quest-doors` — 25 door positions unlocked,
+remaining findings are the real content gaps above; `playtest:quest-chests`
+— 328 chests grant+empty cleanly plus 18 correct shared-`lootedKey`
+empties; the 42 findings are exactly the 30 dead placements (confirmed
+independently by a static `otservbr.items.bin` classification audit) plus
+12 chests unlootable from the charged-amulet count import bug (also in
+`todo/quests.md`: Canary charge counts imported as item counts; 2 further
+chests multiply amulets instead of failing); server typecheck clean.
+
+**Residual risk**: the sweeps take ~30–40 minutes combined and are not part
+of any CI gate — they are on-demand suites; ambient-damage lines are
+skipped by pattern, so a chest that answered with a *new* non-Canary line
+would be reported as no-outcome rather than unexpected-message.
