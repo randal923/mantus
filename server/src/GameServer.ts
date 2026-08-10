@@ -17,6 +17,7 @@ import { CharacterHandler } from "./CharacterHandler";
 import { CharacterPersistence } from "./character/CharacterPersistence";
 import { CharacterWriteLane } from "./character/CharacterWriteLane";
 import { MapCleanupService } from "./world/MapCleanupService";
+import { WorldLightCycle } from "./world/WorldLightCycle";
 import { LoginLoadQueue } from "./character/LoginLoadQueue";
 import { CharacterService } from "./character/CharacterService";
 import { MonsterEventService } from "./creature/MonsterEventService";
@@ -266,6 +267,7 @@ export class GameServer {
   private readonly daily: DailyRewardService;
   private readonly quests: QuestService;
   private readonly worldEvents: WorldEventManager;
+  private readonly worldLightCycle = new WorldLightCycle();
   private readonly toolUse: ToolUseHandler;
   private readonly exerciseTraining: ExerciseTrainingHandler;
   private readonly chat: ChatHandler;
@@ -773,6 +775,7 @@ export class GameServer {
       this.wheelTracker,
       this.gemTracker,
       this.cooldownTracker,
+      () => this.worldLightCycle.current(),
       (characterId, now) => this.reclaimLingeringPlayer(characterId, now),
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
@@ -1303,6 +1306,7 @@ export class GameServer {
           this.worldEvents,
           config.rarity,
           new CombatFormula(config.combatSeed ^ 0x5a7e_11d3),
+          this.worldLightCycle,
         )
       : undefined;
     this.chat = new ChatHandler(
@@ -1557,6 +1561,15 @@ export class GameServer {
       this.monsterEvents.tick(now);
       this.spawns?.tick(now);
       this.worldEvents.tick(now);
+      const worldLight = this.worldLightCycle.tick(now);
+      if (worldLight) {
+        // tickable() is only the drained work queue; every playing session
+        // must learn the ambient change, idle ones included.
+        for (const session of this.registry.all()) {
+          if (!session.playerId) continue;
+          session.send({ type: "world-light", ...worldLight });
+        }
+      }
       this.boosted.tick(now);
       this.forgeMonsters?.tick(now);
       this.imbuements.tick(now);

@@ -223,6 +223,24 @@ describe("view-range broadcast", () => {
     return client;
   };
 
+  it("sends the current world light right after the welcome", async () => {
+    startServer();
+    const alice = await join("Alice");
+
+    await waitFor(
+      () => alice.messages.some((m) => m.type === "world-light"),
+      "Alice to receive the world light",
+    );
+    const light = alice.messages.find((m) => m.type === "world-light");
+    if (light?.type !== "world-light") throw new Error("unreachable");
+    expect(light.level).toBeGreaterThanOrEqual(40);
+    expect(light.level).toBeLessThanOrEqual(250);
+    expect(light.color).toBe(215);
+    expect(
+      alice.messages.findIndex((m) => m.type === "welcome"),
+    ).toBeLessThan(alice.messages.indexOf(light));
+  });
+
   it("stops sending a player's movement once they leave view range", async () => {
     startServer();
     const alice = await join("Alice");

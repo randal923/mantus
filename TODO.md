@@ -29,6 +29,20 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **World lighting: equipped light items don't glow yet** (2026-08-07). The
+  lighting pass renders map-item lights, creature `light` state (monster
+  base light + spell light conditions), and the own player's darkness
+  minimum — but a player holding a torch/lamp emits nothing, because the
+  server's item catalog carries no light metadata to feed
+  `Creature.toState()` (Canary: `Player::updateItemsLight` takes the max
+  over the ten equipment slots). Fix: export light intensity/color into the
+  server item catalog (the client's `objects.json` already has both) and
+  fold the equipped max into the player's broadcast light. Also deferred:
+  magic-effect/missile flashes emit no light (OTClient does light them),
+  and there is no client "ambient light" comfort slider
+  (`m_minimumAmbientLight`); the floor-shade predicate treats any ground
+  tile as fully covering, so a translucent-roof edge case may over-darken.
+
 - **Memory-first store purchases: three bounded staleness windows**
   (2026-08-09). (a) Per-character store facts (owned unique items, XP boost
   day counter) load once per session on first store-open and then update

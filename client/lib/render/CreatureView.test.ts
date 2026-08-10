@@ -382,12 +382,11 @@ describe("CreatureView", () => {
       mount,
     );
 
-    const mountSprite = view.container.children[3];
+    const mountSprite = view.container.children[2];
     if (!(mountSprite instanceof Sprite)) throw new Error("mount missing");
     expect(mountSprite.visible).toBe(true);
-    // Below the rider (children[0], default zIndex 0), above the light (-1).
+    // Below the rider (children[0], default zIndex 0).
     expect(mountSprite.zIndex).toBeLessThan(0);
-    expect(mountSprite.zIndex).toBeGreaterThan(-1);
     // Mounts carry no displacement, unlike the rider's 8px shift.
     expect(mountSprite.position.x).toBe(0);
     const rider = view.container.children[0];
@@ -405,7 +404,7 @@ describe("CreatureView", () => {
 
   it("keeps the mount sprite hidden for unmounted creatures", () => {
     const view = new CreatureView(store, outfit, state, undefined, 0xffffff);
-    const mountSprite = view.container.children[3];
+    const mountSprite = view.container.children[2];
     if (!(mountSprite instanceof Sprite)) throw new Error("mount missing");
     expect(mountSprite.visible).toBe(false);
     view.destroy();

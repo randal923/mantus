@@ -37,6 +37,7 @@ import type { Session } from "../Session";
 import type { SpawnManager } from "../spawn/SpawnManager";
 import type { StoreOperatorService } from "../store/StoreOperatorService";
 import type { WorldEventManager } from "../event/WorldEventManager";
+import type { WorldLightCycle } from "../world/WorldLightCycle";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
 
@@ -67,6 +68,7 @@ export class GmCommandHandler {
     private readonly worldEvents: WorldEventManager | null = null,
     private readonly rarityConfig: RarityConfig | null = null,
     private readonly rarityRoll: RarityRoll | null = null,
+    private readonly worldLightCycle: WorldLightCycle | null = null,
   ) {}
 
   /** Returns true when the text was a slash command and has been consumed. */
@@ -149,14 +151,35 @@ export class GmCommandHandler {
       case "raid":
         this.startWorldEvent(session, player, args, now);
         break;
+      case "light":
+        this.setWorldLight(session, args);
+        break;
       default:
         this.reply(
           session,
           false,
-          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /premium [days], /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>, /raid <eventId>",
+          "Commands: /i <item> [count], /spawn <monster> [count], /despawn, /goto <x> <y> [z], /level <n>, /premium [days], /magic <n>, /skill <name> <n>, /soul, /hp <n>, /heal, /where, /mute, /unmute, /kick, /ban, /unban, /note, /coins <amount>, /storerefund <ledgerEntryId>, /raid <eventId>, /light <0-255|day|night>",
         );
     }
     return true;
+  }
+
+  /** Forces the ambient level; the next tick broadcasts it to everyone. */
+  private setWorldLight(session: Session, args: string[]): void {
+    const cycle = this.worldLightCycle;
+    if (!cycle) {
+      this.reply(session, false, "The world light cycle is unavailable.");
+      return;
+    }
+    const argument = (args[0] ?? "").toLowerCase();
+    const level =
+      argument === "day" ? 250 : argument === "night" ? 40 : Number(argument);
+    if (!Number.isInteger(level) || level < 0 || level > 255) {
+      this.reply(session, false, "Usage: /light <0-255|day|night>");
+      return;
+    }
+    cycle.setLevel(level);
+    this.reply(session, true, `World light set to ${level}.`);
   }
 
   /** Credits the operator's own account; never an id from the message. */

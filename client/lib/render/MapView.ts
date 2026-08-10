@@ -57,6 +57,14 @@ interface RenderedTile {
   animatedItemIds: string[];
 }
 
+interface TileLightInfo {
+  x: number;
+  y: number;
+  /** A ground here blocks lights from deeper floors (OTClient's shades). */
+  shade: boolean;
+  lights: { intensity: number; color: number }[];
+}
+
 function podiumTextureKey(display: {
   lookType: number;
   head: number;
@@ -93,6 +101,8 @@ export class MapView {
   private readonly drawnTiles = new Map<string, RenderedTile>();
   /** Keyed by packed numeric position — read per creature per frame. */
   private readonly tileElevations = new Map<number, number>();
+  /** z -> packed position -> shading/light data for the light pass. */
+  private readonly floorLightTiles = new Map<number, Map<number, TileLightInfo>>();
   /** Baked static podium outfit frames; null marks a bake in flight. */
   private readonly podiumTextures = new Map<string, Texture | null>();
   private readonly dynamicRequests = new Map<string, TileState>();
@@ -162,6 +172,69 @@ export class MapView {
 
   projectPosition(x: number, y: number, z: number): { x: number; y: number } {
     return projectFloorPosition(x, y, this.center?.z ?? z, z);
+  }
+
+  /** The drawn tile window on the camera floor, which the lightmap covers. */
+  lightWindow(): {
+    originX: number;
+    originY: number;
+    widthTiles: number;
+    heightTiles: number;
+  } | null {
+    if (!this.center) return null;
+    const windowX = this.viewRange.x + STATIC_TILE_MARGIN;
+    const windowY = this.viewRange.y + STATIC_TILE_MARGIN;
+    return {
+      originX: this.center.x - windowX,
+      originY: this.center.y - windowY,
+      widthTiles: windowX * 2 + 1,
+      heightTiles: windowY * 2 + 1,
+    };
+  }
+
+  /** Floors the light pass walks, deepest first, skipping covered ones. */
+  drawableLightFloors(): number[] {
+    return this.visibleFloors().filter(
+      (z) => this.floors.get(z)?.container.visible ?? false,
+    );
+  }
+
+  /**
+   * Feeds one floor's covering tiles and static item lights into the
+   * lightmap, projected into the camera floor's plane. All of the floor's
+   * shade resets come first so its own lights are never culled by them.
+   */
+  collectFloorLight(
+    z: number,
+    sink: {
+      resetShade(pixelX: number, pixelY: number): void;
+      addLightSource(
+        pixelX: number,
+        pixelY: number,
+        intensity: number,
+        color: number,
+      ): void;
+    },
+  ): void {
+    const tiles = this.floorLightTiles.get(z);
+    if (!tiles || !this.center) return;
+    const shift = (this.center.z - z) * TILE_SIZE;
+    for (const info of tiles.values()) {
+      if (info.shade) {
+        sink.resetShade(info.x * TILE_SIZE - shift, info.y * TILE_SIZE - shift);
+      }
+    }
+    const half = TILE_SIZE / 2;
+    for (const info of tiles.values()) {
+      for (const light of info.lights) {
+        sink.addLightSource(
+          info.x * TILE_SIZE - shift + half,
+          info.y * TILE_SIZE - shift + half,
+          light.intensity,
+          light.color,
+        );
+      }
+    }
   }
 
   /** Item ids on the tile in source stack order (ground first), for look. */
@@ -300,6 +373,7 @@ export class MapView {
     this.regions.clear();
     this.loaded.clear();
     this.tileElevations.clear();
+    this.floorLightTiles.clear();
   }
 
   async setMap(name: string): Promise<void> {
@@ -632,6 +706,7 @@ export class MapView {
       this.tileElevationKey(z, x, y),
       layers.creatureElevation,
     );
+    this.recordTileLight(z, x, y, layers.ground.length > 0, items);
     for (const item of [...layers.beforeCreature, ...layers.topItems]) {
       this.drawItem(
         item,
@@ -820,12 +895,43 @@ export class MapView {
     this.drawTile(Number(floorText), x, y);
   }
 
+  private recordTileLight(
+    z: number,
+    x: number,
+    y: number,
+    shade: boolean,
+    items: TileRenderItem<TibiaObject>[],
+  ): void {
+    let lights: TileLightInfo["lights"] | null = null;
+    for (const { object } of items) {
+      if (object.flags.lightIntensity <= 0) continue;
+      (lights ??= []).push({
+        intensity: object.flags.lightIntensity,
+        color: object.flags.lightColor,
+      });
+    }
+    const key = this.tileElevationKey(z, x, y);
+    if (!shade && !lights) {
+      this.floorLightTiles.get(z)?.delete(key);
+      return;
+    }
+    let floor = this.floorLightTiles.get(z);
+    if (!floor) {
+      floor = new Map();
+      this.floorLightTiles.set(z, floor);
+    }
+    floor.set(key, { x, y, shade, lights: lights ?? [] });
+  }
+
   private destroyRenderedTile(key: string): void {
     const [floorText, coordinates] = key.split(":") as [string, string];
     const [x, y] = coordinates.split(",").map(Number);
     this.tileElevations.delete(
       this.tileElevationKey(Number(floorText), x ?? 0, y ?? 0),
     );
+    this.floorLightTiles
+      .get(Number(floorText))
+      ?.delete(this.tileElevationKey(Number(floorText), x ?? 0, y ?? 0));
     const rendered = this.drawnTiles.get(key);
     if (!rendered) return;
     for (const id of rendered.animatedItemIds) this.animatedItems.unregister(id);
