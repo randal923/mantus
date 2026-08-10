@@ -105,10 +105,14 @@ describe("worldActionPreconditions", () => {
         continue;
       }
       expect(WORLD_ACTION_REQUIREMENTS[kind].exclusive).toBe(true);
-      // Quest touches and quest levers resolve from position tables: the
-      // service re-reads the live tile state itself, and none of their
-      // registered positions stand on house tiles.
+      // Quest touches, quest levers and chests resolve from position
+      // tables: their hosts are often baked scenery with no world item, and
+      // the services own their durable gates. Chests keep the house check.
       if (kind === "quest-touch" || kind === "quest-lever") continue;
+      if (kind === "chest") {
+        expect(WORLD_ACTION_REQUIREMENTS[kind].houseAccess).toBe(true);
+        continue;
+      }
       expect(WORLD_ACTION_REQUIREMENTS[kind].itemStillPlaced).toBe(true);
       expect(WORLD_ACTION_REQUIREMENTS[kind].houseAccess).toBe(true);
     }

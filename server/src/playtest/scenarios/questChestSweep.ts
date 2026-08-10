@@ -317,12 +317,18 @@ try {
     // 2. The granted reward must be carried now.
     const candidates = rewardTypeIds(chest);
     try {
+      // Grants land in the first free slot, which mid-window can be inside
+      // the starter bag; the carried summary sees closed-bag contents where
+      // the top-level slot list cannot.
       await client.waitFor(
         (m): m is Extract<typeof m, { type: "inventory-updated" }> =>
           m.type === "inventory-updated" &&
-          m.inventory.items.some((entry) =>
+          (m.inventory.items.some((entry) =>
             candidates.includes(entry.item.typeId),
-          ),
+          ) ||
+            (m.inventory.carried ?? []).some((entry) =>
+              candidates.includes(entry.typeId),
+            )),
         "inventory holding the chest reward",
         { since: beforeUse, timeoutMs: 4_000 },
       );

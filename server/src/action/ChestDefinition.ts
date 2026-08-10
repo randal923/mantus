@@ -9,6 +9,12 @@ export interface ChestReward {
   readonly actionId?: number;
   /** Written text stamped on the granted item (letters, notes, scripts). */
   readonly text?: string;
+  /**
+   * Charge count stamped on the granted item. Canary grants charged
+   * non-stackables (amulets, necklaces) as one item whose subtype is the
+   * charge count, never as multiple items.
+   */
+  readonly charges?: number;
 }
 
 /**

@@ -5017,3 +5017,84 @@ chests multiply amulets instead of failing); server typecheck clean.
 of any CI gate — they are on-demand suites; ambient-damage lines are
 skipped by pattern, so a chest that answered with a *new* non-Canary line
 would be reported as no-outcome rather than unexpected-message.
+
+## 2026-08-09 — Quest-fix pass: dead chests, charged rewards, "impassable" doors, keyless-door triage
+
+**Problem**: the 2026-08-09 quest e2e sweep left a findings backlog in
+`todo/quests.md`: 30 chest placements were dead (baked scenery hosts never
+became world items, so `resolveWorldAction` never saw them and 10 key doors
+were uncompletable), 14 chests imported Canary charge counts as item counts
+(12 permanently unlootable "no room", 2 granting five amulets where Canary
+grants one with 5 charges — an economy-relevant multiplication), 3 opened
+doors deterministically refused the walk-through, 12 doors had no obtainable
+key, and chest 6249 was unreachable.
+
+**What changed**:
+
+- **Chests resolve positionally** (`resolveWorldAction.ts`): a registered
+  chest now fires from the position table alone, exactly like quest touches
+  — the sweep's suggested `MUTABLE_POSITIONS` route would have pulled 30
+  pieces of scenery/ground out of the baked client draw (the void-ocean
+  class of converter bug) to surface items the chest handler never reads.
+  The `item` field left `WorldAction`'s chest variant (nothing consumed it),
+  chest preconditions became `itemStillPlaced: false` (house check kept),
+  and the old "rejects a chest whose registered item type is not on the
+  tile" test flipped into the baked-host regression test. No map or
+  world-seed regeneration was needed at all.
+- **Charged rewards** (`tools/importCanaryChests.mjs`): a non-stackable
+  reward whose catalog type declares `charges` and whose count exceeds 1 now
+  imports as count 1 with a `charges` attribute — mirroring Canary's
+  `addItem`, where that count is the charge subtype of a single item.
+  `charges` flows end to end: `ChestDefinition.ChestReward`,
+  `loadChestDefinitions` validation, `ChestService`'s attribute bag (an
+  attributed reward already grants as its own row), and
+  `buildQuestChestDefinitions`' content-attribute allowlist. Exactly the 14
+  affected chests changed in the regenerated `chests.json`;
+  `quest-chests.json` was rebuilt unchanged. Converter re-pinned in
+  `content/source-manifest.json` (`parity:check` green).
+- **"Impassable" doors were wildlife, not walls**: live execution of the
+  real `World`/`MovementRules`/`DynamicMapItems` pipeline at all three tiles
+  (aids 4603/909/3600) proved every gate passes — the deterministic refusal
+  was the seeded monster AI parking the same monster in the same doorway
+  every run. `startPlaytestServer` gained `disableCreatures` (sets
+  `creatures.enabled: false` in the parity config) and the door sweep uses
+  it; it also now asserts unlocks by the catalog's OPEN door id, reports the
+  wire `position-correction` reason on refusals, and drops each spent
+  key/bag after its door (25+ accumulated grants overflowed the sweeper's
+  top-level slots and hid later keys inside the bag).
+- **Keyless doors decided per door** (now in `todo/quests.md`): 3610 healed
+  with the chest fix; 3001/3003–3007/808 sealed (no source exists in Canary
+  either); 3002 sealed (Canary's own chest entry is broken upstream);
+  3012/3940/3142/3666 recorded as NPC-dialogue imports with exact Canary
+  refs. Doors 3301/3302 turned out to sit on custom 12035 doors whose key is
+  inert in Canary too — they open by plain use, and the sweep now mirrors
+  that fallback.
+- **Chest 6249 demystified**: not dead geometry — its pocket is gated by
+  quest-variant door 5104 at (32876,31957,11), which fails closed until
+  quest storage ships. Recorded under the quest-state project; needs no
+  map change.
+- Chest sweep reward check also consults the carried summary
+  (`inventory.carried`), which sees closed-bag contents top-level slots
+  cannot. Two TODO.md entries added: the door-open override never supplies
+  a ground speed, and `overrideMapData.isWalkable` shadows `blocksPath`
+  for pathfinding whenever an override exists.
+
+**Files**: `server/src/action/{resolveWorldAction,WorldAction,worldActionPreconditions,ChestDefinition,loadChestDefinitions}.ts`,
+`server/src/chest/{ChestService,buildQuestChestDefinitions}.ts`,
+`server/src/playtest/{startPlaytestServer.ts,scenarios/questDoorKeySweep.ts,scenarios/questChestSweep.ts}`,
+`tools/importCanaryChests.mjs`, `server/data/chests.json`,
+`content/items/canary-chests.json`, `content/source-manifest.json`, tests.
+
+**Verified**: `playtest:quest-chests` 387/388 chests grant+empty correctly
+(367 direct + 20 shared-key empties; sole finding is quest-door-gated 6249);
+`playtest:quest-doors` PASS — every reachable key door opens and walks
+through (34 by key, 2 by plain use, 12 decided no-key-source);
+`playtest:rookgaard`, `playtest:cultist-key`, `playtest:gate` all PASS;
+server unit suite (3 957 tests), tools tests, `parity:check`, typecheck all
+green.
+
+**Residual risk**: chest use no longer requires the host item on the tile —
+acceptable because the position table is server data, reach/visibility/house
+checks still run, and the durable per-character looted gate lives in the
+chest store; a count-1 charged reward still grants catalog-default charges
+where Canary would grant a 1-charge item (no such reward ships today).

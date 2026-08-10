@@ -17,7 +17,10 @@ const QUEST_CHESTS_PATH = fileURLToPath(
 function requireRewards(value: unknown, label: string): ChestReward[] {
   if (!Array.isArray(value)) throw new Error(`chests.json ${label} is invalid`);
   return value.map((entry) => {
-    const { typeId, count, actionId, text } = entry as Record<string, unknown>;
+    const { typeId, count, actionId, text, charges } = entry as Record<
+      string,
+      unknown
+    >;
     if (
       !Number.isInteger(typeId) ||
       Number(typeId) <= 0 ||
@@ -42,11 +45,18 @@ function requireRewards(value: unknown, label: string): ChestReward[] {
     ) {
       throw new Error(`chests.json ${label} has an invalid reward text`);
     }
+    if (
+      charges !== undefined &&
+      (!Number.isInteger(charges) || Number(charges) <= 0)
+    ) {
+      throw new Error(`chests.json ${label} has an invalid reward charges`);
+    }
     return {
       typeId: Number(typeId),
       count: Number(count),
       ...(actionId === undefined ? {} : { actionId: Number(actionId) }),
       ...(text === undefined ? {} : { text }),
+      ...(charges === undefined ? {} : { charges: Number(charges) }),
     };
   });
 }

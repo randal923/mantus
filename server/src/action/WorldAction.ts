@@ -20,9 +20,12 @@ export type WorldAction =
       readonly door: NonNullable<ItemType["door"]>;
     }
   | {
-      /** A placed quest chest; its reward is granted, not opened as a box. */
+      /**
+       * A registered quest chest; its reward is granted, not opened as a
+       * box. Resolved from the position table alone (like quest touches):
+       * many hosts are baked draw-only scenery, so no map item is carried.
+       */
       readonly kind: "chest";
-      readonly item: MapItem;
       readonly chest: ChestDefinition;
     }
   | {

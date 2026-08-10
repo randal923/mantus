@@ -206,7 +206,7 @@
   },
   {
    "path": "tools/importCanaryChests.mjs",
-   "sha256": "8513d7f3546ab153d413fa1cacf3eec2c77ce4f509dbf29ba5ea5e308c695f27"
+   "sha256": "3c9dd75359e9ef3fc44ec2abcfa5b50f87ecf917ed08bab2edec68b17173e0f6"
   },
   {
    "path": "tools/importCanaryCreatures.mjs",

@@ -57,6 +57,18 @@ const dataUrl = (name: string) =>
 const doorsDocument = JSON.parse(readFileSync(dataUrl("door-keys.json"), "utf8")) as {
   doors: { actionId: number; positions: Vec3[] }[];
 };
+/** Item ids whose catalog door role is "open" — the unlock proof. */
+const openDoorIds = new Set(
+  Object.values(
+    (
+      JSON.parse(readFileSync(dataUrl("item-catalog.json"), "utf8")) as {
+        items: Record<string, { id: number; door?: { role?: string } }>;
+      }
+    ).items,
+  )
+    .filter((item) => item.door?.role === "open")
+    .map((item) => item.id),
+);
 const doors: DoorEntry[] = doorsDocument.doors.map((door) => ({
   actionId: door.actionId,
   positions: door.positions,
@@ -114,7 +126,12 @@ if (!externalUrl) {
   }
   process.env.PLAYTEST_DATABASE = SWEEP_DATABASE;
 }
-const server = externalUrl ? null : await startPlaytestServer({ log: false });
+// Creatures are disabled: the walk-through measures the door, and the
+// seeded monster AI otherwise parks the same monster in the same doorway on
+// every run (the 2026-08-09 sweep's three "impassable" doors).
+const server = externalUrl
+  ? null
+  : await startPlaytestServer({ log: false, disableCreatures: true });
 const url = externalUrl ?? server!.url;
 const findings: Finding[] = [];
 let opened = 0;
@@ -222,6 +239,11 @@ try {
     // 1. Obtain the key (once per shared lootedKey). Retried once: monster
     //    aggro can drag the sweeper out of reach before the use lands.
     let key = carriedKeys.get(source.lootedKey);
+    // The top-level grant (key or its reward bag), dropped after this door:
+    // every fresh key must surface in a top-level slot for the freshness
+    // check below, and 25+ accumulated grants overflow the sweeper's slots
+    // into the bag where that check cannot see them.
+    let cleanup: { itemId: string; revision: number } | null = null;
     if (!key) {
       try {
         let found: { text: string } | null = null;
@@ -278,6 +300,7 @@ try {
             !knownKeyIds.has(candidate.item.id),
         )!;
         knownKeyIds.add(entry.item.id);
+        cleanup = { itemId: entry.item.id, revision: entry.item.revision };
         if (source.containerTypeId === undefined) {
           key = { itemId: entry.item.id, revision: entry.item.revision };
         } else {
@@ -324,6 +347,7 @@ try {
     }
 
     // 2. Use the key on every door position; walk through the first one.
+    let lastStand: Vec3 | null = null;
     for (const [positionIndex, position] of door.positions.entries()) {
       const doorLabel = `${label} @(${position.x},${position.y},${position.z})`;
       let stand: Vec3;
@@ -333,6 +357,7 @@ try {
         record("door-unreachable", position, String(error).split("\n")[0] ?? "");
         continue;
       }
+      lastStand = stand;
       // A pristine door is a static map item, so tile-states does not cover
       // its tile at all until the key transforms it into a world item; the
       // first covering snapshot after the use IS the unlock.
@@ -346,6 +371,8 @@ try {
         targetPosition: position,
       });
       try {
+        // The unlock proof is the OPEN door id on the tile, not merely a
+        // covering snapshot: a re-lock or partial transform must not pass.
         const changed = await client.waitFor(
           (m): m is Extract<typeof m, { type: "tile-states" }> =>
             m.type === "tile-states" &&
@@ -353,9 +380,10 @@ try {
               (tile) =>
                 tile.position.x === position.x &&
                 tile.position.y === position.y &&
-                tile.position.z === position.z,
+                tile.position.z === position.z &&
+                tile.items.some((item) => openDoorIds.has(item.itemId)),
             ),
-          "door transform after the key use",
+          "open door id on the tile after the key use",
           { since: beforeUnlock, timeoutMs: 4_000 },
         );
         const doorTile = changed.visible.find(
@@ -375,16 +403,40 @@ try {
           .find((m) => m.type === "combat-log");
         if (said && said.type === "combat-log" && said.text === "The key does not match.") {
           record("key-did-not-match", position, `key from chest ${source.uniqueId}`);
-        } else {
+          continue;
+        }
+        // Canary's door_key table stamps some positions whose door is a
+        // plain custom door its key script never handles (aids 3301/3302 on
+        // 12035): the key is inert there in Canary too, and the door simply
+        // opens by hand. Mirror the player and try a plain use.
+        const beforePlain = client.mark();
+        await useExhaust();
+        client.send({ type: "use-map", position });
+        try {
+          await client.waitFor(
+            (m): m is Extract<typeof m, { type: "tile-states" }> =>
+              m.type === "tile-states" &&
+              m.visible.some(
+                (tile) =>
+                  tile.position.x === position.x &&
+                  tile.position.y === position.y &&
+                  tile.position.z === position.z &&
+                  tile.items.some((item) => openDoorIds.has(item.itemId)),
+              ),
+            "open door id on the tile after a plain use",
+            { since: beforePlain, timeoutMs: 4_000 },
+          );
+          ok(`${doorLabel}: key inert (Canary parity), opened by plain use`);
+        } catch {
           record(
             "door-did-not-open",
             position,
             said && said.type === "combat-log"
               ? `said: "${said.text}"`
-              : "no tile change and no message after the key use",
+              : "no tile change after the key use or a plain use",
           );
+          continue;
         }
-        continue;
       }
       opened++;
       console.log(`  ✓ [${index + 1}/${doors.length}] ${doorLabel}: unlocked`);
@@ -417,9 +469,47 @@ try {
           );
           ok(`${doorLabel}: walked through`);
         } catch {
-          record("door-not-passable", position, "opened but the step was refused");
+          // Say WHY: the movement path reports its refusal on the wire.
+          const correction = client.messages
+            .slice(beforeStep)
+            .filter(
+              (m): m is Extract<typeof m, { type: "position-correction" }> =>
+                m.type === "position-correction",
+            )
+            .at(-1);
+          record(
+            "door-not-passable",
+            position,
+            correction
+              ? `step refused: ${correction.reason} at (${correction.position.x},${correction.position.y},${correction.position.z})`
+              : "opened but the step was refused (no position-correction seen)",
+          );
         }
       }
+    }
+
+    // Drop the spent grant beside the last door so the next door's fresh key
+    // lands in a visible top-level slot again. Best-effort: a failed drop
+    // only risks the overflow this cleanup exists to prevent.
+    if (cleanup !== null && lastStand !== null) {
+      const spent = cleanup;
+      const beforeDrop = client.mark();
+      client.send({
+        type: "drop-item",
+        itemId: spent.itemId,
+        revision: spent.revision,
+        position: lastStand,
+      });
+      await client
+        .waitFor(
+          (m): m is Extract<typeof m, { type: "inventory-updated" }> =>
+            m.type === "inventory-updated" &&
+            !m.inventory.items.some((entry) => entry.item.id === spent.itemId),
+          "spent key dropped",
+          { since: beforeDrop, timeoutMs: 2_000 },
+        )
+        .catch(() => {});
+      carriedKeys.delete(source.lootedKey);
     }
   }
 

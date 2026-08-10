@@ -616,7 +616,9 @@ describe("WorldActionRegistry chests", () => {
     expect(harness.lootedChests).toEqual([]);
   });
 
-  it("rejects a chest whose registered item type is not on the tile", async () => {
+  it("loots a chest whose host is baked scenery with no world item", async () => {
+    // Many Canary chest hosts (dead trees, coffins, ground tiles) never
+    // surface as server-owned items; the position registration alone fires.
     const harness = makeHarness({
       items: [{ position: TILE, item: seededMapItem(LEVER_OFF, TILE) }],
       chests: chestAt(TILE),
@@ -624,9 +626,11 @@ describe("WorldActionRegistry chests", () => {
     const { session } = await harness.makeSession("actor", { x: 5, y: 5, z: 7 });
 
     expect(harness.worldActions.handleChestUse(session, TILE, 1_000)).toBe(
-      false,
+      true,
     );
-    expect(harness.lootedChests).toEqual([]);
+    expect(harness.lootedChests).toEqual([
+      { characterId: "actor", uniqueId: 5_000 },
+    ]);
   });
 
   it("rejects chest use from beyond reach", async () => {

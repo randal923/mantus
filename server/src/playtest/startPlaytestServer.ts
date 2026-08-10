@@ -38,6 +38,13 @@ export async function startPlaytestServer(
     rarityChances?: Record<string, number>;
     /** Overrides the pinned 1x loot rate, to force loot-table drops. */
     lootRate?: number;
+    /**
+     * Boots the world without monster spawns. Sweeps that measure map
+     * mechanics (door walk-throughs) use this so a monster parked on the
+     * measured tile cannot fail the run — the seeded AI parks the same
+     * monster on the same tile every time.
+     */
+    disableCreatures?: boolean;
   } = {},
 ): Promise<PlaytestServer> {
   const log = process.env.PLAYTEST_LOG === "1" || (options.log ?? false);
@@ -96,13 +103,18 @@ export async function startPlaytestServer(
 }
 
 function writeParityConfig(
-  options: { rarityChances?: Record<string, number>; lootRate?: number } = {},
+  options: {
+    rarityChances?: Record<string, number>;
+    lootRate?: number;
+    disableCreatures?: boolean;
+  } = {},
 ): string {
   const config = parse(
     readFileSync(join(serverRoot, "../config.yml"), "utf8"),
   ) as {
     rates?: Record<string, number>;
     rarity?: unknown;
+    creatures?: { enabled?: boolean };
   };
   config.rates = {
     ...config.rates,
@@ -119,6 +131,9 @@ function writeParityConfig(
   delete config.rarity;
   if (options.rarityChances) {
     config.rarity = { chances: options.rarityChances };
+  }
+  if (options.disableCreatures && config.creatures) {
+    config.creatures = { ...config.creatures, enabled: false };
   }
   const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
   const path = join(directory, "config.yml");

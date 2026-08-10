@@ -39,12 +39,12 @@ export function resolveWorldAction(
     (left, right) => right.stackIndex - left.stackIndex,
   );
   // A chest's unique-id registration outranks every generic behaviour of the
-  // same item type in Canary — container open, rotation, reading.
+  // same item type in Canary — container open, rotation, reading. Hosts are
+  // often baked draw-only scenery (dead trees, coffins, ground tiles) the
+  // converter never surfaces as world items, so like quest touches the chest
+  // resolves purely from the position table.
   const chest = chests.get(positionKey(position));
-  if (chest) {
-    const placed = items.find((item) => item.itemId === chest.itemTypeId);
-    if (placed) return { kind: "chest", item: placed, chest };
-  }
+  if (chest) return { kind: "chest", chest };
   // Quest touches live on baked static scenery (Canary registers them by
   // aid on ids the item catalog may not even carry), so they resolve purely
   // from the position table — never from a placed item.
