@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { planTradeReservation } from "../../trade/planTradeReservation";
+import { ADVENTURERS_STONE_TYPE_ID } from "../adventurersStoneTypeId";
 import { ITEM_POUCH_TYPE_ID } from "../itemPouchTypeId";
 import type { Item } from "../Item";
 import { ItemCatalog } from "../ItemCatalog";
@@ -18,6 +19,7 @@ const POUCH_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const SELLER_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const LOOT_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff";
 const SWORD_ID = "abababab-abab-4bab-8bab-abababababab";
+const STONE_ID = "acacacac-acac-4cac-8cac-acacacacacac";
 
 const makeItemType = (
   overrides: Partial<ItemType> & { id: number },
@@ -65,6 +67,7 @@ const catalog = new ItemCatalog([
     movable: false,
   }),
   makeItemType({ id: SELLER_TYPE, movable: false }),
+  makeItemType({ id: ADVENTURERS_STONE_TYPE_ID, movable: false }),
   makeItemType({ id: LOOT_TYPE, stackable: true, maxCount: 100, weight: 1 }),
   makeItemType({ id: SWORD_TYPE, equipmentSlot: "weapon" }),
 ]);
@@ -213,6 +216,77 @@ describe("bound slot rules", () => {
         destinationSlot: 1,
       }),
     ).toBeNull();
+  });
+
+  it("locks the adventurer's stone into the bound container", () => {
+    const items = [
+      ...fixture(),
+      {
+        id: STONE_ID,
+        typeId: ADVENTURERS_STONE_TYPE_ID,
+        count: 1,
+        attributes: {},
+        version: 1,
+        location: { kind: "container", containerId: BOUND_ID, slot: 1 },
+      } satisfies Item,
+    ];
+    expect(
+      planMoveToContainer({
+        characterId: CHARACTER_ID,
+        catalog,
+        items,
+        itemId: STONE_ID,
+        expectedVersion: 1,
+        destinationContainerId: BACKPACK_ID,
+        destinationVersion: 1,
+        destinationSlot: 1,
+      }),
+    ).toBeNull();
+    expect(
+      planDrop({
+        characterId: CHARACTER_ID,
+        catalog,
+        carried: { items },
+        world: emptyWorld,
+        itemId: STONE_ID,
+        expectedVersion: 1,
+        position: { x: 100, y: 100, z: 7 },
+      }),
+    ).toBeNull();
+    expect(
+      planTradeReservation({
+        characterId: CHARACTER_ID,
+        items,
+        itemId: STONE_ID,
+        expectedVersion: 1,
+      }),
+    ).toBeNull();
+  });
+
+  it("lets an adventurer's stone enter the bound container", () => {
+    const items = [
+      ...fixture(),
+      {
+        id: STONE_ID,
+        typeId: ADVENTURERS_STONE_TYPE_ID,
+        count: 1,
+        attributes: {},
+        version: 1,
+        location: { kind: "container", containerId: BACKPACK_ID, slot: 1 },
+      } satisfies Item,
+    ];
+    expect(
+      planMoveToContainer({
+        characterId: CHARACTER_ID,
+        catalog,
+        items,
+        itemId: STONE_ID,
+        expectedVersion: 1,
+        destinationContainerId: BOUND_ID,
+        destinationVersion: 1,
+        destinationSlot: 1,
+      }),
+    ).not.toBeNull();
   });
 
   it("refuses a swap that would displace a bound child outward", () => {

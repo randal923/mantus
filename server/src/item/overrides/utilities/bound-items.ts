@@ -10,9 +10,9 @@ export const boundItems: ItemOverride = {
   name: "bound items",
   article: "your",
   description:
-    "Store purchases are delivered here. Your Loot Pouch and Portable " +
-    "Seller are bound to you and never leave; everything else can be " +
-    "taken out.",
+    "Store purchases are delivered here. Your Loot Pouch, Adventurer's " +
+    "Stone and Portable Seller are bound to you and never leave; everything " +
+    "else can be taken out.",
   // 500 = MAX_CONTAINER_CAPACITY renders as unlimited slots, and the
   // 500-row carried cap binds long before the slots would.
   containerCapacity: 500,

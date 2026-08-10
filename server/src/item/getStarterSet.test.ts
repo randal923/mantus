@@ -79,15 +79,20 @@ describe("getStarterSet", () => {
     });
   });
 
-  it("gives every vocation a loot pouch inside the bound container", () => {
+  it("gives every vocation a loot pouch and an adventurer's stone inside the bound container", () => {
     for (const vocation of STARTER_VOCATIONS) {
       const starterSet = getStarterSet(vocation);
 
       expect(
         starterSet.equipment.some((item) => item.slot === "bound"),
       ).toBe(true);
-      expect(starterSet.boundContents).toEqual([{ typeId: 23721, count: 1 }]);
+      expect(starterSet.boundContents).toEqual([
+        { typeId: 23721, count: 1 },
+        { typeId: 16277, count: 1 },
+      ]);
       expect(catalog.require(23721).name).toBe("loot pouch");
+      expect(catalog.require(16277).name).toBe("adventurer's stone");
+      expect(catalog.require(16277).movable).toBe(false);
     }
   });
 

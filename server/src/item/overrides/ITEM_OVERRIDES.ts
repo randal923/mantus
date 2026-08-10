@@ -1,4 +1,5 @@
 import type { ItemOverride } from "./ItemOverride";
+import { adventurersStone } from "./utilities/adventurers-stone";
 import { boundItems } from "./utilities/bound-items";
 import { lootPouch } from "./utilities/loot-pouch";
 
@@ -21,4 +22,5 @@ import { lootPouch } from "./utilities/loot-pouch";
 export const ITEM_OVERRIDES: ReadonlyArray<ItemOverride> = [
   lootPouch,
   boundItems,
+  adventurersStone,
 ];
