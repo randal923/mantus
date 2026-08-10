@@ -1380,3 +1380,15 @@ limitations accepted during a session are recorded in the owning feature file
   lands on avoid-tiles (fields). Recommended fix: merge the static
   `blocksPath` bit into the override instead of shadowing it. Owner:
   movement.
+
+- 2026-08-10: `monotonicNow()` (`performance.timeOrigin + performance.now()`)
+  lags wall-clock time by the host's cumulative sleep while the process runs
+  (CLOCK_MONOTONIC stalls during suspend — routine on the WSL2 dev laptop,
+  negligible on Fly VMs). Everything persisted as "epoch ms from the server
+  clock" (`ready_at`, `skull_expires_at`, prey `free_reroll_at`,
+  `last_seen_at` stamina anchoring) skews when written and read under
+  differently-lagged clocks. Cooldown restore now caps remaining at the
+  spell's `totalMs` (2026-08-10 fix), but the other timers have no such
+  bound. Recommended fix: anchor monotonicNow to `Date.now()` at startup and
+  re-anchor when `Date.now()` and the monotonic clock diverge past a
+  threshold, keeping in-tick monotonicity. Owner: server time.

@@ -111,6 +111,31 @@ databaseDescribe("PgCooldownStore integration", () => {
     expect(await store.load(characterId)).toEqual([]);
   });
 
+  it("replaces rows whose keys survive into the new set", async () => {
+    const readyAt = Date.now() + 30_000;
+    await store.replace(characterId, [
+      { key: "spell:exevo-gran-mas-vis", readyAt, totalMs: 36_000 },
+      { key: "group:focus", readyAt, totalMs: 36_000 },
+    ]);
+    await store.replace(characterId, [
+      { key: "spell:exevo-gran-mas-vis", readyAt: readyAt + 60_000, totalMs: 36_000 },
+      { key: "group:attack", readyAt: readyAt + 60_000, totalMs: 4_000 },
+    ]);
+
+    const loaded = await store.load(characterId);
+    expect(loaded).toHaveLength(2);
+    expect(loaded).toContainEqual({
+      key: "spell:exevo-gran-mas-vis",
+      readyAt: readyAt + 60_000,
+      totalMs: 36_000,
+    });
+    expect(loaded).toContainEqual({
+      key: "group:attack",
+      readyAt: readyAt + 60_000,
+      totalMs: 4_000,
+    });
+  });
+
   it("scopes rows to their character", async () => {
     const other = await createCharacter("beta");
     await store.replace(characterId, [

@@ -380,6 +380,39 @@ describe("CharacterPersistence", () => {
     error.mockRestore();
   });
 
+  it("does not leak an unhandled rejection when a begin promise is dropped", async () => {
+    const failure = new Error("database unavailable");
+    const store = makeStore(async () => {
+      throw failure;
+    });
+    const persistence = new CharacterPersistence(store, 30_000, 2, 0);
+    const player = new Player(makeCharacter("character-id"), {
+      x: 0,
+      y: 0,
+      z: 7,
+    });
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const rejections: unknown[] = [];
+    const onRejection = (cause: unknown) => {
+      rejections.push(cause);
+    };
+    process.on("unhandledRejection", onRejection);
+
+    persistence.track(player, 0);
+    persistence.saveNow(player, 1);
+    await nextTurn();
+    // Combat lanes take this promise fire-and-forget and may never attach a
+    // handler; a rejection here used to crash the whole process.
+    void persistence.beginExternalMutation(player, 2);
+    await nextTurn();
+    await nextTurn();
+
+    expect(rejections).toEqual([]);
+    process.removeListener("unhandledRejection", onRejection);
+    await persistence.stop();
+    error.mockRestore();
+  });
+
   it("stamps last_seen_at with a final save when a clean character logs out", async () => {
     const snapshots: CharacterSaveSnapshot[] = [];
     const store = makeStore(async (snapshot) => {

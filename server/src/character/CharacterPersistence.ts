@@ -100,10 +100,23 @@ export class CharacterPersistence {
     }
   }
 
-  async beginExternalMutation(
+  beginExternalMutation(
     player: Player,
     now: number,
     options: BeginExternalMutationOptions = {},
+  ): Promise<number> {
+    const result = this.beginExternalMutationInner(player, now, options);
+    // Combat lanes take this promise fire-and-forget and may early-return
+    // before attaching a handler; without this, a failed save behind the
+    // tail becomes an unhandled rejection and kills the process.
+    void result.catch(() => undefined);
+    return result;
+  }
+
+  private async beginExternalMutationInner(
+    player: Player,
+    now: number,
+    options: BeginExternalMutationOptions,
   ): Promise<number> {
     const state = this.states.get(player.id);
     if (

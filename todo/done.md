@@ -5098,3 +5098,119 @@ acceptable because the position table is server data, reach/visibility/house
 checks still run, and the durable per-character looted gate lives in the
 chest store; a count-1 charged reward still grants catalog-default charges
 where Canary would grant a 1-charge item (no such reward ships today).
+
+## 2026-08-10 — Cults of Carlin hideout exit portal (players were trapped)
+
+**Problem**: stepping on the exit portal at (32351,31679,8) in the Carlin
+cultist hideout did nothing, stranding players in the hunt area. The OTBM
+stores that teleport with destination 0,0,0 — Canary drives it from a Lua
+MoveEvent (`movements_movement-cults-of-carlin-teleport.lua`) — so the map
+converter dropped it as `missing-destination` and no transition existed.
+
+**What changed**: added `QUEST_TELEPORTS`, a position-keyed table of
+script-driven step-in portals (destination + landing effect), applied by
+`PressurePlateRegistry.onStepIn` right after movement gates and before
+plate/trap handling. First entry: the Carlin hideout exit, returning the
+player to the crypt at (32403,31813,8) with the teleport effect at the
+landing, matching the Canary script. Parity ledger entry for the Lua flipped
+to `implemented`.
+
+**Files**: `server/src/action/questTeleportTables.ts` (new),
+`server/src/action/PressurePlateRegistry.ts`,
+`server/src/action/PressurePlateRegistry.test.ts`,
+`server/src/playtest/scenarios/cultsCarlinPortal.ts` (new),
+`server/package.json`, `content/canary-world-action-parity.json`.
+
+**Verified**: `yarn playtest:carlin-portal` PASS (enters the hideout via the
+static crypt portal's destination, walks onto the exit tile, lands at
+(32403,31813,8)); `PressurePlateRegistry` vitest suite 15/15; server
+typecheck clean.
+
+**Residual risk**: only this one portal ships in the table; the ~45 other
+movement-triggered tiles (triage bucket D) and ~25 teleport-on-use E entries
+remain deferred in `todo/quest-parity-triage.md`. QUEST_TELEPORTS entries are
+unconditional (no storage/level gating) — storage-gated portals must not be
+added to it until quest storage ships.
+
+## 2026-08-10 — Spell cooldowns: persist failure (duplicate key) and clock-skew restore cap
+
+**Problem**: exevo gran mas vis / exevo gran mas flam appeared stuck on
+cooldown forever (both buttons frozen at "36" — the shared `group:focus`
+entry, 40 s base minus the 4 s wheel grade-2 reduction; the action bar clamps
+the displayed remaining to `totalMs`, so any absurdly long cooldown renders
+as a full, motionless overlay). The server also logged
+`failed to persist cooldowns for <id>: duplicate key value violates unique
+constraint "character_spell_cooldowns_pkey"` on every disconnect whose flush
+shared a key with the previous rows.
+
+**Root causes**: (1) `replaceCooldownsQuery` did the full replace as
+`WITH deleted AS (DELETE ...) INSERT ...`; the sub-statements' execution
+order is unspecified, so re-inserting a key that already had a row raised
+duplicate_key and the whole flush failed — cooldowns silently stopped
+persisting once any key survived a relog (charter rule 8 leak: relogging
+could shed a cooldown). (2) The login restore trusted persisted `ready_at`
+unbounded. `monotonicNow()` is `performance.timeOrigin + performance.now()`,
+and the monotonic clock stalls while the host sleeps (WSL2 laptop), so the
+in-process clock lags wall time; a row written before a sleep then sits far
+in the *future* of the lagged clock and restored as an hours-long cooldown
+on a 36 s spell.
+
+**What changed**: `replaceCooldownsQuery` rewritten as upsert-incoming +
+delete-keys-that-dropped-out (the two legs touch disjoint rows, so the
+same-statement hazard cannot recur); `CharacterHandler` login restore now
+caps `readyAt` at `now + totalMs` so no restored cooldown can exceed the
+spell's own total.
+
+**Files**: `server/src/combat/sql/replaceCooldownsQuery.ts`,
+`server/src/CharacterHandler.ts`,
+`server/src/combat/PgCooldownStore.integration.test.ts` (regression:
+same-key replace), `server/src/GameServer.test.ts` (regression: restored
+cooldown capped at its total).
+
+**Verified**: new integration test reproduced the exact duplicate-key error
+before the fix and passes after (4/4 against local docker Postgres); new
+GameServer relog test passes plus the existing carry-across-relog test
+(40/40); server typecheck clean.
+
+**Residual risk**: `monotonicNow()` drift across host sleeps is systemic
+(recorded in TODO.md); the cap only bounds the damage for cooldowns.
+
+## 2026-08-10 — Server crash under kill bursts: pooler exhaustion + unhandled save rejection
+
+**Problem**: Killing many cultists in Carlin crashed the whole server with
+`EMAXCONNSESSION` ("max clients reached in session mode"). Two stacked bugs:
+(1) `server/.env` (the file `yarn dev` actually loads — not the root `.env`)
+pointed at the Supabase *session-mode* pooler (port 5432) with
+`PG_POOL_MAX=25`, but session mode pins one backend per pool client and caps
+clients at pool_size 15, so a save burst fatally rejected client #16.
+(2) That rejection escaped as an unhandled promise rejection and killed the
+process: `beginExternalMutation` promises are handed fire-and-forget to
+combat lanes (`conjureForCombat`, `usePotionForCombat`), whose early-return
+paths never attach a handler; `SpellCaster.executeConjure` also ignored
+`conjureForCombat`'s return value, leaving `externalMutationPending` stuck.
+
+**What changed**: `server/.env` now uses the transaction pooler (6543,
+matching the root `.env` and its comment) so client connections multiplex
+over the backend pool and bursts queue instead of erroring;
+`CharacterPersistence.beginExternalMutation` pre-attaches a no-op catch to
+the promise it returns (real consumers still see the rejection; a dropped
+promise can no longer crash the process); `SpellCaster.executeConjure` now
+cancels the external mutation and returns false when the item lane refuses
+the op; `isTransientDatabaseError` treats Supavisor "max clients reached"
+(generic XX000) as transient so saves back off and retry instead of
+poisoning the character.
+
+**Files**: `server/.env`, `server/src/character/CharacterPersistence.ts`,
+`server/src/combat/SpellCaster.ts`,
+`server/src/character/isTransientDatabaseError.ts`,
+`server/src/character/CharacterPersistence.test.ts` (regression: dropped
+begin promise after a failed save must not raise unhandledRejection).
+
+**Verified**: regression test fails with the guard removed and passes with
+it; full character + combat unit suites pass (14/14 and 172/172); server
+typecheck clean; live `SELECT 1` against the 6543 transaction pooler OK.
+
+**Residual risk**: env-file edits don't hot-reload — `yarn dev` must be
+restarted to pick up the new `DATABASE_URL`. Dev Supabase's pool_size 15 is
+still small; real player-scale load wants a bigger pooler/DB tier (prod
+sizing is a deploy concern, not a code change).

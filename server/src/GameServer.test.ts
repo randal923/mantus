@@ -1308,6 +1308,54 @@ describe("auth gate", () => {
     ]);
   });
 
+  it("caps a restored cooldown at its own total", async () => {
+    // A row written under a clock that later diverged (host sleep stalls the
+    // monotonic clock) can claim a readyAt far beyond the spell's total; the
+    // login restore must not turn that into an hours-long cooldown.
+    class CountingCooldownStore extends MemoryCooldownStore {
+      replaces = 0;
+      override async replace(
+        characterId: string,
+        cooldowns: Parameters<MemoryCooldownStore["replace"]>[1],
+      ): Promise<void> {
+        await super.replace(characterId, cooldowns);
+        this.replaces += 1;
+      }
+    }
+    const cooldowns = new CountingCooldownStore();
+    startServer(
+      {},
+      new InMemoryAccountStore(),
+      new InMemoryCharacterStore(),
+      fakeVerifier,
+      { cooldowns },
+    );
+    const first = await connect(server.port, "Chiller", "tok.chiller");
+    sockets.push(first.socket);
+    first.socket.terminate();
+    await waitFor(() => cooldowns.replaces >= 1, "logout flush");
+    await cooldowns.replace(first.playerId, [
+      {
+        key: "spell:exevo-gran-mas-vis",
+        readyAt: Date.now() + 3_600_000,
+        totalMs: 36_000,
+      },
+    ]);
+
+    const second = await connect(server.port, "Chiller", "tok.chiller");
+    sockets.push(second.socket);
+    const welcome = second.messages.find(
+      (message) => message.type === "welcome",
+    );
+    if (welcome?.type !== "welcome") throw new Error("missing relog welcome");
+    const restored = welcome.fightState.cooldowns.find(
+      (cooldown) => cooldown.group === "spell:exevo-gran-mas-vis",
+    );
+    expect(restored).toBeDefined();
+    expect(restored?.remainingMs).toBeGreaterThan(30_000);
+    expect(restored?.remainingMs).toBeLessThanOrEqual(36_000);
+  });
+
   it("restores the authoritative floor after a transition and reconnect", async () => {
     const characters = new InMemoryCharacterStore();
     const source = { x: GRID.width / 2, y: GRID.height / 2 - 1, z: 7 };

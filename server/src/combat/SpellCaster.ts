@@ -605,7 +605,7 @@ export class SpellCaster {
       player,
       now,
     );
-    this.items.conjureForCombat(
+    const started = this.items.conjureForCombat(
       session,
       expectedVersion,
       expectedMana,
@@ -652,6 +652,10 @@ export class SpellCaster {
         this.persistence.saveNow(player, failedAt);
       },
     );
+    if (!started) {
+      this.persistence.cancelExternalMutation(player);
+      return false;
+    }
     return true;
   }
 

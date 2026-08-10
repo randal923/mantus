@@ -434,12 +434,15 @@ export class CharacterHandler {
     session.aimAtTargetSpellIds = new Set(character.aimAtTargetSpellIds);
     // Cooldowns persisted at the last logout; expired rows drop here and
     // the first fight-state projection (the welcome below) carries the rest,
-    // so relogging never shortens a cooldown (charter rule 8).
+    // so relogging never shortens a cooldown (charter rule 8). readyAt is
+    // capped at now + totalMs: a row written under a clock that later
+    // diverged (host sleep stalls the monotonic clock) must not restore a
+    // cooldown longer than the spell ever had.
     for (const cooldown of cooldowns) {
       if (cooldown.readyAt <= now) continue;
       if (session.combatCooldowns.has(cooldown.key)) continue;
       session.combatCooldowns.set(cooldown.key, {
-        readyAt: cooldown.readyAt,
+        readyAt: Math.min(cooldown.readyAt, now + cooldown.totalMs),
         totalMs: cooldown.totalMs,
       });
     }
