@@ -1,4 +1,5 @@
 import type { StarterVocation } from "@tibia/protocol";
+import { ADVENTURERS_STONE_TYPE_ID } from "./adventurersStoneTypeId";
 import { BOUND_CONTAINER_TYPE_ID } from "./boundContainerTypeId";
 import { ITEM_POUCH_TYPE_ID } from "./itemPouchTypeId";
 import type { StarterSet } from "./StarterSet";
@@ -12,6 +13,7 @@ const COMMON_EQUIPMENT = [
 
 const COMMON_BOUND_CONTENTS = [
   { typeId: ITEM_POUCH_TYPE_ID, count: 1 },
+  { typeId: ADVENTURERS_STONE_TYPE_ID, count: 1 },
 ] as const;
 
 const COMMON_SUPPLIES = [

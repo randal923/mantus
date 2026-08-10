@@ -3,6 +3,9 @@ import { PORTABLE_SELLER_TYPE_ID } from "@tibia/protocol";
 /** The Loot Pouch; every character owns exactly one, inside the bound root. */
 const LOOT_POUCH_TYPE_ID = 23_721;
 
+/** The Adventurer's Stone; every character owns exactly one, inside the bound root. */
+const ADVENTURERS_STONE_TYPE_ID = 16_277;
+
 /**
  * The only item types the server accepts as direct children of the bound
  * container — mirrors the server's own allowlist so the client can pre-reject
@@ -11,4 +14,5 @@ const LOOT_POUCH_TYPE_ID = 23_721;
 export const BOUND_ITEM_TYPE_IDS: ReadonlySet<number> = new Set([
   LOOT_POUCH_TYPE_ID,
   PORTABLE_SELLER_TYPE_ID,
+  ADVENTURERS_STONE_TYPE_ID,
 ]);
