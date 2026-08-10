@@ -34,6 +34,13 @@ const ZOOM = 3;
 const GROUND_FLOOR = 7;
 /** Below this ambient level the own player glows faintly (OTClient rule). */
 const DARK_AMBIENT_LEVEL = 64;
+/**
+ * Comfort floor under the ambient level (OTClient's minimum ambient light):
+ * deep night and caves keep some global illumination instead of going
+ * near-black. 64/255 multiplies sprites to ~25% brightness; light sources
+ * still brighten well past it.
+ */
+const MINIMUM_AMBIENT_LEVEL = 64;
 const MIN_PLAYER_LIGHT = { intensity: 2, color: 215 } as const;
 const NAME_PLATE_CULL_MARGIN_PX = 32;
 const CREATURE_LOAD_RETRY_INITIAL_MS = 2_000;
@@ -1255,7 +1262,8 @@ export class WorldRenderer {
 
   /**
    * Rebuilds the frame's lightmap: ambient from the server world light
-   * (fixed darkness underground), then every visible floor deepest-first —
+   * (underground ignores it), floored at MINIMUM_AMBIENT_LEVEL, then every
+   * visible floor deepest-first —
    * its covering tiles shade off deeper floors' lights, then its item and
    * creature lights join in. Mirrors OTClient's MapView::drawLights.
    */
@@ -1267,9 +1275,13 @@ export class WorldRenderer {
       return;
     }
     const underground = center.z > GROUND_FLOOR;
-    const ambient = underground ? { level: 0, color: 215 } : this.worldLight;
+    const worldLevel = underground ? 0 : this.worldLight.level;
+    const ambient = {
+      level: Math.max(worldLevel, MINIMUM_AMBIENT_LEVEL),
+      color: underground ? 215 : this.worldLight.color,
+    };
     this.lightOverlay.beginFrame(window, ambient.level, ambient.color);
-    const playerNeedsLight = underground || ambient.level < DARK_AMBIENT_LEVEL;
+    const playerNeedsLight = underground || worldLevel < DARK_AMBIENT_LEVEL;
     for (const z of this.mapView.drawableLightFloors()) {
       this.mapView.collectFloorLight(z, this.lightOverlay);
       for (const [id, view] of this.creatureViews) {

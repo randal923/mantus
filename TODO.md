@@ -39,8 +39,10 @@ limitations accepted during a session are recorded in the owning feature file
   server item catalog (the client's `objects.json` already has both) and
   fold the equipped max into the player's broadcast light. Also deferred:
   magic-effect/missile flashes emit no light (OTClient does light them),
-  and there is no client "ambient light" comfort slider
-  (`m_minimumAmbientLight`); the floor-shade predicate treats any ground
+  and the minimum ambient light is a fixed comfort floor
+  (`MINIMUM_AMBIENT_LEVEL` 64 in `WorldRenderer.ts`, added 2026-08-10), not
+  a player-adjustable slider like OTClient's `m_minimumAmbientLight`; the
+  floor-shade predicate treats any ground
   tile as fully covering, so a translucent-roof edge case may over-darken.
 
 - **Memory-first store purchases: three bounded staleness windows**
