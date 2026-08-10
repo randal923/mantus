@@ -223,10 +223,22 @@ describe("buildQuestChestDefinitions", () => {
     ]);
   });
 
-  it("defers contents with unsupported attributes, naming the keys", () => {
+  it("passes a charges attribute through to the reward", () => {
     const result = build([
       worldItem(CHEST_TYPE_ID, at(1), { actionId: 2000, uniqueId: 4008 }, [
         content(REWARD_TYPE_ID, { charges: 3, count: 1 }),
+      ]),
+    ]);
+    expect(result.skipped).toEqual([]);
+    expect(result.chests[0]?.reward).toEqual([
+      { typeId: REWARD_TYPE_ID, count: 1, charges: 3 },
+    ]);
+  });
+
+  it("defers contents with unsupported attributes, naming the keys", () => {
+    const result = build([
+      worldItem(CHEST_TYPE_ID, at(1), { actionId: 2000, uniqueId: 4008 }, [
+        content(REWARD_TYPE_ID, { fluidType: 3, count: 1 }),
       ]),
     ]);
     expect(result.skipped).toEqual([
@@ -234,7 +246,7 @@ describe("buildQuestChestDefinitions", () => {
         uniqueId: 4008,
         position: at(1),
         status: "deferred",
-        reason: "unsupported content attributes: charges",
+        reason: "unsupported content attributes: fluidType",
       },
     ]);
   });

@@ -31,7 +31,7 @@ const QUEST_SYSTEM2_ACTION_ID = 2001;
 const BAG_TYPE_ID = 2853;
 const BACKPACK_TYPE_ID = 2854;
 const MAX_STORAGE_UID = 65_535;
-const REWARD_ATTRIBUTE_KEYS = new Set(["count", "actionId", "text"]);
+const REWARD_ATTRIBUTE_KEYS = new Set(["count", "actionId", "text", "charges"]);
 
 /**
  * Canary side effects of quest_system1's questsExperience/questLog/tutorialIds/
@@ -166,6 +166,10 @@ function contentReward(
   if (text !== undefined && typeof text !== "string") {
     return { status: "deferred", reason: "invalid text attribute" };
   }
+  const rawCharges = content.attributes.charges;
+  if (rawCharges !== undefined && integerAttribute(content.attributes, "charges") === undefined) {
+    return { status: "deferred", reason: "invalid charges attribute" };
+  }
   return {
     reward: {
       typeId: content.typeId,
@@ -174,6 +178,7 @@ function contentReward(
         ? { actionId: Number(rawActionId) }
         : {}),
       ...(text !== undefined ? { text } : {}),
+      ...(rawCharges !== undefined ? { charges: Number(rawCharges) } : {}),
     },
   };
 }

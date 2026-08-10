@@ -38,6 +38,26 @@ const doorsDocument = JSON.parse(
   await readFile(join(repoRoot, "content/items/canary-doors.json"), "utf8"),
 );
 const keyItemIds = new Set(doorsDocument.keyItemIds);
+const catalogItems = JSON.parse(
+  await readFile(join(repoRoot, "server/data/item-catalog.json"), "utf8"),
+).items;
+
+// Canary's addItem treats the count of a charged non-stackable (amulets,
+// necklaces) as the charge subtype and grants ONE item; keeping it as an
+// item count would need one slot per unit and can never be placed (or, for
+// small counts, multiplies the reward).
+const chargedReward = (reward) => {
+  const type = catalogItems[reward.typeId];
+  if (
+    !type ||
+    type.stackable ||
+    type.charges === undefined ||
+    reward.count <= 1
+  ) {
+    return reward;
+  }
+  return { ...reward, count: 1, charges: reward.count };
+};
 
 const stampKeyRewards = (rewards, keyActionId) =>
   rewards.map((reward) =>
@@ -84,12 +104,12 @@ for (const chest of parsed) {
     itemTypeId: chest.itemTypeId,
     positions: chest.positions,
     lootedKey: chestLootedKey(chest),
-    reward:
-      keyActionId === null
-        ? chest.reward
-        : stampKeyRewards(chest.reward, keyActionId),
+    reward: (keyActionId === null
+      ? chest.reward
+      : stampKeyRewards(chest.reward, keyActionId)
+    ).map(chargedReward),
     ...(chest.randomReward.length > 0
-      ? { randomReward: chest.randomReward }
+      ? { randomReward: chest.randomReward.map(chargedReward) }
       : {}),
     ...(chest.containerTypeId === null
       ? {}

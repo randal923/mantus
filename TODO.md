@@ -1364,3 +1364,20 @@ limitations accepted during a session are recorded in the owning feature file
   the questTilePassability ground-speed overlay; if the visual reads badly
   in the real client, the fix is a ground-transform channel in tile-states.
   Owner: quest levers.
+
+- 2026-08-09: the dynamic door-open override never supplies a ground speed
+  (`DynamicMapItems.refreshTileOverride` builds `{walkable, blocksProjectile}`
+  only), so `overrideMapData.getGroundSpeed` falls back to the static value.
+  A door standing on speedless ground (water/void, like the sewer-bridge
+  span) would open, report walkable, and still refuse the step in
+  `MovementRules` with `invalid-transition`. No shipped door does this today
+  (verified while exonerating the three 2026-08-09 "impassable" doors); add
+  a `groundSpeedWhenWalkable`-style guard when one ever does. Owner: doors.
+
+- 2026-08-09: `overrideMapData.isWalkable` ignores its `pathfinding`
+  argument whenever a dynamic override exists, so an overridden tile can
+  never be avoided via `blocksPath` by the pathfinder. Harmless for door
+  tiles (they should be pathable when open); wrong if an override ever
+  lands on avoid-tiles (fields). Recommended fix: merge the static
+  `blocksPath` bit into the override instead of shadowing it. Owner:
+  movement.

@@ -136,6 +136,7 @@ export class ChestService {
       const attributes = {
         ...(reward.actionId === undefined ? {} : { actionId: reward.actionId }),
         ...(reward.text === undefined ? {} : { text: reward.text }),
+        ...(reward.charges === undefined ? {} : { charges: reward.charges }),
       };
       rewards.push({
         typeId: reward.typeId,

@@ -29,9 +29,12 @@ export interface WorldActionRequirements {
 export const WORLD_ACTION_REQUIREMENTS: Readonly<
   Record<RegisteredKind, WorldActionRequirements>
 > = {
+  // Chests resolve from the position table on hosts that are often baked
+  // scenery, so there is no placed world item to re-check; the durable
+  // per-character looted gate lives in the chest store.
   chest: {
     reach: "adjacent",
-    itemStillPlaced: true,
+    itemStillPlaced: false,
     houseAccess: true,
     exclusive: true,
   },
