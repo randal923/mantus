@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { countMoneyWorth } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { TopNavigationBar } from "../navigation/TopNavigationBar";
+import { createPanelActions } from "./createPanelActions";
 import { useGameWindowStore } from "./store/useGameWindowStore";
 import { useGameWindowStoreApi } from "./store/useGameWindowStoreApi";
 
@@ -8,6 +10,7 @@ export function GameNavigation() {
   const { t } = useAppTranslation();
   const store = useGameWindowStoreApi();
   const runtime = store.getState().runtime;
+  const panelActions = useMemo(() => createPanelActions(store), [store]);
   const character = useGameWindowStore((state) => state.ownCharacter);
   const fightMode = useGameWindowStore(
     (state) => state.fightState?.mode ?? null,
@@ -60,85 +63,7 @@ export function GameNavigation() {
     (state) => state.characterStatsOpen,
   );
   const inventoryOpen = useGameWindowStore((state) => state.inventoryOpen);
-  const houseListLoaded = useGameWindowStore(
-    (state) => Boolean(state.sessions?.house.list),
-  );
-  const bestiaryLoaded = useGameWindowStore(
-    (state) => Boolean(state.sessions?.bestiary.creatures),
-  );
-  const wheelLoaded = useGameWindowStore(
-    (state) => Boolean(state.sessions?.wheel.wheel),
-  );
-  const forgeLoaded = useGameWindowStore(
-    (state) => Boolean(state.sessions?.forge.state),
-  );
-  const proficiencyLoaded = useGameWindowStore(
-    (state) => Boolean(state.sessions?.proficiency.state),
-  );
   const sessionActions = useGameWindowStore((state) => state.sessionActions);
-  const setGameMenuOpen = useGameWindowStore(
-    (state) => state.setGameMenuOpen,
-  );
-  const setInventoryOpen = useGameWindowStore(
-    (state) => state.setInventoryOpen,
-  );
-  const setCharacterStatsOpen = useGameWindowStore(
-    (state) => state.setCharacterStatsOpen,
-  );
-  const setGuildModalOpen = useGameWindowStore(
-    (state) => state.setGuildModalOpen,
-  );
-  const setHouseModalOpen = useGameWindowStore(
-    (state) => state.setHouseModalOpen,
-  );
-  const setHighscoresOpen = useGameWindowStore(
-    (state) => state.setHighscoresOpen,
-  );
-  const setWikiOpen = useGameWindowStore((state) => state.setWikiOpen);
-  const setWheelOpen = useGameWindowStore((state) => state.setWheelOpen);
-  const setForgeOpen = useGameWindowStore((state) => state.setForgeOpen);
-  const setProficiencyOpen = useGameWindowStore(
-    (state) => state.setProficiencyOpen,
-  );
-  const setTrackerVisible = useGameWindowStore(
-    (state) => state.setTrackerVisible,
-  );
-  const setImbuementTrackerVisible = useGameWindowStore(
-    (state) => state.setImbuementTrackerVisible,
-  );
-  const setQuestLogOpen = useGameWindowStore(
-    (state) => state.setQuestLogOpen,
-  );
-  const setPreyWindowOpen = useGameWindowStore(
-    (state) => state.setPreyWindowOpen,
-  );
-  const setHuntingTasksOpen = useGameWindowStore(
-    (state) => state.setHuntingTasksOpen,
-  );
-  const setHuntFinderOpen = useGameWindowStore(
-    (state) => state.setHuntFinderOpen,
-  );
-  const setOutfitWindowOpen = useGameWindowStore(
-    (state) => state.setOutfitWindowOpen,
-  );
-  const setProfileWindowOpen = useGameWindowStore(
-    (state) => state.setProfileWindowOpen,
-  );
-  const setVipPanelVisible = useGameWindowStore(
-    (state) => state.setVipPanelVisible,
-  );
-  const setPartyPanelVisible = useGameWindowStore(
-    (state) => state.setPartyPanelVisible,
-  );
-  const setBattleListVisible = useGameWindowStore(
-    (state) => state.setBattleListVisible,
-  );
-  const setMinimapVisible = useGameWindowStore(
-    (state) => state.setMinimapVisible,
-  );
-  const setStoreOpen = useGameWindowStore((state) => state.setStoreOpen);
-  const setStoreSession = useGameWindowStore((state) => state.setStoreSession);
-  const closeMarket = useGameWindowStore((state) => state.closeMarket);
   if (!character || !sessionActions) return null;
   const activePanel = marketOpen
     ? "market"
@@ -193,262 +118,37 @@ export function GameNavigation() {
         mantusCoins={mantusCoins}
         storeOpen={storeOpen}
         activePanel={activePanel}
-        onCharacter={() => {
-          setGameMenuOpen(false);
-          if (characterStatsOpen) {
-            setCharacterStatsOpen(false);
-            setInventoryOpen(false);
-            return;
-          }
-          setInventoryOpen(true);
-          setCharacterStatsOpen(true);
-        }}
-        onInventory={() => {
-          setGameMenuOpen(false);
-          if (characterStatsOpen) {
-            setCharacterStatsOpen(false);
-            setInventoryOpen(true);
-            return;
-          }
-          setCharacterStatsOpen(false);
-          setInventoryOpen((open) => !open);
-        }}
-        onVip={() => {
-          setGameMenuOpen(false);
-          if (vipPanelVisible) {
-            setVipPanelVisible(false);
-            return;
-          }
-          setPartyPanelVisible(false);
-          setVipPanelVisible(true);
-        }}
-        onParty={() => {
-          setGameMenuOpen(false);
-          if (partyPanelVisible) {
-            setPartyPanelVisible(false);
-            return;
-          }
-          setVipPanelVisible(false);
-          setPartyPanelVisible(true);
-        }}
-        onGuild={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setGuildModalOpen((open) => {
-            if (!open) runtime.clientRef.current?.openGuild();
-            return !open;
-          });
-        }}
-        onHouse={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setGuildModalOpen(false);
-          setHouseModalOpen((open) => {
-            if (!open) {
-              runtime.clientRef.current?.openHouse();
-              if (!houseListLoaded) {
-                runtime.clientRef.current?.browseHouses(undefined, 0);
-              }
-            }
-            return !open;
-          });
-        }}
-        onHighscores={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setHighscoresOpen((open) => {
-            if (!open) {
-              const sent =
-                runtime.clientRef.current?.requestHighscores(
-                  "experience",
-                  undefined,
-                  0,
-                ) ?? false;
-              sessionActions.highscores.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onWiki={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setWikiOpen((open) => {
-            if (!open && !bestiaryLoaded) {
-              const sent =
-                runtime.clientRef.current?.requestBestiaryCreatures() ??
-                false;
-              sessionActions.bestiary.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onWheel={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setWikiOpen(false);
-          setWheelOpen((open) => {
-            if (!open && !wheelLoaded) {
-              const sent = runtime.clientRef.current?.requestWheel() ?? false;
-              sessionActions.wheel.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onForge={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setWikiOpen(false);
-          setWheelOpen(false);
-          setForgeOpen((open) => {
-            if (!open && !forgeLoaded) {
-              // Idempotent refresh; forge-state is also pushed at login.
-              const sent = runtime.clientRef.current?.requestForge() ?? false;
-              sessionActions.forge.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onProficiency={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setWikiOpen(false);
-          setWheelOpen(false);
-          setForgeOpen(false);
-          setProficiencyOpen((open) => {
-            if (!open && !proficiencyLoaded) {
-              // Idempotent refresh; proficiency-state is pushed at login.
-              const sent =
-                runtime.clientRef.current?.requestProficiencies() ?? false;
-              sessionActions.proficiency.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onTracker={() => setTrackerVisible((visible) => !visible)}
-        onImbuementTracker={() =>
-          // Timers come from the inventory the server already pushes; there is
-          // nothing to fetch when the panel opens.
-          setImbuementTrackerVisible((visible) => !visible)
-        }
-        onPrey={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setHuntingTasksOpen(false);
-          // No fetch: prey-state is pushed at login and after every change.
-          setPreyWindowOpen((open) => !open);
-        }}
-        onQuests={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setQuestLogOpen((open) => {
-            if (!open) {
-              // The log is evaluated on demand from the owner's storages.
-              runtime.clientRef.current?.requestQuestLog();
-            }
-            return !open;
-          });
-        }}
-        onHuntingTasks={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setPreyWindowOpen(false);
-          // No fetch: hunting-tasks-state is pushed like prey-state.
-          setHuntingTasksOpen((open) => !open);
-        }}
-        onHuntFinder={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setPreyWindowOpen(false);
-          setHuntingTasksOpen(false);
-          setHuntFinderOpen((open) => {
-            if (!open && !bestiaryLoaded) {
-              const sent =
-                runtime.clientRef.current?.requestBestiaryCreatures() ?? false;
-              sessionActions.bestiary.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onOutfits={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setOutfitWindowOpen((open) => {
-            if (!open) {
-              // Idempotent refresh; the server also pushes state at login.
-              const sent = runtime.clientRef.current?.getOutfits() ?? false;
-              sessionActions.outfit.begin(sent);
-            }
-            return !open;
-          });
-        }}
-        onProfile={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          // No fetch: profile-state is pushed at login and after changes.
-          setProfileWindowOpen((open) => !open);
-        }}
-        onBattleList={() => setBattleListVisible((visible) => !visible)}
-        onMinimap={() => setMinimapVisible((visible) => !visible)}
-        onStore={() => {
-          if (storeOpen) {
-            setStoreOpen(false);
-            return;
-          }
-          setGameMenuOpen(false);
-          setStoreSession((current) =>
-            current
-              ? { ...current, error: null, purchasedOfferId: null }
-              : current,
-          );
-          setStoreOpen(true);
-          const sent = runtime.clientRef.current?.openStore() ?? false;
-          if (!sent) {
-            setStoreSession({
-              categories: [],
-              home: [],
-              categoryId: null,
-              products: [],
-              page: 0,
-              pageCount: 1,
-              selectedProductId: null,
-              description: null,
-              pending: false,
-              pendingOfferId: null,
-              purchasedOfferId: null,
-              error: "unavailable",
-            });
-          }
-        }}
+        onCharacter={panelActions.toggleCharacterStats}
+        onInventory={panelActions.toggleInventory}
+        onVip={panelActions.toggleVipPanel}
+        onParty={panelActions.togglePartyPanel}
+        onGuild={panelActions.toggleGuildModal}
+        onHouse={panelActions.toggleHouseModal}
+        onHighscores={panelActions.toggleHighscores}
+        onWiki={panelActions.toggleWiki}
+        onWheel={panelActions.toggleWheel}
+        onForge={panelActions.toggleForge}
+        onProficiency={panelActions.toggleProficiency}
+        onTracker={panelActions.toggleTracker}
+        onImbuementTracker={panelActions.toggleImbuementTracker}
+        onPrey={panelActions.togglePrey}
+        onQuests={panelActions.toggleQuestLog}
+        onHuntingTasks={panelActions.toggleHuntingTasks}
+        onHuntFinder={panelActions.toggleHuntFinder}
+        onOutfits={panelActions.toggleOutfits}
+        onProfile={panelActions.toggleProfile}
+        onBattleList={panelActions.toggleBattleList}
+        onMinimap={panelActions.toggleMinimap}
+        onStore={panelActions.toggleStore}
         onFightModeChange={(mode) =>
           runtime.clientRef.current?.setFightMode(mode)
         }
-        onMarket={() => {
-          setGameMenuOpen(false);
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          if (marketOpen) {
-            closeMarket();
-            return;
-          }
-          runtime.clientRef.current?.openMarket(1);
-        }}
+        onMarket={panelActions.toggleMarket}
         onSettings={() => {
-          setInventoryOpen(false);
-          setCharacterStatsOpen(false);
-          setGameMenuOpen(true);
+          const state = store.getState();
+          state.setInventoryOpen(false);
+          state.setCharacterStatsOpen(false);
+          state.setGameMenuOpen(true);
         }}
       />
     </div>

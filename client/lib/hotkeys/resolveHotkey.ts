@@ -1,8 +1,10 @@
 import {
-  CTRL_HOTKEY_BINDINGS,
-  HOTKEY_BINDINGS,
+  isMovementBindingAction,
   type HotkeyAction,
-} from "./hotkeyBindings";
+  type KeyBindingAction,
+  type KeyBindings,
+} from "./keyBindings";
+import { serializeKeyBindingEvent } from "./serializeKeyBindingEvent";
 
 interface HotkeyKeyEvent {
   code: string;
@@ -13,18 +15,17 @@ interface HotkeyKeyEvent {
   repeat: boolean;
 }
 
-export function resolveHotkey(event: HotkeyKeyEvent): HotkeyAction | null {
+export function resolveHotkey(
+  event: HotkeyKeyEvent,
+  bindings: KeyBindings,
+): HotkeyAction | null {
   if (event.repeat) return null;
-  if (
-    event.ctrlKey &&
-    !event.altKey &&
-    !event.metaKey &&
-    !event.shiftKey
-  ) {
-    return CTRL_HOTKEY_BINDINGS[event.code] ?? null;
+  const combo = serializeKeyBindingEvent(event);
+  if (!combo) return null;
+  for (const action of Object.keys(bindings) as KeyBindingAction[]) {
+    if (bindings[action] !== combo) continue;
+    if (isMovementBindingAction(action)) continue;
+    return action;
   }
-  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
-    return null;
-  }
-  return HOTKEY_BINDINGS[event.code] ?? null;
+  return null;
 }

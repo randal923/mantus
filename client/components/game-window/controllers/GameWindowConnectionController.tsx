@@ -11,8 +11,10 @@ import { updateVisibleCreaturesBatch } from "../../../lib/creatures/updateVisibl
 import { isEditableTarget } from "../../../lib/hotkeys/isEditableTarget";
 import { getHeldMovementDirection } from "../../../lib/movement/getHeldMovementDirection";
 import { getKeyboardTurnDirection } from "../../../lib/movement/getKeyboardTurnDirection";
+import { getMovementKeyDirections } from "../../../lib/movement/getMovementKeyDirections";
 import { flushPendingSaves } from "../../../lib/game-window/flushPendingSaves";
 import { useGameSettingsStore } from "../../../stores/useGameSettingsStore";
+import { useKeyBindingsStore } from "../../../stores/useKeyBindingsStore";
 import { useLanguageStore } from "../../../stores/useLanguageStore";
 import { handleCharacterSessionMessage } from "../messages/handleCharacterSessionMessage";
 import { handleCommerceMessage } from "../messages/handleCommerceMessage";
@@ -158,6 +160,7 @@ export function GameWindowConnectionController() {
       const direction = getHeldMovementDirection(
         heldMovementKeys,
         useGameSettingsStore.getState().diagonalWalking,
+        getMovementKeyDirections(useKeyBindingsStore.getState().bindings),
       );
       if (!direction) return;
       client?.sendMove(direction, queueStep);
@@ -182,8 +185,10 @@ export function GameWindowConnectionController() {
           return;
         }
       }
+      const bindings = useKeyBindingsStore.getState().bindings;
       const turnDirection = getKeyboardTurnDirection(
         event,
+        bindings,
         runtime.uiSettingsRef.current.turnModifier ?? DEFAULT_TURN_MODIFIER,
       );
       if (
@@ -200,6 +205,7 @@ export function GameWindowConnectionController() {
       const direction = getHeldMovementDirection(
         [event.code],
         useGameSettingsStore.getState().diagonalWalking,
+        getMovementKeyDirections(bindings),
       );
       if (
         !direction ||
@@ -215,7 +221,10 @@ export function GameWindowConnectionController() {
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
-      if (!getHeldMovementDirection([event.code], true)) return;
+      const keyDirections = getMovementKeyDirections(
+        useKeyBindingsStore.getState().bindings,
+      );
+      if (!getHeldMovementDirection([event.code], true, keyDirections)) return;
       if (!runtime.joinedRef.current) return;
       if (
         isEditableTarget(event.target) &&

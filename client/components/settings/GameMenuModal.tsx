@@ -13,29 +13,9 @@ import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/Dropdown";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
+import { KeyBindingsView } from "./KeyBindingsView";
 
 type MenuView = "menu" | "settings" | "hotkeys" | "email" | "password";
-type HotkeyId =
-  | "moveUp"
-  | "moveLeft"
-  | "moveDown"
-  | "moveRight"
-  | "inventory"
-  | "characterStats"
-  | "gameMenu";
-type HotkeyCode =
-  | "KeyW"
-  | "KeyA"
-  | "KeyS"
-  | "KeyD"
-  | "KeyI"
-  | "KeyC"
-  | "KeyM"
-  | "ArrowUp"
-  | "ArrowLeft"
-  | "ArrowDown"
-  | "ArrowRight"
-  | "Escape";
 
 interface GameMenuModalProps {
   onClose: () => void;
@@ -56,26 +36,6 @@ interface GameMenuModalProps {
   languageError?: boolean;
   initialView?: MenuView;
 }
-
-interface HotkeyOption {
-  value: HotkeyCode;
-  label: string;
-}
-
-interface HotkeyRow {
-  id: HotkeyId;
-  label: string;
-}
-
-const DEFAULT_HOTKEYS: Readonly<Record<HotkeyId, HotkeyCode>> = {
-  moveUp: "KeyW",
-  moveLeft: "KeyA",
-  moveDown: "KeyS",
-  moveRight: "KeyD",
-  inventory: "KeyI",
-  characterStats: "KeyC",
-  gameMenu: "Escape",
-};
 
 export function GameMenuModal({
   onClose,
@@ -99,7 +59,6 @@ export function GameMenuModal({
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const [view, setView] = useState<MenuView>(initialView);
-  const [hotkeys, setHotkeys] = useState(DEFAULT_HOTKEYS);
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -109,20 +68,6 @@ export function GameMenuModal({
     { value: "en", label: t("languages.en") },
     { value: "pt-BR", label: t("languages.pt-BR") },
   ];
-  const hotkeyOptions: ReadonlyArray<HotkeyOption> = [
-    { value: "KeyW", label: "W" },
-    { value: "KeyA", label: "A" },
-    { value: "KeyS", label: "S" },
-    { value: "KeyD", label: "D" },
-    { value: "KeyI", label: "I" },
-    { value: "KeyC", label: "C" },
-    { value: "KeyM", label: "M" },
-    { value: "ArrowUp", label: t("hotkeys.arrowUp") },
-    { value: "ArrowLeft", label: t("hotkeys.arrowLeft") },
-    { value: "ArrowDown", label: t("hotkeys.arrowDown") },
-    { value: "ArrowRight", label: t("hotkeys.arrowRight") },
-    { value: "Escape", label: t("hotkeys.escape") },
-  ];
   const turnModifierOptions: ReadonlyArray<{
     value: TurnModifier;
     label: string;
@@ -131,15 +76,6 @@ export function GameMenuModal({
     { value: "Alt", label: t("hotkeys.modifiers.alt") },
     { value: "Control", label: t("hotkeys.modifiers.control") },
     { value: "Meta", label: t("hotkeys.modifiers.meta") },
-  ];
-  const hotkeyRows: ReadonlyArray<HotkeyRow> = [
-    { id: "moveUp", label: t("hotkeys.moveUp") },
-    { id: "moveLeft", label: t("hotkeys.moveLeft") },
-    { id: "moveDown", label: t("hotkeys.moveDown") },
-    { id: "moveRight", label: t("hotkeys.moveRight") },
-    { id: "inventory", label: t("hotkeys.inventory") },
-    { id: "characterStats", label: t("hotkeys.characterStats") },
-    { id: "gameMenu", label: t("hotkeys.gameMenu") },
   ];
   const viewTitles: Readonly<Record<MenuView, string>> = {
     menu: t("menu.title"),
@@ -335,47 +271,7 @@ export function GameMenuModal({
       )}
 
       {view === "hotkeys" && (
-        <div className="flex flex-col gap-4">
-          <div className="overflow-hidden rounded-lg border border-ui-stone-light/15 bg-black/20">
-            {hotkeyRows.map((row) => (
-              <div
-                key={row.id}
-                className="flex items-center justify-between gap-4 border-b border-ui-stone-light/10 px-3 py-2.5 last:border-b-0"
-              >
-                <span className="text-sm font-medium text-ui-text">
-                  {row.label}
-                </span>
-                <Dropdown
-                  ariaLabel={t("hotkeys.inputLabel", { action: row.label })}
-                  value={hotkeys[row.id]}
-                  options={hotkeyOptions}
-                  onChange={(value) => {
-                    setHotkeys((current) => ({
-                      ...current,
-                      [row.id]: value,
-                    }));
-                  }}
-                  className="min-w-32"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between gap-2">
-            <Button size="sm" onClick={() => setView("settings")}>
-              ‹ {t("common.back")}
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => setHotkeys(DEFAULT_HOTKEYS)}
-            >
-              {t("hotkeys.resetDefaults")}
-            </Button>
-          </div>
-          <p className="text-sm leading-6 text-ui-muted">
-            {t("hotkeys.previewNotice")}
-          </p>
-        </div>
+        <KeyBindingsView onBack={() => setView("settings")} />
       )}
 
       {view === "email" && (

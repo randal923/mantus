@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { HotkeyAction } from "../lib/hotkeys/hotkeyBindings";
+import type { HotkeyAction } from "../lib/hotkeys/keyBindings";
 import { isEditableTarget } from "../lib/hotkeys/isEditableTarget";
 import { resolveHotkey } from "../lib/hotkeys/resolveHotkey";
+import { useKeyBindingsStore } from "../stores/useKeyBindingsStore";
 
 export function useHotkeys(onAction: (action: HotkeyAction) => void) {
   const onActionRef = useRef(onAction);
@@ -15,7 +16,10 @@ export function useHotkeys(onAction: (action: HotkeyAction) => void) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
-      const action = resolveHotkey(event);
+      const action = resolveHotkey(
+        event,
+        useKeyBindingsStore.getState().bindings,
+      );
       if (!action) return;
       event.preventDefault();
       onActionRef.current(action);

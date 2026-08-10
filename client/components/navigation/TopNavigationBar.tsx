@@ -5,6 +5,9 @@ import { FightControls } from "../combat/FightControls";
 import { CharacterMenuButton } from "./CharacterMenuButton";
 import { CharacterPortrait } from "./CharacterPortrait";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { formatKeyBinding } from "../../lib/hotkeys/formatKeyBinding";
+import type { KeyBindingAction } from "../../lib/hotkeys/keyBindings";
+import { useKeyBindingsStore } from "../../stores/useKeyBindingsStore";
 import { NavigationIconButton } from "./NavigationIconButton";
 import { CurrencyCounters } from "./CurrencyCounters";
 
@@ -114,69 +117,79 @@ export function TopNavigationBar({
   onSettings,
 }: TopNavigationBarProps) {
   const { t } = useAppTranslation();
+  const bindings = useKeyBindingsStore((state) => state.bindings);
+  const hotkeyLabel = (action: KeyBindingAction) =>
+    formatKeyBinding(bindings[action]) || undefined;
   // The character's own windows live behind the character button instead of
   // the icon row, which had grown to twenty-one flat buttons.
   const characterMenuEntries = [
     {
       id: "tracker" as const,
       label: t("navigation.tracker"),
+      hotkey: hotkeyLabel("toggleTracker"),
       active: trackerVisible,
       ...(onTracker ? { onSelect: onTracker } : {}),
     },
     {
       id: "imbuementTracker" as const,
       label: t("navigation.imbuementTracker"),
+      hotkey: hotkeyLabel("toggleImbuementTracker"),
       active: imbuementTrackerVisible,
       ...(onImbuementTracker ? { onSelect: onImbuementTracker } : {}),
     },
     {
       id: "battleList" as const,
       label: t("navigation.battleList"),
+      hotkey: hotkeyLabel("toggleBattleList"),
       active: battleListVisible,
       onSelect: onBattleList,
     },
     {
       id: "profile" as const,
       label: t("navigation.profile"),
+      hotkey: hotkeyLabel("toggleProfile"),
       active: activePanel === "profile",
       ...(onProfile ? { onSelect: onProfile } : {}),
     },
     {
       id: "outfit" as const,
       label: t("navigation.outfit"),
+      hotkey: hotkeyLabel("toggleOutfits"),
       active: activePanel === "outfit",
       ...(onOutfits ? { onSelect: onOutfits } : {}),
     },
     {
       id: "proficiency" as const,
       label: t("navigation.proficiency"),
+      hotkey: hotkeyLabel("toggleProficiency"),
       active: activePanel === "proficiency",
       ...(onProficiency ? { onSelect: onProficiency } : {}),
     },
     {
       id: "guild" as const,
       label: t("navigation.guild"),
-      hotkey: "G",
+      hotkey: hotkeyLabel("toggleGuildModal"),
       active: activePanel === "guild",
       ...(onGuild ? { onSelect: onGuild } : {}),
     },
     {
       id: "quests" as const,
       label: t("navigation.quests"),
+      hotkey: hotkeyLabel("toggleQuestLog"),
       active: activePanel === "quests",
       ...(onQuests ? { onSelect: onQuests } : {}),
     },
     {
       id: "party" as const,
       label: t("navigation.party"),
-      hotkey: "P",
+      hotkey: hotkeyLabel("togglePartyPanel"),
       active: partyVisible,
       ...(onParty ? { onSelect: onParty } : {}),
     },
     {
       id: "vip" as const,
       label: t("navigation.vip"),
-      hotkey: "V",
+      hotkey: hotkeyLabel("toggleVipPanel"),
       active: vipVisible,
       ...(onVip ? { onSelect: onVip } : {}),
     },
@@ -243,7 +256,7 @@ export function TopNavigationBar({
       >
         <NavigationIconButton
           label={t("navigation.character")}
-          hotkey="C"
+          hotkey={hotkeyLabel("toggleCharacterStats")}
           active={activePanel === "character"}
           disabled={!onCharacter}
           onClick={onCharacter}
@@ -265,7 +278,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.inventory")}
-          hotkey="I"
+          hotkey={hotkeyLabel("toggleInventory")}
           active={activePanel === "inventory"}
           disabled={!onInventory}
           onClick={onInventory}
@@ -291,7 +304,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.house")}
-          hotkey="H"
+          hotkey={hotkeyLabel("toggleHouseModal")}
           active={activePanel === "house"}
           disabled={!onHouse}
           onClick={onHouse}
@@ -314,6 +327,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.highscores")}
+          hotkey={hotkeyLabel("toggleHighscores")}
           active={activePanel === "highscores"}
           disabled={!onHighscores}
           onClick={onHighscores}
@@ -336,6 +350,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.wiki")}
+          hotkey={hotkeyLabel("toggleWiki")}
           active={activePanel === "wiki"}
           disabled={!onWiki}
           onClick={onWiki}
@@ -357,6 +372,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.wheel")}
+          hotkey={hotkeyLabel("toggleWheel")}
           active={activePanel === "wheel"}
           disabled={!onWheel}
           onClick={onWheel}
@@ -379,6 +395,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.forge")}
+          hotkey={hotkeyLabel("toggleForge")}
           active={activePanel === "forge"}
           disabled={!onForge}
           onClick={onForge}
@@ -401,6 +418,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.prey")}
+          hotkey={hotkeyLabel("togglePrey")}
           active={activePanel === "prey"}
           disabled={!onPrey}
           onClick={onPrey}
@@ -424,6 +442,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.huntingTasks")}
+          hotkey={hotkeyLabel("toggleHuntingTasks")}
           active={activePanel === "huntingTasks"}
           disabled={!onHuntingTasks}
           onClick={onHuntingTasks}
@@ -446,6 +465,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.huntFinder")}
+          hotkey={hotkeyLabel("toggleHuntFinder")}
           active={activePanel === "huntFinder"}
           disabled={!onHuntFinder}
           onClick={onHuntFinder}
@@ -468,6 +488,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.map")}
+          hotkey={hotkeyLabel("toggleMinimap")}
           active={minimapVisible}
           onClick={onMinimap}
         >
@@ -488,6 +509,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.market")}
+          hotkey={hotkeyLabel("toggleMarket")}
           active={activePanel === "market"}
           disabled={!onMarket}
           onClick={onMarket}
@@ -510,7 +532,7 @@ export function TopNavigationBar({
 
         <NavigationIconButton
           label={t("navigation.settings")}
-          hotkey="Esc"
+          hotkey={hotkeyLabel("toggleGameMenu")}
           disabled={!onSettings}
           onClick={onSettings}
         >
