@@ -32,3 +32,4 @@ worktree is created, merged, or removed.
 | `agents/quest-fixes`             | done        |
 | `agents/adventurers-stone`       | done        |
 | `agents/key-bindings`            | done        |
+| `agents/adventurers-stone-use`   | done        |
