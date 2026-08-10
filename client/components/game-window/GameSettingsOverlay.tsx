@@ -3,6 +3,7 @@ import {
   DEFAULT_TURN_MODIFIER,
   type TurnModifier,
 } from "@tibia/protocol";
+import { minimumAmbientLevelFromPercent } from "../../lib/render/minimumAmbientLevelFromPercent";
 import { useGameSettingsStore } from "../../stores/useGameSettingsStore";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { GameMenuModal } from "../settings/GameMenuModal";
@@ -42,6 +43,24 @@ export function GameSettingsOverlay() {
   );
   const setDiagonalWalking = useGameSettingsStore(
     (state) => state.setDiagonalWalking,
+  );
+  const minimumAmbientLight = useGameSettingsStore(
+    (state) => state.minimumAmbientLight,
+  );
+  const setMinimumAmbientLight = useGameSettingsStore(
+    (state) => state.setMinimumAmbientLight,
+  );
+
+  const onMinimumAmbientLightChange = useCallback(
+    (percent: number) => {
+      setMinimumAmbientLight(percent);
+      store
+        .getState()
+        .runtime.rendererRef.current?.setMinimumAmbientLevel(
+          minimumAmbientLevelFromPercent(percent),
+        );
+    },
+    [setMinimumAmbientLight, store],
   );
 
   const onTurnModifierChange = useCallback(
@@ -103,6 +122,8 @@ export function GameSettingsOverlay() {
       onDiagonalWalkingChange={setDiagonalWalking}
       turnModifier={turnModifier}
       onTurnModifierChange={onTurnModifierChange}
+      minimumAmbientLight={minimumAmbientLight}
+      onMinimumAmbientLightChange={onMinimumAmbientLightChange}
       onResetLayout={onResetLayout}
       onChangeLanguage={(nextLanguage) => {
         setLanguage(nextLanguage);

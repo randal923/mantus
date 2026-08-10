@@ -13,6 +13,7 @@ import { Checkbox } from "../ui/Checkbox";
 import { Dropdown } from "../ui/Dropdown";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
+import { RangeSlider } from "../ui/RangeSlider";
 import { KeyBindingsView } from "./KeyBindingsView";
 
 type MenuView = "menu" | "settings" | "hotkeys" | "email" | "password";
@@ -30,6 +31,9 @@ interface GameMenuModalProps {
   onDiagonalWalkingChange?: (enabled: boolean) => void;
   turnModifier?: TurnModifier;
   onTurnModifierChange?: (modifier: TurnModifier) => void;
+  /** World lightmap comfort floor, 0-100%. */
+  minimumAmbientLight?: number;
+  onMinimumAmbientLightChange?: (percent: number) => void;
   /** Drops every stored panel layout back to the client defaults. */
   onResetLayout?: () => void;
   languageSaving?: boolean;
@@ -51,6 +55,8 @@ export function GameMenuModal({
   turnModifier = "Shift",
   onResetLayout,
   onTurnModifierChange,
+  minimumAmbientLight = 25,
+  onMinimumAmbientLightChange,
   languageSaving = false,
   languageError = false,
   initialView = "menu",
@@ -220,6 +226,26 @@ export function GameMenuModal({
                 onChange={(value) => onTurnModifierChange?.(value)}
                 className="w-36 shrink-0"
               />
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h3 className="font-display text-xs font-bold tracking-widest text-ui-gold uppercase">
+              {t("settings.graphics")}
+            </h3>
+            <div className="flex flex-col gap-2 rounded-lg border border-ui-stone-light/15 bg-black/20 px-3 py-3">
+              <RangeSlider
+                label={t("settings.minimumAmbientLight")}
+                value={minimumAmbientLight}
+                min={0}
+                max={100}
+                unit="%"
+                disabled={!onMinimumAmbientLightChange}
+                onChange={(percent) => onMinimumAmbientLightChange?.(percent)}
+              />
+              <span className="text-sm leading-6 text-ui-muted">
+                {t("settings.minimumAmbientLightDescription")}
+              </span>
             </div>
           </section>
 

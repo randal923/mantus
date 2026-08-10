@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 
 import { GameMenuModal } from "../components/settings/GameMenuModal";
 
@@ -19,6 +19,8 @@ const meta = {
     onDiagonalWalkingChange: fn(),
     turnModifier: "Shift",
     onTurnModifierChange: fn(),
+    minimumAmbientLight: 25,
+    onMinimumAmbientLightChange: fn(),
   },
 } satisfies Meta<typeof GameMenuModal>;
 
@@ -33,7 +35,12 @@ export const Settings: Story = {
   },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.queryByRole("slider")).not.toBeInTheDocument();
+    const slider = canvas.getByRole("slider", {
+      name: /Minimum ambient light/,
+    });
+    await expect(slider).toHaveValue("25");
+    fireEvent.change(slider, { target: { value: "60" } });
+    await expect(args.onMinimumAmbientLightChange).toHaveBeenCalledWith(60);
     await userEvent.click(
       canvas.getByRole("checkbox", { name: /Diagonal walking/ }),
     );

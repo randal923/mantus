@@ -13,6 +13,7 @@ import { getHeldMovementDirection } from "../../../lib/movement/getHeldMovementD
 import { getKeyboardTurnDirection } from "../../../lib/movement/getKeyboardTurnDirection";
 import { getMovementKeyDirections } from "../../../lib/movement/getMovementKeyDirections";
 import { flushPendingSaves } from "../../../lib/game-window/flushPendingSaves";
+import { minimumAmbientLevelFromPercent } from "../../../lib/render/minimumAmbientLevelFromPercent";
 import { useGameSettingsStore } from "../../../stores/useGameSettingsStore";
 import { useKeyBindingsStore } from "../../../stores/useKeyBindingsStore";
 import { useLanguageStore } from "../../../stores/useLanguageStore";
@@ -116,6 +117,11 @@ export function GameWindowConnectionController() {
       }
       renderer = worldRenderer;
       runtime.rendererRef.current = worldRenderer;
+      worldRenderer.setMinimumAmbientLevel(
+        minimumAmbientLevelFromPercent(
+          useGameSettingsStore.getState().minimumAmbientLight,
+        ),
+      );
       syncViewport();
 
       client = new GameClient(WS_URL, {

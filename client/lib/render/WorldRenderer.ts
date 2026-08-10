@@ -35,12 +35,12 @@ const GROUND_FLOOR = 7;
 /** Below this ambient level the own player glows faintly (OTClient rule). */
 const DARK_AMBIENT_LEVEL = 64;
 /**
- * Comfort floor under the ambient level (OTClient's minimum ambient light):
- * deep night and caves keep some global illumination instead of going
- * near-black. 64/255 multiplies sprites to ~25% brightness; light sources
- * still brighten well past it.
+ * Default comfort floor under the ambient level (OTClient's minimum ambient
+ * light): deep night and caves keep some global illumination instead of
+ * going near-black. 64/255 multiplies sprites to ~25% brightness; light
+ * sources still brighten well past it. Adjustable in the settings modal.
  */
-const MINIMUM_AMBIENT_LEVEL = 64;
+const DEFAULT_MINIMUM_AMBIENT_LEVEL = 64;
 const MIN_PLAYER_LIGHT = { intensity: 2, color: 215 } as const;
 const NAME_PLATE_CULL_MARGIN_PX = 32;
 const CREATURE_LOAD_RETRY_INITIAL_MS = 2_000;
@@ -122,6 +122,7 @@ export class WorldRenderer {
   );
   private readonly lightOverlay = new LightOverlay();
   private worldLight = { level: 250, color: 215 };
+  private minimumAmbientLevel = DEFAULT_MINIMUM_AMBIENT_LEVEL;
   private viewRange: ViewRange = { x: 1, y: 1 };
   private readonly creatureViews = new Map<string, CreatureView>();
   private orderedCreatureViews: ReadonlyArray<readonly [string, CreatureView]> =
@@ -442,6 +443,11 @@ export class WorldRenderer {
         this.warEmblemKindFor(creatureView.guildName, creatureView.isAtWar),
       );
     }
+  }
+
+  /** Settings-modal ambient floor; takes effect on the next frame. */
+  setMinimumAmbientLevel(level: number): void {
+    this.minimumAmbientLevel = Math.max(0, Math.min(255, Math.round(level)));
   }
 
   setViewportSize(width: number, height: number): ViewRange {
@@ -1277,7 +1283,7 @@ export class WorldRenderer {
     const underground = center.z > GROUND_FLOOR;
     const worldLevel = underground ? 0 : this.worldLight.level;
     const ambient = {
-      level: Math.max(worldLevel, MINIMUM_AMBIENT_LEVEL),
+      level: Math.max(worldLevel, this.minimumAmbientLevel),
       color: underground ? 215 : this.worldLight.color,
     };
     this.lightOverlay.beginFrame(window, ambient.level, ambient.color);
