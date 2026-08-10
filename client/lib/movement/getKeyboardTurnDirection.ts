@@ -3,13 +3,11 @@ import {
   type Direction,
   type TurnModifier,
 } from "@tibia/protocol";
-
-const TURN_DIRECTIONS: Readonly<Record<string, Direction>> = {
-  KeyW: "north",
-  KeyD: "east",
-  KeyS: "south",
-  KeyA: "west",
-};
+import {
+  MOVEMENT_BINDING_DIRECTIONS,
+  type KeyBindings,
+  type MovementBindingAction,
+} from "../hotkeys/keyBindings";
 
 type KeyboardTurnEvent = Pick<
   KeyboardEvent,
@@ -27,8 +25,16 @@ const TURN_MODIFIER_EVENT_KEYS: Readonly<
 
 export function getKeyboardTurnDirection(
   event: KeyboardTurnEvent,
+  bindings: KeyBindings,
   modifier: TurnModifier = DEFAULT_TURN_MODIFIER,
 ): Direction | null {
   if (!event[TURN_MODIFIER_EVENT_KEYS[modifier]]) return null;
-  return TURN_DIRECTIONS[event.code] ?? null;
+  for (const action of Object.keys(
+    MOVEMENT_BINDING_DIRECTIONS,
+  ) as MovementBindingAction[]) {
+    if (bindings[action] === event.code) {
+      return MOVEMENT_BINDING_DIRECTIONS[action];
+    }
+  }
+  return null;
 }
