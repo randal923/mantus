@@ -10,6 +10,7 @@ import {
   type CharacterSex,
   type ClientMessage,
   type PodiumRaceEntry,
+  type Position,
 } from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
@@ -48,6 +49,7 @@ import type { GuildStore } from "./guild/GuildStore";
 import { HouseService } from "./house/HouseService";
 import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
+import { AdventurersStoneService } from "./action/AdventurersStoneService";
 import { ClockHandler } from "./action/ClockHandler";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
 import { loadDoorKeyActions } from "./action/loadDoorKeyActions";
@@ -284,6 +286,7 @@ export class GameServer {
   private readonly bank: BankService;
   private readonly shops: ShopService;
   private readonly portableSeller: PortableSellerService;
+  private readonly adventurersStone: AdventurersStoneService;
   private readonly shopStock = new ShopStockCache();
   private readonly shopRestock: ShopRestockRunner;
   private readonly currencyConservation: CurrencyConservationRunner;
@@ -879,6 +882,18 @@ export class GameServer {
       loadQuestStorageAliases(),
       loadQuestCatalog(),
     );
+    this.adventurersStone = new AdventurersStoneService(this.items, {
+      getPlayer: (characterId) => this.world.getPlayer(characterId),
+      isProtectionZone: (position) => this.world.isProtectionZone(position),
+      isHouse: (position) => this.world.getHouseId(position) !== undefined,
+      teleport: (session, player, destination) =>
+        this.teleportPlayerTo(session, player, destination),
+      effect: (position, effectId) =>
+        this.visibility.broadcastMagicEffect(position, effectId),
+      setStorageValue: (player, key, value) =>
+        this.quests.setStorageValue(player, key, value),
+      fallbackTemple: () => this.world.templePosition,
+    });
     this.npcs = new NpcHandler(
       this.world,
       this.registry,
@@ -1864,6 +1879,7 @@ export class GameServer {
         // item-use path; it only reads the world clock.
         if (this.clocks.handleUseItem(session, intent)) return;
         if (this.portableSeller.handleUseItem(session, intent, now)) return;
+        if (this.adventurersStone.handleUseItem(session, intent)) return;
         this.items.handle(session, intent, now);
         return;
       case "equip-item":
@@ -2335,11 +2351,17 @@ export class GameServer {
     const player = this.world.getPlayer(characterId);
     const session = this.registry.sessionFor(characterId);
     if (!player || !session) return;
-    const destination = this.world.findUnoccupiedPosition(
-      this.world.templePosition,
-      2,
-    );
-    if (!destination) return;
+    this.teleportPlayerTo(session, player, this.world.templePosition);
+  }
+
+  /** Teleports near `destination`; false when no free tile was found. */
+  private teleportPlayerTo(
+    session: Session,
+    player: Player,
+    destination: Position,
+  ): boolean {
+    const spot = this.world.findUnoccupiedPosition(destination, 2);
+    if (!spot) return false;
     session.movementDirection = null;
     session.bufferedMovementDirection = null;
     session.autoWalkDirections = [];
@@ -2347,8 +2369,9 @@ export class GameServer {
       session.attackTargetId = null;
       session.send({ type: "attack-target-changed", creatureId: null });
     }
-    const from = this.world.relocateCreature(player, destination);
+    const from = this.world.relocateCreature(player, spot);
     this.visibility.onPlayerTeleported(session, player, from);
     this.persistence.markDirty(player);
+    return true;
   }
 }

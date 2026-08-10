@@ -31,3 +31,4 @@ worktree is created, merged, or removed.
 | `agent/protocol-strike-logging`  | done        |
 | `agents/quest-fixes`             | done        |
 | `agents/adventurers-stone`       | done        |
+| `agents/adventurers-stone-use`   | done        |
