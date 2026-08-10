@@ -20,13 +20,15 @@ const STONE_WALL = 1_295;
 const GRINDING =
   "You hear a loud grinding sound not very far from you. something very heavy seems to have moved.";
 const BONE_KEY = 2_973;
-const TOKEN = "dev-cultist-key-scenario";
 // The playtest database persists between runs and the box is once-per-
 // character, so every run brings a fresh character (letters only: character
-// names reject digits).
-const CHARACTER = `Key Tester ${[...String(Date.now() % 1_000_000)]
+// names reject digits). The token is per-run too: a fixed token's account
+// fills its character slots after a few runs and creation starts failing.
+const suffix = [...String(Date.now() % 1_000_000)]
   .map((digit) => "abcdefghij"[Number(digit)])
-  .join("")}`;
+  .join("");
+const TOKEN = `dev-cultist-key-${suffix}`;
+const CHARACTER = `Key Tester ${suffix}`;
 
 const step = (text: string) => console.log(`\n▶ ${text}`);
 const ok = (text: string) => console.log(`  ✓ ${text}`);

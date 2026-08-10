@@ -10,6 +10,8 @@
     "test": "vitest run",
     "playtest:banker-relogin": "tsx src/playtest/scenarios/bankerReloginModal.ts",
     "playtest:cultist-key": "tsx src/playtest/scenarios/cultistKeyChest.ts",
+    "playtest:quest-chests": "tsx src/playtest/scenarios/questChestSweep.ts",
+    "playtest:quest-doors": "tsx src/playtest/scenarios/questDoorKeySweep.ts",
     "playtest:rookgaard": "tsx src/playtest/scenarios/rookgaardQuests.ts",
     "playtest:npc-spawn": "tsx src/playtest/scenarios/npcSpawnCycle.ts",
     "playtest:look": "tsx src/playtest/scenarios/lookDescriptions.ts",

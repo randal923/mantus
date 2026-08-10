@@ -6,6 +6,7 @@ worktree is created, merged, or removed.
 
 | Branch                           | Status      |
 | -------------------------------- | ----------- |
+| `agents/quest-e2e-sweep`         | in progress |
 | `agents/quest-parity-rookgaard`  | done        |
 | `agents/quest-touch-actions`     | done        |
 | `agents/chest-click-redirect`    | done        |
