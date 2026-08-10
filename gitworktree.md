@@ -29,4 +29,4 @@ worktree is created, merged, or removed.
 | `agent/wakeable-tick`            | done        |
 | `agent/fix-item-drag-npc-spawns` | done        |
 | `agent/protocol-strike-logging`  | done        |
-| `agents/quest-fixes`             | in progress |
+| `agents/quest-fixes`             | done        |
