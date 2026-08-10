@@ -1271,15 +1271,14 @@ limitations accepted during a session are recorded in the owning feature file
   (useCallback + store.getState()) callbacks down from
   `GameInventoryOverlays`. Owner: client inventory UI.
 
-- 2026-08-09: full quest e2e sweep findings live in `todo/quests.md`: 30
-  *shipped* chest placements are dead (scenery hosts absent or
-  classification-2 in the converted map — distinct from the 22 build-time
-  skips below), 10 key doors sit behind those dead chests, 3 doors open but
-  stay impassable (aids 4603/909/3600), 12 doors have no obtainable key, 12
-  chests are unlootable (Canary amulet *charge* counts imported as item
-  counts — and 2 more multiply amulets instead of failing), and the
-  51-quest catalog is display-only (nothing writes quest storage).
-  Owner: quest chests / quest platform.
+- 2026-08-09 (updated 2026-08-10): the quest e2e sweep findings were fixed
+  by the quest-fix pass (`todo/done.md` 2026-08-09) — chests resolve
+  positionally, charged rewards carry `charges`, the "impassable" doors
+  were seeded-AI wildlife. What remains open: 12 keyless doors (7+808
+  sealed-in-Canary, 3002 Canary-broken, 3012/3940/3142/3666 await NPC
+  import), chest 6249 behind a storage-gated quest door, and the
+  display-only 51-quest catalog — all carried in
+  `todo/quest-parity-triage.md`. Owner: quest platform.
 
 - 2026-08-09: `server/scripts/buildQuestChests.ts` (quest_system1/2 map-chest
   import) knowingly defers two data gaps. (1) 22 quest items with aid

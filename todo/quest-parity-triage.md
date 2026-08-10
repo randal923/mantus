@@ -425,3 +425,42 @@ Canary keeps its quest content in `data-otservbr-global/scripts/quests/` — **9
 7. **Three deferred entries duplicate things we already have handlers for**: `tools/sickle.lua` (we have `handleSickleUse.ts`), `other/kits.lua` (`handleDecorationKitUse.ts`), `items/exercise_training_weapons.lua` (`ExerciseTrainingHandler.ts`). The ledger status may be stale for these — worth re-running `tools/buildWorldActionParityInventory.mjs`.
 8. **`freequests.lua`** is a config-toggled script that stamps a large table of quest storages onto every character on login. If we ever port it, it doubles as a ready-made list of "which storage value means quest complete" for ~40 quests.
 
+
+## Key doors and gated chests carried over from the 2026-08-09 e2e sweep
+
+Transferred from `todo/quests.md` (file retired 2026-08-10 after the
+quest-fix pass; verification history in `todo/done.md`). The sweeps
+themselves pass — `playtest:quest-chests` 387/388 (sole finding: chest
+6249, below), `playtest:quest-doors` PASS with the 12 doors here as its
+only findings.
+
+**Keyless doors, decided per door (2026-08-09):**
+
+- Sealed, parity-accurate — no key source exists anywhere in Canary either
+  (aids reserved in `lib/core/storages.lua`, consumed only by
+  `door_key.lua`): aids **3001, 3003–3007** (Draconia set) and **808**.
+  Nothing to do unless Canary adds a source.
+- Sealed, Canary-broken upstream: aid **3002** — Canary's own source chest
+  (`ChestUnique[6093]`) misses `isKey`, reads a nil `storage = keyAction`,
+  and nests `itemPos`, so Canary grants an aid-less key and never marks the
+  chest looted. Our importer documents the exclusion ("Canary grants
+  nothing either"). Revisit only if Canary fixes it.
+- Waiting on NPC import (bucket C/E adjacent) — the key is sold/granted in
+  dialogue; needs a grant-item dialogue action kind plus these NPCs (only 3
+  world NPCs exist today):
+  - aid **3012** — Elathriel (`npc/elathriel.lua:195-215`): say `key`,
+    pay 5000 gp → key 2970. Repeatable, no storage gate.
+  - aid **3940** — Dermot (`npc/dermot.lua:68-90`, 2000 gp) or Simon the
+    Beggar (`npc/simon_the_beggar.lua:270-293`, 500+200 gp chained topics).
+  - aid **3142** — Skjaar (`npc/skjaar.lua:55-87`): 1000 gp + riddle
+    answers (`redips`, `7`, `black`) → key 2970.
+  - aid **3666** — A Prisoner (`npc/a_prisoner.lua:80-102`): hand over 7
+    apples through a four-step `yes` chain, sets the MadMageRoom storage,
+    grants key 2969.
+
+**Chest 6249** at (32876,31958,11) belongs to the storage-machine work
+(bucket C): its pocket is gated by the quest-variant door 5104 at
+(32876,31957,11), which fails closed until quest storage ships. The chest
+sweep reports it `unreachable` (its `/goto` only sees static walkability);
+the chest itself fires fine once the door can open. No map or converter
+change is needed.
