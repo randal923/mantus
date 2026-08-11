@@ -4,6 +4,7 @@ import {
   GUILD_AREA,
   GUILD_ARRIVAL,
 } from "./adventurersStoneTables";
+import { resolveStoredTempleDestination } from "./resolveStoredTempleDestination";
 
 export type AdventurersStoneDecision =
   | { kind: "refuse" }
@@ -44,11 +45,10 @@ export function resolveAdventurersStoneTeleport(input: {
   }
 
   if (inRange(input.position, GUILD_AREA.from, GUILD_AREA.to)) {
-    const destination =
-      ADVENTURERS_STONE_TEMPLES.find((entry) => entry.townId === input.storedTownId)?.temple ??
-      ADVENTURERS_STONE_TEMPLES.find((entry) => entry.townId === input.homeTownId)?.temple ??
-      input.fallbackTemple;
-    return { kind: "to-temple", destination };
+    return {
+      kind: "to-temple",
+      destination: resolveStoredTempleDestination(input),
+    };
   }
 
   return { kind: "refuse" };

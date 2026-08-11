@@ -5538,3 +5538,81 @@ stands still. Full server suite 3986 passed, 0 failed; typecheck clean.
 **Residual risk**: a player who steps off and back onto the same tile inside a
 single server tick would not be caught — physically impossible at walk speed,
 but it is the one behavioural gap versus Canary's flag-on-move.
+
+## 2026-08-11 — The Adventurers Guild exit portal did nothing, and 74 more map portals with it
+
+**Problem**: stepping into either shimmering portal north of the Adventurers
+Guild hall (32209/32210,32292,6) did nothing at all — the player just stood on
+it. The stone gets you *to* the guild, but the way Canary players leave is that
+step-in portal, and ours was dead. Auditing it turned up the same failure across
+the map: the OTBM item carries teleport destination 0,0,0 (Canary drives the
+destination from Lua), or it carries a real destination plus an action/unique id,
+which makes `tools/convertOtbm.mjs` drop it as `requires-content-action`.
+
+**Canary** (`a879c931`): three mechanisms feed one behaviour.
+`movements/teleport/adventurers_guild.lua` (aid 4253, stamped onto the map item
+by `startup/tables/teleport.lua`) reads
+`Storage.Quest.U9_80.AdventurersGuild.Stone`, teleports to that town's temple
+and resets the storage. `scripts/movements/others/teleport.lua` applies
+`TeleportUnique[38001-40000]` — a pure data table of destination + effect with no
+condition at all. And the C++ `Teleport::addThing` (`src/game/movement/teleport.cpp`)
+teleports on any tile whose item has a non-zero destination, regardless of the
+action id a Lua script may also be registered on — so "has an aid" is not a
+reason to disable a portal, only "a script claims that aid" is. The elemental
+shrine flames (`shrine_entrance.lua`/`shrine_exit.lua`) are a fourth case: they
+are registered on bare positions and carry no OTBM teleport item at all, so the
+converter never sees them.
+
+**What changed**:
+- `AdventurersGuildExitService` (new) resolves the guild exit destination inside
+  the tick from the player's own storage — stored town, else their home town,
+  else the world temple — teleports through `GameServer.teleportPlayerTo` (which
+  lands on the nearest free tile, so a crowded temple cannot swallow the trip),
+  clears the storage and flashes the teleport effect at both ends. The temple
+  resolution moved into `resolveStoredTempleDestination` and is now shared with
+  the stone's return leg.
+- `QUEST_TELEPORTS` grew from 1 to 77 rows: all 38xxx/39xxx `TeleportUnique`
+  destinations reachable on foot (Deeper Fibula, Draconia, Demon Helmet,
+  Alawar's Vault, the Paradox Tower, Faceless Bane, the 20-portal Grave Danger
+  maze), the unconditional Lua step-ins (Vengoth castle, Dreamer's court and
+  death ring, White Pearl, the deathling sanctums, the Port Hope waterfall
+  cave, the Secret Library pair, the Essence of Malice exit, the banshees' last
+  seal), and the 11 map-destination portals no Canary script claims (Deeper
+  Banuta's element pairs, the Ape City catacombs, the library's Liquid Death
+  wing, the Cults of Tibia Sandking exit, a Ferumbras habitat corridor, the
+  Formorgar lift). `effectId` is now optional, because some Canary handlers play
+  nothing. Deeper Banuta's death portals (aid 64022/64023) are the one
+  deliberate deviation: both OTBM destinations are solid mountain wall (ground
+  1128 + wall 23828), which Canary force-moves the player into, so each row
+  lands on the open floor beside the paired portal instead.
+- `ElementalShrineService` + tables (new): the 52 city flames and 13 shrine
+  flames. Level 30 or the stepper is pushed back where they came from with
+  Canary's line; the city index is remembered in `ShrineEntrance` storage and
+  the shrine flames return the player to it (home temple when unset).
+
+**Files**: `server/src/action/AdventurersGuildExitService.ts`,
+`resolveStoredTempleDestination.ts`, `ElementalShrineService.ts`,
+`resolveElementalShrineStep.ts`, `elementalShrineTables.ts`,
+`questTeleportTables.ts`, `adventurersStoneTables.ts` (guild exit portals),
+`resolveAdventurersStoneTeleport.ts`, `PressurePlateRegistry.ts` (optional
+effect), `GameServer.ts` (two step-in hooks), `server/src/readMapWalkability.ts`,
+`server/src/playtest/gotoTile.ts`, playtest scenarios
+`questTeleportSweep.ts`/`elementalShrines.ts` (+ `adventurersStone.ts` third
+leg), and the four new test files.
+
+**Verified**: `yarn playtest:adventurers-stone` now walks out through the exit
+portal to the Thais temple; `yarn playtest:quest-teleports` (new) walks into all
+77 table portals in the real world and 76 teleport correctly (the Dreamer's
+death-ring exit is sealed behind quest scenery, so no tile beside it is walkable
+— reported, not skipped silently); `yarn playtest:shrines` (new) proves the
+level-30 refusal, the ice-shrine trip and the return to Thais;
+`yarn playtest:carlin-portal` still passes. Table tests assert every source and
+destination is a walkable tile in `otservbr.map.bin` and that no row duplicates
+a static map transition. Server suite 4005 passed, 0 failed; typecheck clean.
+
+**Residual risk**: the ported scripts do only the teleport — Canary's side
+effects (banshee seal storages, Dreamer's tree regrowth, White Pearl's pot
+variant) are not modelled. Everything still dead is enumerated under "Accepted
+gaps" in `TODO.md` (gated portals, use-activated teleports, citizen tiles,
+swimming-only vortices, two blocked-destination portals, and ~1,140 unattributed
+zero-destination placements).
