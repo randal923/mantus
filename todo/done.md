@@ -5499,3 +5499,42 @@ box (32195-32230 × 32285-32315, z6) around the arrival tile — a player who
 wanders off the guild island's PZ (or upstairs) gets the refusal hint until
 they walk back. Characters GM-teleported to the guild with no stored town
 return to the world spawn temple (home town 1 has no temple box).
+
+## 2026-08-11 — Exercise training never stopped when the trainer walked away
+
+**Problem**: starting a run on an exercise dummy and then walking off kept the
+training going — charges kept burning and skill tries kept landing from
+anywhere, as long as the player stayed inside some protection zone. Nothing in
+`ExerciseTrainingHandler`'s tick looked at where the trainer was standing;
+reach was validated only when the use intent arrived (charter rule 4, missed).
+
+**Canary**: `Creature::onCreatureMove` (`src/creatures/creature.cpp`) clears
+the flag on any *self* move — `if (player->isExerciseTraining())
+player->setTraining(false)` — and the next `exerciseTrainingEvent` tick sees
+`player:isTraining() == 0`, says "You have stopped training." and tears the
+event down. So a single step ends the run in Canary, whatever the weapon's
+reach was when it started (rods, wands and bows can *start* up to 7×5 tiles
+away, but they cannot follow the player). There is no distance re-check in the
+loop at all; movement is the rule.
+
+**What changed**: `ActiveTraining` now records `trainerPosition` — the tile the
+player stood on when training started — and the tick ends the run with Canary's
+"You have stopped training." as soon as `player.position` differs from it.
+Because it compares positions rather than hooking the walk path, it also covers
+teleports, pushes and any other way the player leaves the tile. The check sits
+*after* the protection-zone check on purpose: a step that also left the zone
+keeps the more specific "You are no longer in a protection zone, the training
+has stopped." message (in Canary that message is effectively unreachable, since
+the move flag fires first).
+
+**Files**: `server/src/action/ExerciseTrainingHandler.ts` (+ its test).
+
+**Verified**: 2 new unit tests — a step to a neighbouring tile that is still in
+the protection zone *and* still adjacent to the dummy stops the run and spends
+no further charges (it fails on the pre-fix handler, checked by stashing the
+change), and a far-use rod keeps training from 3 tiles away while the trainer
+stands still. Full server suite 3986 passed, 0 failed; typecheck clean.
+
+**Residual risk**: a player who steps off and back onto the same tile inside a
+single server tick would not be caught — physically impossible at walk speed,
+but it is the one behavioural gap versus Canary's flag-on-move.
