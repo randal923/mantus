@@ -34,4 +34,4 @@ worktree is created, merged, or removed.
 | `agents/key-bindings`            | done        |
 | `agents/adventurers-stone-use`   | done        |
 | `agents/exercise-training-move-stop` | done        |
-| `agents/teleport-audit`          | in progress |
+| `agents/teleport-audit`          | done        |
