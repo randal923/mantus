@@ -307,6 +307,37 @@ describe("ExerciseTrainingHandler", () => {
     expect(harness.chargesLeft()).toBe(499);
   });
 
+  it("stops training when the trainer steps off the tile they started on", async () => {
+    const harness = await makeHarness();
+    harness.use(1_000);
+    await harness.tick(1_000);
+    // Still in the protection zone, still next to the dummy: Canary ends the
+    // run on the step itself, whatever the step was.
+    harness.player.moveTo({ x: 4, y: 5, z: 7 });
+
+    await harness.tick(10_000);
+    await harness.tick(20_000);
+
+    expect(conditionTexts(harness.sent)).toContain("You have stopped training.");
+    expect(harness.chargesLeft()).toBe(499);
+  });
+
+  it("keeps training a far-use dummy while the trainer stands still", async () => {
+    const harness = await makeHarness({
+      weaponTypeId: EXERCISE_ROD,
+      dummyPositions: [FAR_DUMMY_POSITION],
+    });
+    harness.use(1_000, FAR_DUMMY_POSITION);
+
+    await harness.tick(1_000);
+    await harness.tick(10_000);
+
+    expect(conditionTexts(harness.sent)).not.toContain(
+      "You have stopped training.",
+    );
+    expect(harness.chargesLeft()).toBeLessThan(500);
+  });
+
   it("rejects a melee weapon used on a dummy out of reach", async () => {
     const harness = await makeHarness({
       dummyPositions: [FAR_DUMMY_POSITION],

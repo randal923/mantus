@@ -33,3 +33,4 @@ worktree is created, merged, or removed.
 | `agents/adventurers-stone`       | done        |
 | `agents/key-bindings`            | done        |
 | `agents/adventurers-stone-use`   | done        |
+| `agents/exercise-training-move-stop` | in progress |

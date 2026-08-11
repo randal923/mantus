@@ -6,6 +6,7 @@ import {
 import { MISSILE_DURATION_MS } from "../combat/combatConstants";
 import { chargesOf } from "../item/chargesOf";
 import { isNear } from "../item/isNear";
+import { samePosition } from "../item/samePosition";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import type { ItemIntentHandler } from "../item/ItemIntentHandler";
 import {
@@ -40,6 +41,8 @@ interface ActiveTraining {
   readonly weaponTypeId: number;
   readonly dummyPosition: Position;
   readonly dummyTypeId: number;
+  /** The tile training started on; any step off it ends the run. */
+  readonly trainerPosition: Position;
   /** When the next paid-for hit is drawn. */
   nextAt: number;
   /** Charges committed and awarded, whose hits have not been drawn yet. */
@@ -57,8 +60,8 @@ interface ActiveTraining {
  *
  * Every rule is re-checked on the tick that pays, not when the intent arrived
  * (charter rule 4): the dummy must still be on its tile, the trainer must
- * still stand in a protection zone, and the weapon must still be carried at
- * the revision the charges are spent against. Charges are spent by a single
+ * still stand on the tile they started from inside a protection zone, and the
+ * weapon must still be carried at the revision the charges are spent against. Charges are spent by a single
  * atomic store operation and the skill is awarded only once that commits, so a
  * failed write can never hand out free progress.
  *
@@ -137,6 +140,7 @@ export class ExerciseTrainingHandler {
       weaponTypeId: item.typeId,
       dummyPosition: { ...intent.targetPosition },
       dummyTypeId: dummy.typeId,
+      trainerPosition: { ...player.position },
       // Canary's first addEvent fires with no delay.
       nextAt: now,
       creditedHits: 0,
@@ -195,6 +199,15 @@ export class ExerciseTrainingHandler {
         session,
         "You are no longer in a protection zone, the training has stopped.",
       );
+      return;
+    }
+    // Canary clears the training flag from `Creature::onCreatureMove` on any
+    // self move, so a single step — walked, pushed or teleported — ends the
+    // run, whatever the weapon's reach was when it started. Checked after the
+    // zone rule so a step that also left the protection zone keeps its more
+    // specific message.
+    if (!samePosition(player.position, training.trainerPosition)) {
+      this.finish(playerId, session, "You have stopped training.");
       return;
     }
 
