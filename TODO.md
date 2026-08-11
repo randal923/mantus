@@ -34,7 +34,9 @@ limitations accepted during a session are recorded in the owning feature file
   was cross-referenced against Canary `a879c931` (`startup/tables/teleport.lua`,
   `teleport_item.lua`, all 366 `MoveEvent` scripts). Live now: 788 static map
   transitions, 77 `QUEST_TELEPORTS` rows, the 2 Adventurers Guild exit portals,
-  and the 65 elemental shrine flames. Still dead, with the reason:
+  and the 65 elemental shrine flames. Every tile that is still dead is listed
+  with its coordinates and gate in
+  [`todo/teleport-gaps.md`](todo/teleport-gaps.md); by category:
   - **~370 storage/boss/level-gated portals** (227 storage, 106 boss+storage,
     20 boss, 16 boss+level, 14 level, 3 level+storage). These need the quest
     storage/boss-cooldown platforms, not a data row — they are bucket C/D work

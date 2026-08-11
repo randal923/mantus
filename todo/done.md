@@ -5612,7 +5612,7 @@ a static map transition. Server suite 4005 passed, 0 failed; typecheck clean.
 
 **Residual risk**: the ported scripts do only the teleport — Canary's side
 effects (banshee seal storages, Dreamer's tree regrowth, White Pearl's pot
-variant) are not modelled. Everything still dead is enumerated under "Accepted
-gaps" in `TODO.md` (gated portals, use-activated teleports, citizen tiles,
+variant) are not modelled. Everything still dead is listed tile by tile in
+`todo/teleport-gaps.md` and summarised under "Accepted gaps" in `TODO.md` (gated portals, use-activated teleports, citizen tiles,
 swimming-only vortices, two blocked-destination portals, and ~1,140 unattributed
 zero-destination placements).
