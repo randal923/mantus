@@ -56,7 +56,9 @@ function seededWall(): MapItem {
   };
 }
 
-function makeHarness(options: { wallPlaced?: boolean } = {}) {
+function makeHarness(
+  options: { wallPlaced?: boolean; secondTouch?: Position } = {},
+) {
   const touch: QuestTouchDefinition = {
     itemId: 2_930,
     removals: [{ position: WALL, itemId: STONE_WALL }],
@@ -64,6 +66,7 @@ function makeHarness(options: { wallPlaced?: boolean } = {}) {
     effectId: POFF,
     cooldownSeconds: 306,
     restoreAfterMs: 300_000,
+    ...(options.secondTouch ? { cooldownKey: "shared-wall" } : {}),
   };
   const world = new World(
     gridMapData({
@@ -105,7 +108,12 @@ function makeHarness(options: { wallPlaced?: boolean } = {}) {
     undefined,
     undefined,
     undefined,
-    new Map([[positionKey(TOUCH), touch]]),
+    new Map([
+      [positionKey(TOUCH), touch],
+      ...(options.secondTouch
+        ? [[positionKey(options.secondTouch), touch] as const]
+        : []),
+    ]),
     (session, player, position, definition, now) =>
       service.use(session, player, position, definition, now),
   );
@@ -231,6 +239,27 @@ describe("QuestTouchService", () => {
     expect(wallItemIds(harness)).toEqual([STONE_WALL]);
   });
 
+  it("shares one cooldown between two touch positions with the same key", async () => {
+    const SECOND = { x: 4, y: 3, z: 7 } as const;
+    const harness = makeHarness({ secondTouch: SECOND });
+    const first = await harness.makeSession("first", { x: 5, y: 5, z: 7 });
+    expect(
+      harness.worldActions.handleUseMap(first.session, TOUCH, 1_000),
+    ).toBe(true);
+    expect(wallItemIds(harness)).toEqual([]);
+
+    // The other side's trigger is inside the same cooldown: poff only.
+    const second = await harness.makeSession("second", { x: 4, y: 4, z: 7 });
+    expect(
+      harness.worldActions.handleUseMap(second.session, SECOND, 2_000),
+    ).toBe(true);
+    expect(combatLogs(second.sent)).toEqual([]);
+    expect(harness.effects.at(-1)).toEqual({
+      position: { x: 4, y: 4, z: 7 },
+      effectId: POFF,
+    });
+  });
+
   it("ships the Cults of Tibia torch entry and derives its wall tile", () => {
     const torch = QUEST_TOUCH_ACTIONS.get(
       positionKey({ x: 32_400, y: 31_793, z: 8 }),
@@ -251,5 +280,11 @@ describe("QuestTouchService", () => {
       blockingItemIds: [STONE_WALL],
       blocksProjectileWhenBlocked: true,
     });
+    // The inside sconce (OTBM stamps aid 5524 there too) is the same
+    // definition, so both sides open the wall and share the cooldown.
+    expect(
+      QUEST_TOUCH_ACTIONS.get(positionKey({ x: 32_395, y: 31_808, z: 8 })),
+    ).toBe(torch);
+    expect(torch?.cooldownKey).toBe("cults-carlin-wall");
   });
 });

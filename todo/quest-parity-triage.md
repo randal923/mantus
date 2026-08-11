@@ -9,7 +9,7 @@ Source of truth: `content/canary-world-action-parity.json` (261 registrations wi
 | **A** | quest-touch data only — Fits the new position-keyed table: use at position -> remove/transform/create map items, message, effect, optional cooldown/timed restore. No storage gating. | 12 |
 | **B** | chest-like — Grants items once per character; expressible as a chest definition in `server/data/chests.json` / `quest-chests.json`. | 4 |
 | **C** | storage state machine — Needs per-character quest storage reads/writes beyond a looted flag (quest doors, mission steps, gated levers/teleports). | 30 |
-| **D** | movement-triggered — Step-in / step-out (or add-item) tiles; extends `PressurePlateRegistry` or a sibling movement registry. | 45 |
+| **D** | movement-triggered — Step-in / step-out (or add-item) tiles; extends `PressurePlateRegistry` or a sibling movement registry. Unconditional step-in portals now have a data seam: `QUEST_TELEPORTS` in `server/src/action/questTeleportTables.ts` (first entry: the Cults of Carlin hideout exit, shipped 2026-08-10). Storage/level-gated portals do NOT fit it yet. | 45 |
 | **E** | new mechanic required — Named subsystem is missing (teleport-on-use, boss arenas, blessings, imbuements, house furniture, conditions/buffs, store, timers spanning restarts, ...). | 158 |
 | **F** | cosmetic/skippable — No gameplay effect; a flavour message and/or effect only. | 12 |
 | | **Total** | **261** |
@@ -66,7 +66,7 @@ Storage keys these need, and whether `content/quests/canary-quests.json` (51 que
 | `Quest.U12_20.KilmareshQuest.Sixth.*` | **no** | gems (ivory mask) |
 | `Quest.U10_80.GrimvaleQuest.WereHelmetEnchant` | **no** | moonlight_crystals |
 | `Quest.U8_7.RottinWoodAndTheMarriedMen.RottinStart` | **no** | hammer |
-| `Quest.U9_80.AdventurersGuild.Stone`, `.MagicDoor` | **no** | adventurers stone / magic door / guild exit |
+| `Quest.U9_80.AdventurersGuild.Stone` (in use since 2026-08-10), `.MagicDoor` | **no** | magic door (stone + guild exit shipped via AdventurersStoneService) |
 | `Storage.WagonTicket` | **no** | kazordoon ore wagons |
 | `Storage.ShrineEntrance` | **no** | shrine entrance/exit |
 | `Storage.BanutaSecretTunnel.DeeperBanutaShortcut` | **no** | deeper banuta shortcut |
@@ -83,7 +83,7 @@ Roughly **half** of the storage keys the deferred C-bucket needs are already in 
 
 | sourcePath (idx / name) | B | Behaviour | Selectors |
 | --- | :-: | --- | --- |
-| `data-otservbr-global/scripts/actions/adventurers_guild/adventurers_stone.lua`<br/>_action_ · idx 0 | C | Only usable inside a listed town hall: records the town id in AdventurersGuild.Stone storage and teleports the player to the guild. | ids 16277 |
+| ~~`data-otservbr-global/scripts/actions/adventurers_guild/adventurers_stone.lua`~~ ✅ SHIPPED 2026-08-10 (agents/adventurers-stone-use: `AdventurersStoneService`, temple boxes → guild, storage `Quest.U9_80.AdventurersGuild.Stone`) | C | Only usable inside a listed town hall: records the town id in AdventurersGuild.Stone storage and teleports the player to the guild. | ids 16277 |
 | `data-otservbr-global/scripts/actions/adventurers_guild/magic_door.lua`<br/>_action_ · idx 0 | C | Magic door teleports in/out of the guild, flipping AdventurersGuild.MagicDoor storage to pick the return side. | ids 17318, 17319 |
 | `data-otservbr-global/scripts/actions/arena_pvp/arena_10x10.lua`<br/>_action_ · idx 0 | E | Lever requires 10 players standing on the entry tiles and teleports both teams into the arena; missing mechanic: multi-player ritual + arena occupancy. | ids 24181 |
 | `data-otservbr-global/scripts/actions/arena_pvp/arena_2x2.lua`<br/>_action_ · idx 0 | E | Same as the 10x10 arena but for 2 players; missing mechanic: multi-player ritual. | ids 24173 |
@@ -211,7 +211,7 @@ Roughly **half** of the storage keys the deferred C-bucket needs are already in 
 | `data-otservbr-global/scripts/movements/rookgaard/premium_bridge.lua`<br/>_movement_ · idx 0 | D | Rookgaard premium bridge pushes free accounts back. | aids 50241; stamped in the OTBM map, not by a startup table |
 | `data-otservbr-global/scripts/movements/rookgaard/rook_village.lua`<br/>_movement_ · idx 0 | D | Stepping on id 7888 pushes the player 3 north / 1 floor up with "You don't have any business there anymore." | ids 7888 |
 | `data-otservbr-global/scripts/movements/roshamuul/strange_vortex_tp.lua`<br/>_movement_ · idx 0 | D | Step-in vortex teleports the player into the nightmare area with a message. | aids 33542; stamped in the OTBM map, not by a startup table |
-| `data-otservbr-global/scripts/movements/teleport/adventurers_guild.lua`<br/>_movement_ · idx 0 | C | Guild exit teleport sends the player to the town recorded in AdventurersGuild.Stone storage (else their own town) and clears the storage. | aids 4253; stamped by teleport.lua:Action |
+| `data-otservbr-global/scripts/movements/teleport/adventurers_guild.lua`<br/>_movement_ · idx 0 | C | Guild exit teleport sends the player to the town recorded in AdventurersGuild.Stone storage (else their own town) and clears the storage. FUNCTIONALLY COVERED 2026-08-10: using the stone at the guild returns home (deliberate deviation from the aid-4253 step-in tile). | aids 4253; stamped by teleport.lua:Action |
 | `data-otservbr-global/scripts/movements/teleport/candia.lua`<br/>_movement_ · idx 0 | D | Four position-registered step-in teleports between Candia and Feyrist with a candy-floss effect. | 1 map position(s) |
 | `data-otservbr-global/scripts/movements/teleport/citizen.lua`<br/>_movement_ · idx 0 | C | Citizenship tiles set the player town, but Svargrond first requires BarbarianTest.Questline >= 8 (key is in our quest catalog). | dynamic selectors (table-driven) |
 | `data-otservbr-global/scripts/movements/teleport/citizen_svargrond.lua`<br/>_movement_ · idx 0 | C | Roof access teleport requires BarbarianTest.Questline == 8, otherwise drops the player below with a hint. | aids 30032; stamped by lever.lua:Unique, teleport.lua:Action |
@@ -408,7 +408,7 @@ Canary keeps its quest content in `data-otservbr-global/scripts/quests/` — **9
 | 3 | **Rookgaard starter quests** — ✅ SHIPPED 2026-08-09 (agents/quest-parity-rookgaard) | 9 registrations | Rapier chest, bear room (aid 30006), katana lever+door, sewer bridge, level/premium bridges live (quest-lever tables + movement gates + chest import; e2e `playtest:rookgaard`). CORRECTION: uid 1056, uids 14049/14050 (goblin temple) and aid 30492 (wooden-sword chest) are **dead content in Canary** at a879c931 — stamped neither in the OTBM nor by any startup table — and are excluded, not implemented |
 | 4 | **Teleport network** (Oramond/Rathleton, Vengoth, Ab'Dendriel, Fibula, Port Hope, Gray Beach, Candia, turtles, Dragolisk, Gnomprona, Schrödinger) | ~30 movement registrations + `movements/others/teleport.lua` (uids 38001-40000) | one data-driven step-in teleport table (destination + effect + optional level/premium/storage gate); the data is already in `startup/tables/teleport.lua` |
 | 5 | **Use-to-teleport props** (hive gates, sewer grates, elevators, rope-downs, ore wagons, vines, draw wells, boats) | ~25 action registrations | the same table, on the use path — i.e. a `teleport` verb on the new quest-touch system |
-| 6 | **Adventurers Guild** (stone + magic door + exit) | 3 registrations | `AdventurersGuild.Stone` / `.MagicDoor` storages (not in catalog) + town temple lookup |
+| 6 | **Adventurers Guild** (stone ✅ + exit ✅ 2026-08-10 via stone-use return; magic door open) | 1 registration left | `AdventurersGuild.MagicDoor` storage (not in catalog); stone + guild exit shipped in `AdventurersStoneService` |
 | 7 | **Elemental shrines / Feyrist** | `shrine_entrance.lua`, `shrine_exit.lua`, `feyrist_exit.lua`, `other/gems.lua` | `Storage.ShrineEntrance` round-trip storage, level-30 gate, gem consumption at the shrine |
 | 8 | **Roshamuul prison bosses** (golden lever + 3 cell keys) | 2 registrations | boss arena mechanic: N-player check, per-player 20h cooldown, global room-busy flag, boss spawn, timed room clear |
 | 9 | **Kazordoon** (ore wagon network, elevators, trapdoor, stone lever) | 5 registrations | `Storage.WagonTicket` weekly timer + teleport-on-use; the stone/trapdoor levers are pure bucket A |

@@ -43,7 +43,7 @@ export class QuestTouchService {
     touch: QuestTouchDefinition,
     now: number,
   ): void {
-    const key = positionKey(position);
+    const key = touch.cooldownKey ?? positionKey(position);
     if ((this.cooldownUntil.get(key) ?? 0) > now) {
       // Canary: within the global cooldown only a poff at the player.
       this.effect(player.position, touch.effectId);

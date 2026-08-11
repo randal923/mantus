@@ -16,6 +16,7 @@ import { makeCharacter } from "../test/makeCharacter";
 import { Visibility } from "../Visibility";
 import { World } from "../World";
 import type { MovementGateDefinition } from "./movementGateTables";
+import type { QuestTeleportDefinition } from "./questTeleportTables";
 import { positionKey } from "../positionKey";
 import { PressurePlateRegistry } from "./PressurePlateRegistry";
 
@@ -63,6 +64,7 @@ async function makeHarness(options: {
   protectionZones?: ReadonlyArray<readonly [number, number, number]>;
   level?: number;
   gates?: ReadonlyMap<string, MovementGateDefinition>;
+  questTeleports?: ReadonlyMap<string, QuestTeleportDefinition>;
   premiumUntil?: Date;
 }) {
   const world = new World(
@@ -109,6 +111,7 @@ async function makeHarness(options: {
       effects.push({ position: { ...position }, effectId });
     },
     options.gates,
+    options.questTeleports,
   );
   const level = options.level ?? 1;
   const player = new Player(
@@ -360,5 +363,32 @@ describe("PressurePlateRegistry", () => {
     expect(
       MOVEMENT_GATES.get(positionKey({ x: 32_063, y: 32_193, z: 7 })),
     ).toMatchObject({ requirement: { kind: "premium" } });
+  });
+
+  const PORTAL_LANDING = { x: 2, y: 3, z: 7 } as const;
+  const portalTeleports = (): ReadonlyMap<string, QuestTeleportDefinition> =>
+    new Map([
+      [positionKey(PLATE), { destination: PORTAL_LANDING, effectId: 11 }],
+    ]);
+
+  it("teleports a player stepping onto a quest portal to its destination", async () => {
+    const harness = await makeHarness({
+      items: [],
+      questTeleports: portalTeleports(),
+    });
+    harness.step("north", 1_000);
+
+    expect(harness.snapBacks).toEqual([PORTAL_LANDING]);
+    expect(harness.player.position).toEqual(PORTAL_LANDING);
+    expect(harness.effects).toEqual([
+      { position: PORTAL_LANDING, effectId: 11 },
+    ]);
+  });
+
+  it("ships the Cults of Tibia Carlin hideout exit portal", async () => {
+    const { QUEST_TELEPORTS } = await import("./questTeleportTables");
+    expect(
+      QUEST_TELEPORTS.get(positionKey({ x: 32_351, y: 31_679, z: 8 })),
+    ).toMatchObject({ destination: { x: 32_403, y: 31_813, z: 8 } });
   });
 });

@@ -5189,16 +5189,26 @@ player to the crypt at (32403,31813,8) with the teleport effect at the
 landing, matching the Canary script. Parity ledger entry for the Lua flipped
 to `implemented`.
 
+**Second trap on the same path**: the returning player then faces the
+decaying wall from the south, and only the north torch at (32400,31793,8)
+was registered in `QUEST_TOUCH_ACTIONS` — but the OTBM stamps aid 5524 on a
+second sconce at (32395,31808,8) inside the corridor. Registered that
+position on the same shared `QuestTouchDefinition` and added an optional
+`cooldownKey` to the definition (used by `QuestTouchService` in place of the
+touched tile's position key) so both sides share one cooldown, mirroring
+Canary's single global storage.
+
 **Files**: `server/src/action/questTeleportTables.ts` (new),
-`server/src/action/PressurePlateRegistry.ts`,
-`server/src/action/PressurePlateRegistry.test.ts`,
-`server/src/playtest/scenarios/cultsCarlinPortal.ts` (new),
+`server/src/action/{PressurePlateRegistry,questTouchTables,QuestTouchService}.ts`
+(+ their tests), `server/src/playtest/scenarios/cultsCarlinPortal.ts` (new),
 `server/package.json`, `content/canary-world-action-parity.json`.
 
-**Verified**: `yarn playtest:carlin-portal` PASS (enters the hideout via the
-static crypt portal's destination, walks onto the exit tile, lands at
-(32403,31813,8)); `PressurePlateRegistry` vitest suite 15/15; server
-typecheck clean.
+**Verified**: `yarn playtest:carlin-portal` PASS end to end — enters the
+hideout via the static crypt portal's destination, steps onto the exit tile,
+lands at (32403,31813,8), touches the inside sconce (grinding line), and
+walks north through the removed wall tile; `yarn playtest:cultist-key` still
+PASS (north torch chain); `PressurePlateRegistry` 15/15 and
+`QuestTouchService` 7/7 vitest; server typecheck clean.
 
 **Residual risk**: only this one portal ships in the table; the ~45 other
 movement-triggered tiles (triage bucket D) and ~25 teleport-on-use E entries
@@ -5288,3 +5298,204 @@ typecheck clean; live `SELECT 1` against the 6543 transaction pooler OK.
 restarted to pick up the new `DATABASE_URL`. Dev Supabase's pool_size 15 is
 still small; real player-scale load wants a bigger pooler/DB tier (prod
 sizing is a deploy concern, not a code change).
+
+## 2026-08-10 — Adventurer's stone: bound-slot grant for every character
+
+**Problem**: Canary's adventurer's stone (16277, used in a city temple to
+travel to the Adventurers Guild) existed in our catalog but nobody owned
+one, and the parity ledger defers its use effect. Requested: every
+character — new and existing — carries one permanently.
+
+**What changed**: new characters get an adventurer's stone seeded next to
+the Loot Pouch in the bound container (`getStarterSet` COMMON_BOUND_CONTENTS);
+the stone joined the bound-item allowlist on both server and client mirror,
+so like the pouch/Portable Seller it may enter the bound root but never
+leave it (move/drop/trade/depot all refuse); a catalog override pins it
+`movable: false` and trims the "replacement available at temples" line from
+the description; `scripts/backfillBoundContainers.ts` was generalized from
+pouch-only to a `BOUND_STARTER_ITEMS` list (pouch + stone) so one
+`yarn db:backfill-bound` run seeds any missing bound starter item, moving a
+stray existing copy into the bound root instead of duping.
+
+**Files**: `server/src/item/adventurersStoneTypeId.ts` (new),
+`server/src/item/getStarterSet.ts`, `server/src/item/boundItemTypeIds.ts`,
+`client/lib/inventory/boundItemTypeIds.ts`,
+`server/src/item/overrides/utilities/adventurers-stone.ts` (new) +
+`ITEM_OVERRIDES.ts` + `bound-items.ts` description,
+`server/scripts/backfillBoundContainers.ts`, tests in
+`getStarterSet.test.ts` and `boundSlotRules.test.ts`.
+
+**Verified**: new bound-slot cases (stone locked in: move-out/drop/trade
+refused; one-way entry allowed) plus updated starter-set assertions pass;
+full server (3967) and client (463) unit suites green; both typechecks
+clean; backfill run against the dev DB with the game server stopped —
+9 stones created for 9 characters, and a second run reported 0 created /
+18 already in place (idempotent).
+
+**Residual risk**: the stone's temple-teleport use effect is still deferred
+(`canary-world-action-parity.json` `adventurersStone`, todo-13 Feature 51) —
+the item is inert until that lands, though its description already promises
+the teleport. Production has NOT been backfilled: after deploying, stop the
+prod server (or verify 0 online via PUBLIC_API_URL) and run
+`yarn db:backfill-bound` there.
+
+## 2026-08-10 — Key mapping wired for real: rebindable controls (Feature 87, hotkey slice)
+
+**Problem.** The settings dialog's "Hotkey Mapping" view was a preview: a
+local `useState` of seven dropdowns whose footer admitted the mappings
+"do not change runtime controls yet". Real key handling was hardcoded in
+six places (`HOTKEY_BINDINGS`, movement `KEY_DIRECTIONS`, turn
+`TURN_DIRECTIONS`, action-bar reserved list, navbar `hotkey` label props,
+the modal's own `DEFAULT_HOTKEYS`), and most top-navbar panels had no key
+at all.
+
+**What changed.** One vocabulary (`client/lib/hotkeys/keyBindings.ts`)
+now defines every rebindable action — movement (4), all 23 panel toggles
+(every top-navbar button and character-menu entry, incl. quests, battle
+list, minimap, market, store, highscores, wiki, wheel, forge, prey,
+hunting tasks, hunt finder, tracker, imbuement tracker, profile, outfits,
+proficiency), game menu, and bug report — in three UI categories, with
+historical defaults (WASD, I, C, P, G, H, V, Esc, Ctrl+Z) and everything
+else unassigned. Bindings persist in a localStorage zustand store
+(`useKeyBindingsStore`, key `mantus-key-bindings`); assigning a key
+steals it from its previous owner; a persisted-snapshot merge backfills
+actions added later. `resolveHotkey` matches serialized combos (modifier
+combos now supported), movement/turn handlers derive their key maps from
+bindings — arrows + numpad diagonals stay built-in unless the user binds
+them to something else. Panel open/close behavior (with first-open
+fetches) moved to `createPanelActions.ts`, shared by GameNavigation and
+the hotkey controller so keyboard and navbar can't drift. The settings
+view is a categorized press-a-key capture UI (Esc cancels, Backspace
+clears); navbar/character-menu tooltips show live binding labels.
+
+**Files.** `client/lib/hotkeys/{keyBindings,serializeKeyBindingEvent,formatKeyBinding,resolveHotkey}.ts`
+(deleted `hotkeyBindings.ts`), `client/lib/movement/{getMovementKeyDirections,getHeldMovementDirection,getKeyboardTurnDirection}.ts`,
+`client/stores/useKeyBindingsStore.ts`, `client/hooks/useHotkeys.ts`,
+`client/components/game-window/{createPanelActions.ts,GameNavigation.tsx,controllers/GameWindowHotkeyController.tsx,controllers/GameWindowConnectionController.tsx}`,
+`client/components/settings/{KeyBindingsView,KeyBindingCaptureButton,GameMenuModal}.tsx`,
+`client/components/navigation/TopNavigationBar.tsx`, locales (en/pt-BR
+`hotkeys.*` rebuilt), `client/vitest.config.ts` (unit include +
+`stores/**`). Merged via `agents/key-bindings` (686cf63f).
+
+**Verified.** `yarn typecheck`, `yarn test` (476 tests; new suites for
+combo serialization, hotkey resolution incl. rebinds/clears, movement key
+maps incl. arrow-release/steal, store conflict-stealing/reset),
+`yarn build`; lint clean on touched files (2 pre-existing errors
+elsewhere untouched).
+
+**Residual.** (1) Bindings are per-device (localStorage), unlike the
+server-persisted action bar — fine for now, revisit if cross-device sync
+is wanted. (2) Action-bar slot hotkeys and the keymap store don't check
+each other for conflicts (action bar wins at runtime via its
+capture-phase listener; its reserved list still hardcodes bare WASD
+rather than the live movement bindings). (3) While the game-menu modal is
+open, panel hotkeys are ignored (previously only the C key worked there).
+(4) Behavior change: toggling stats via hotkey now mirrors the navbar
+button exactly (opens inventory alongside stats).
+
+## 2026-08-10 — Minimum ambient light: night and caves no longer near-black
+
+**Problem**: after the world-lighting merge, deep night (ambient 40/255 ≈
+16%) and especially caves (ambient 0 — pure black outside light radii)
+were judged too dark to play comfortably.
+
+**What changed**: `client/lib/render/WorldRenderer.ts` gained
+`MINIMUM_AMBIENT_LEVEL = 64` — a fixed comfort floor under the frame's
+ambient level (the concept behind OTClient's `m_minimumAmbientLight`).
+Night now bottoms out at 64/255 ≈ 25% brightness and underground floors use
+the same floor instead of 0. Server world light is untouched (Canary
+parity: day 250 / night 40 still broadcast); the own-player minimum glow
+still keys off the raw pre-floor level so it appears at night and
+underground as before. TODO.md's world-lighting gap entry updated — the
+remaining deferral is a player-adjustable slider, not the floor itself.
+
+**Verified**: client typecheck clean; WorldRenderer + computeLightmapPixels
+suites pass (9/9).
+
+**Residual risk**: none beyond taste — if 64 feels too bright/dark it is a
+one-constant tune.
+
+## 2026-08-10 — Minimum ambient light becomes a settings slider (OTClient parity)
+
+**Problem**: the night/cave comfort floor added earlier today was a hard
+constant (64/255); OTClient exposes the same knob as a player-adjustable
+"minimum ambient light" setting.
+
+**What changed**: the settings modal gained a "Graphics" section with a
+0–100% `RangeSlider` (default 25% = the old constant). The value persists
+in `useGameSettingsStore` (localStorage `mantus-game-settings`, client-only
+— deliberately not server `uiSettings` since it is a per-device render
+preference). `WorldRenderer` turned the constant into a field with
+`setMinimumAmbientLevel()` (clamped 0–255, applies next frame);
+`minimumAmbientLevelFromPercent` maps slider % → level.
+`GameSettingsOverlay` pushes changes live to the renderer;
+`GameWindowConnectionController` pushes the persisted value once at
+renderer creation. Locale strings added in en + pt-BR
+(Gráficos / Luz ambiente mínima).
+
+**Files**: `client/stores/useGameSettingsStore.ts`,
+`client/lib/render/WorldRenderer.ts`,
+`client/lib/render/minimumAmbientLevelFromPercent.ts` (+ test),
+`client/components/settings/GameMenuModal.tsx`,
+`client/components/game-window/GameSettingsOverlay.tsx`,
+`client/components/game-window/controllers/GameWindowConnectionController.tsx`,
+`client/locales/{en,pt-BR}.json`,
+`client/stories/GameMenuModal.stories.tsx`, `TODO.md` (slider deferral
+removed from the world-lighting gap entry).
+
+**Verified**: client typecheck clean; unit tests 7/7
+(minimumAmbientLevelFromPercent + WorldRenderer); GameMenuModal storybook
+interaction tests 5/5 (Settings play drags the slider and asserts the
+callback); eslint clean on all touched files.
+
+**Residual risk**: at 100% the lightmap ambient is 255 — the overlay still
+renders (dark flag keys off the server level) but multiplies by ~1.0,
+wasting a little GPU for a player who maxes the slider; harmless.
+
+## 2026-08-10 — Adventurer's stone use: temple ↔ Adventurers Guild teleport
+
+**Problem**: right-clicking the adventurer's stone (16277, granted to every
+character 2026-08-10) did nothing — the Canary `adventurersStone` action was
+deferred in the parity ledger, and the item had no use kind, so the client
+did not even offer "Use".
+
+**What changed**: `getItemUseKind` returns `activate` for the stone, and a
+new `AdventurersStoneService` sits in the `use-item` dispatch chain beside
+the Portable Seller (`GameServer.ts`). The pure rule lives in
+`resolveAdventurersStoneTeleport`: usable only on a protection-zone tile
+that is not in a house and never while pz-locked (Canary's exact gate);
+inside one of the 17 Canary temple boxes (`adventurersStoneTables.ts`,
+coordinates verbatim from `adventurers_stone.lua`, each with its town's
+temple from `otservbr.map.json`) it teleports to the guild arrival tile
+32210,32300,6, storing the town id in `Quest.U9_80.AdventurersGuild.Stone`;
+inside the guild PZ box it returns to the stored temple (home-town temple,
+then world temple, as fallbacks) and clears the storage. Refusal mirrors
+Canary: poff effect + "Try to move more to the center of a temple…" via
+combat-log. Teleporting reuses the store's temple-teleport recipe, extracted
+as `GameServer.teleportPlayerTo` (find free tile radius 2, clear
+movement/attack, `onPlayerTeleported`, markDirty); teleport magic effect
+plays at both ends. **Deliberate deviation**: Canary's return trip is a
+step-in tile (aid 4253) — ours is using the stone again at the guild, which
+also functionally covers `movements/teleport/adventurers_guild.lua`. The
+guild magic door (17318/17319) stays deferred.
+
+**Files**: `server/src/action/AdventurersStoneService.ts`,
+`resolveAdventurersStoneTeleport.ts`, `adventurersStoneTables.ts` (new) +
+tests; `server/src/GameServer.ts` (wiring + `teleportPlayerTo` extraction),
+`server/src/item/getItemUseKind.ts`,
+`server/src/playtest/scenarios/adventurersStone.ts` (new,
+`yarn playtest:adventurers-stone`); parity ledger entry flipped to
+implemented; triage rows updated in `todo/quest-parity-triage.md`.
+
+**Verified**: 14 new unit tests (decision rules, inclusive Canary box
+corners, table integrity against `otservbr.map.json` towns, service
+effects/storage/failure paths); full server suite 3981 passed; typecheck
+clean; live e2e playtest on the real map — refusal on a Thais street,
+temple → guild lands exactly on 32210,32300,6, guild → back to the Thais
+temple.
+
+**Residual risk**: the guild "at the guild" detection is a hand-probed PZ
+box (32195-32230 × 32285-32315, z6) around the arrival tile — a player who
+wanders off the guild island's PZ (or upstairs) gets the refusal hint until
+they walk back. Characters GM-teleported to the guild with no stored town
+return to the world spawn temple (home town 1 has no temple box).

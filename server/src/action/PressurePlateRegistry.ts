@@ -20,6 +20,10 @@ import {
   TRAP_TILES,
   type TrapDefinition,
 } from "./pressurePlateTables";
+import {
+  QUEST_TELEPORTS,
+  type QuestTeleportDefinition,
+} from "./questTeleportTables";
 
 /** Immediate tile damage, wired to the combat damage path by the caller. */
 export type TileDamageHook = (
@@ -55,6 +59,10 @@ export class PressurePlateRegistry {
       string,
       MovementGateDefinition
     > = MOVEMENT_GATES,
+    private readonly questTeleports: ReadonlyMap<
+      string,
+      QuestTeleportDefinition
+    > = QUEST_TELEPORTS,
   ) {}
 
   /** Runs after a player's step has been applied to `player.position`. */
@@ -75,6 +83,15 @@ export class PressurePlateRegistry {
       }
       this.effect?.(gate.failPosition, gate.effectId);
       this.snapBack(session, player, gate.failPosition, now);
+      return;
+    }
+    // Script-driven portals (OTBM destination 0,0,0): the destination is
+    // re-read here at execution time, and the effect plays where the player
+    // lands, matching Canary's post-teleport sendMagicEffect.
+    const teleport = this.questTeleports.get(positionKey(position));
+    if (teleport) {
+      this.snapBack(session, player, teleport.destination, now);
+      this.effect?.(teleport.destination, teleport.effectId);
       return;
     }
     if (this.world.isProtectionZone(position)) return;

@@ -10,6 +10,8 @@
     "test": "vitest run",
     "playtest:banker-relogin": "tsx src/playtest/scenarios/bankerReloginModal.ts",
     "playtest:cultist-key": "tsx src/playtest/scenarios/cultistKeyChest.ts",
+    "playtest:carlin-portal": "tsx src/playtest/scenarios/cultsCarlinPortal.ts",
+    "playtest:adventurers-stone": "tsx src/playtest/scenarios/adventurersStone.ts",
     "playtest:quest-chests": "tsx src/playtest/scenarios/questChestSweep.ts",
     "playtest:quest-doors": "tsx src/playtest/scenarios/questDoorKeySweep.ts",
     "playtest:rookgaard": "tsx src/playtest/scenarios/rookgaardQuests.ts",

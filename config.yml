@@ -49,7 +49,7 @@ rates:
   skill: 2
   magic: 2
   loot: 2
-  spawn: 5
+  spawn: 2
   # Soul regeneration, offline-training, and exercise-weapon training speeds.
   soulRegen: 5
   offlineTraining: 1

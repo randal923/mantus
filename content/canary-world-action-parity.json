@@ -2518,9 +2518,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
+   "status": "implemented",
    "owner": "todo-13 Feature 51",
-   "reason": "item-use effect not yet reproduced"
+   "reason": "AdventurersStoneService teleports temple <-> guild; return trip is stone-use at the guild, not the aid-4253 step-in tile"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/adventurers_guild/magic_door.lua",
@@ -6745,9 +6745,9 @@
    "aids": [],
    "positionCount": 1,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-20 quest storage",
-   "reason": "selected by unique/action id or map position, so it is scripted quest content"
+   "status": "implemented",
+   "owner": "quest teleports",
+   "reason": "step-in exit portal ships as a QUEST_TELEPORTS entry applied by PressurePlateRegistry"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/quests/cults_of_tibia/movements_orc_teleport.lua",
