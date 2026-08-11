@@ -21,14 +21,27 @@ export const ADVENTURERS_STONE_STORAGE_KEY =
 export const GUILD_ARRIVAL: Position = { x: 32210, y: 32300, z: 6 };
 
 /**
- * The Adventurers Guild protection zone around the arrival tile. Canary's
- * return trip is a step-in teleporter here (aid 4253); ours is using the
- * stone again anywhere inside this box.
+ * The Adventurers Guild protection zone around the arrival tile. Using the
+ * stone again anywhere inside this box returns the player to the temple they
+ * came from, on top of Canary's own exit portals below.
  */
 export const GUILD_AREA: { readonly from: Position; readonly to: Position } = {
   from: { x: 32195, y: 32285, z: 6 },
   to: { x: 32230, y: 32315, z: 6 },
 };
+
+/**
+ * The two magic forcefields north of the guild hall that lead back out
+ * (Canary `movements/teleport/adventurers_guild.lua`, aid 4253 stamped by
+ * `startup/tables/teleport.lua`). Their OTBM teleport destination is 0,0,0
+ * because the destination depends on the town the player arrived from, so the
+ * map converter cannot resolve them; `AdventurersGuildExitService` supplies
+ * the destination at execution time instead.
+ */
+export const GUILD_EXIT_PORTALS: ReadonlyArray<Position> = [
+  { x: 32209, y: 32292, z: 6 },
+  { x: 32210, y: 32292, z: 6 },
+];
 
 export const ADVENTURERS_STONE_TEMPLES: ReadonlyArray<AdventurersStoneTemple> =
   [

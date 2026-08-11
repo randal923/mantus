@@ -49,8 +49,10 @@ import type { GuildStore } from "./guild/GuildStore";
 import { HouseService } from "./house/HouseService";
 import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
+import { AdventurersGuildExitService } from "./action/AdventurersGuildExitService";
 import { AdventurersStoneService } from "./action/AdventurersStoneService";
 import { ClockHandler } from "./action/ClockHandler";
+import { ElementalShrineService } from "./action/ElementalShrineService";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
 import { loadDoorKeyActions } from "./action/loadDoorKeyActions";
 import { loadDoorLevelRequirements } from "./action/loadDoorLevelRequirements";
@@ -287,6 +289,8 @@ export class GameServer {
   private readonly shops: ShopService;
   private readonly portableSeller: PortableSellerService;
   private readonly adventurersStone: AdventurersStoneService;
+  private readonly guildExit: AdventurersGuildExitService;
+  private readonly elementalShrines: ElementalShrineService;
   private readonly shopStock = new ShopStockCache();
   private readonly shopRestock: ShopRestockRunner;
   private readonly currencyConservation: CurrencyConservationRunner;
@@ -894,6 +898,24 @@ export class GameServer {
         this.quests.setStorageValue(player, key, value),
       fallbackTemple: () => this.world.templePosition,
     });
+    this.elementalShrines = new ElementalShrineService({
+      teleport: (session, player, destination) =>
+        this.teleportPlayerTo(session, player, destination),
+      effect: (position, effectId) =>
+        this.visibility.broadcastMagicEffect(position, effectId),
+      setStorageValue: (player, key, value) =>
+        this.quests.setStorageValue(player, key, value),
+      fallbackTemple: () => this.world.templePosition,
+    });
+    this.guildExit = new AdventurersGuildExitService({
+      teleport: (session, player, destination) =>
+        this.teleportPlayerTo(session, player, destination),
+      effect: (position, effectId) =>
+        this.visibility.broadcastMagicEffect(position, effectId),
+      setStorageValue: (player, key, value) =>
+        this.quests.setStorageValue(player, key, value),
+      fallbackTemple: () => this.world.templePosition,
+    });
     this.npcs = new NpcHandler(
       this.world,
       this.registry,
@@ -951,6 +973,13 @@ export class GameServer {
         this.worldActions.closeDoorBehind(session, player, from, now);
         this.pressurePlates.onStepOut(session, player, from, now);
         this.pressurePlates.onStepIn(session, player, from, now);
+        // Portals whose destination depends on the player (the guild exit's
+        // remembered town, the shrine flames' remembered city) cannot live in
+        // the position-keyed table the plates use. They run after the plates;
+        // none of their tiles carries a plate.
+        if (!this.guildExit.onStepIn(session, player)) {
+          this.elementalShrines.onStepIn(session, player, from);
+        }
         // A step that crosses a protection-zone boundary refreshes the
         // client's fight-state so its PZ status icon appears/clears in step
         // with the move. Server-authoritative and own-tile-only (charter 6).

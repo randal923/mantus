@@ -29,6 +29,59 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Map teleport audit: what is still dead after the 2026-08-11 sweep**
+  (2026-08-11). Every teleport-type item placement in the OTBM (2,438 tiles)
+  was cross-referenced against Canary `a879c931` (`startup/tables/teleport.lua`,
+  `teleport_item.lua`, all 366 `MoveEvent` scripts). Live now: 788 static map
+  transitions, 77 `QUEST_TELEPORTS` rows, the 2 Adventurers Guild exit portals,
+  and the 65 elemental shrine flames. Still dead, with the reason:
+  - **~370 storage/boss/level-gated portals** (227 storage, 106 boss+storage,
+    20 boss, 16 boss+level, 14 level, 3 level+storage). These need the quest
+    storage/boss-cooldown platforms, not a data row — they are bucket C/D work
+    in [`todo/quest-parity-triage.md`](todo/quest-parity-triage.md). Fail-closed
+    today (the portal does nothing), which is the safe direction.
+  - **~10 world-state portals**: Dreamer's Challenge wall/stone/riddle tiles,
+    the Shattered Isles sacrifice, Yalahar's demon soil gates, Draconia's lever
+    exit, Grave Danger's Zelos tile (skips while the knights live), Oramond's
+    seacrest dive (requires an underwater helmet), Soul War's reward portal.
+    Each reads live map/inventory state; port them with the condition, never
+    unconditionally.
+  - **4 use-activated teleports** (Canary `TeleportItemUnique` 15001-15004:
+    two Kilmaresh boats, an Issavi ladder-ish item, the Faceless Bane
+    entrance). They are `Action` handlers, not step-ins, so they belong on the
+    quest-touch/world-action `use` seam, not in `QUEST_TELEPORTS`.
+  - **6 water-vortex portals in the Trapwood water-elemental cave**
+    (uid 39001-39006) sit on water tiles no one can stand on without swimming,
+    which we do not implement; one dry sibling (39003) is live.
+  - **Deliberate deviation, not a gap**: Deeper Banuta's death portals (aid
+    64022/64023) aim at tiles that are solid mountain wall in the OTBM, so both
+    rows land the player on the open floor beside the paired portal instead —
+    Canary force-moves them into the rock. Any other portal that turns out to
+    aim into scenery should be nudged the same way rather than hand-editing the
+    hash-pinned map (that would mean a full `map:convert` + `minimap:build` +
+    world-seed reconcile and a divergence from the pinned Canary baseline).
+  - **Citizen tiles (uid 9056-9068, 9240, 9500, 9510, 9515 + aid 30032)** — the
+    "become a citizen of X" flames in every city temple. Blocked on mutable,
+    persisted `Player.townId`: the field is `readonly`, and the character save
+    snapshot (`CharacterPersistence.snapshot`) and `PgCharacterStore` UPDATE do
+    not carry `town_id`. Fix: add a town setter + snapshot field + SQL column
+    write, then a step-in table mapping tile -> town (Svargrond additionally
+    demands the Barbarian Test storage, so it should fail closed to
+    "teleport to the temple without citizenship").
+  - **A `QUEST_TELEPORTS` portal does nothing while its destination tile is
+    occupied.** The plate registry teleports through
+    `MovementHandler.teleportPlayer`, which refuses an occupied or non-walkable
+    landing; Canary's `Teleport` stacks the arrival instead. Only the two
+    player-dependent services (guild exit, shrines) take the nearest free tile.
+    Fix if it ever bites: give the registry the same nearest-free-tile hook.
+  - **~1,140 zero-destination teleport-type placements with no attributable
+    Canary handler** (431 small boats, 258 magic forcefields, 100 carved stone
+    tiles, ...). Canary's `Teleport::addThing` skips destination (0,0,0), so an
+    unclaimed one is inert there too — but the 258 forcefields deserve a second
+    pass, since some are probably driven by a script our position/aid/uid index
+    could not attribute. Re-run the audit with
+    `server/src/readMapWalkability.ts` plus a fresh OTBM dump if this comes up.
+
 - **World lighting: equipped light items don't glow yet** (2026-08-07). The
   lighting pass renders map-item lights, creature `light` state (monster
   base light + spell light conditions), and the own player's darkness

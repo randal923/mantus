@@ -11,11 +11,14 @@ import { ADVENTURERS_STONE_TYPE_ID } from "../../item/adventurersStoneTypeId";
  * `actions/adventurers_guild/adventurers_stone.lua`). A fresh character owns
  * the stone in the bound container; using it away from a temple only puffs,
  * using it inside the Thais temple teleports to the Adventurers Guild, and
- * using it at the guild returns to the Thais temple. Run with:
- * yarn playtest:adventurers-stone
+ * using it at the guild returns to the Thais temple. The guild's own exit
+ * portal (a step-in teleporter with no OTBM destination) must send the player
+ * to the same temple. Run with: yarn playtest:adventurers-stone
  */
 const THAIS_TEMPLE = { x: 32369, y: 32241, z: 7 };
 const NOWHERE = { x: 32345, y: 32222, z: 7 }; // Thais street, no PZ
+// One tile south of the western guild exit portal (32209,32292,6).
+const PORTAL_APPROACH = { x: 32209, y: 32293, z: 6 };
 
 // Fresh letters-only character per run: playtest databases persist, and only
 // a post-stone character is guaranteed to carry the item.
@@ -152,7 +155,29 @@ try {
   );
   ok(`returned to the temple (${home.position.x},${home.position.y},${home.position.z})`);
 
-  console.log("\nPASS: adventurer's stone teleports both ways");
+  step("stepping into the guild exit portal (must also return to the temple)");
+  await useExhaust();
+  const beforeSecondTrip = client.mark();
+  useStone();
+  await waitForArrival(
+    (p) => p.z === GUILD_ARRIVAL.z && p.y >= GUILD_AREA.from.y,
+    "second teleport to the Adventurers Guild",
+    beforeSecondTrip,
+  );
+  await goto(PORTAL_APPROACH, "the tile below the guild exit portal");
+  const beforePortal = client.mark();
+  client.send({ type: "move", direction: "north", queueStep: true });
+  const exited = await waitForArrival(
+    (p) =>
+      Math.abs(p.x - THAIS_TEMPLE.x) <= 2 &&
+      Math.abs(p.y - THAIS_TEMPLE.y) <= 2 &&
+      p.z === THAIS_TEMPLE.z,
+    "exit portal teleport back to the Thais temple",
+    beforePortal,
+  );
+  ok(`walked out through the portal (${exited.position.x},${exited.position.y},${exited.position.z})`);
+
+  console.log("\nPASS: adventurer's stone and the guild exit portal both work");
 } catch (error) {
   failed = true;
   console.error("\nFAIL:", error);

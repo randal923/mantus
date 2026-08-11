@@ -91,7 +91,9 @@ export class PressurePlateRegistry {
     const teleport = this.questTeleports.get(positionKey(position));
     if (teleport) {
       this.snapBack(session, player, teleport.destination, now);
-      this.effect?.(teleport.destination, teleport.effectId);
+      if (teleport.effectId !== undefined) {
+        this.effect?.(teleport.destination, teleport.effectId);
+      }
       return;
     }
     if (this.world.isProtectionZone(position)) return;
