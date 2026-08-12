@@ -35,3 +35,4 @@ worktree is created, merged, or removed.
 | `agents/adventurers-stone-use`   | done        |
 | `agents/exercise-training-move-stop` | done        |
 | `agents/teleport-audit`          | done        |
+| `agents/monster-pz-exclusion`    | in progress |

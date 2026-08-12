@@ -52,6 +52,8 @@ export class SpawnManager {
   private spawnSectorCursor = 0;
   private aiCursor = 0;
   private summonGeneration = 0;
+  /** Monster spawn points dropped for sitting inside a protection zone. */
+  private protectionZoneSlotCount = 0;
 
   constructor(
     private readonly world: World,
@@ -111,11 +113,28 @@ export class SpawnManager {
       } satisfies SlotState;
       this.slots.set(definition.id, slot);
       if (!definition.enabled) continue;
+      // A handful of imported monster spawn points sit on protection-zone
+      // tiles, where a monster may never stand. Drop them at load instead of
+      // retrying forever. (Canary only refuses these at startup — its runtime
+      // respawn forces placement, spawn_monster.cpp:225 — which is how
+      // monsters end up standing in a town there. We refuse both.)
+      if (
+        definition.kind === "monster" &&
+        world.isProtectionZone(definition.home)
+      ) {
+        this.protectionZoneSlotCount++;
+        continue;
+      }
       const sectorKey = this.sectorKey(definition.home);
       const sector = this.sectorSlots.get(sectorKey) ?? [];
       sector.push(slot);
       this.sectorSlots.set(sectorKey, sector);
     }
+  }
+
+  /** Monster spawn points dropped at load for sitting in a protection zone. */
+  get protectionZoneSlots(): number {
+    return this.protectionZoneSlotCount;
   }
 
   tick(now: number): {
@@ -333,7 +352,12 @@ export class SpawnManager {
     if (!type || !type.flags.summonable) return null;
     const owned = this.liveSummonIds(owner.id);
     if (owned.length >= PLAYER_MAX_SUMMONS) return null;
-    const position = this.world.findUnoccupiedPosition(owner.position, 1);
+    // No summon inside a town: Canary's summon spell places with force=false
+    // (summon_creature.lua), so `Tile::queryAdd` refuses the protection zone
+    // and the cast fails for lack of room.
+    const position = this.world.findUnoccupiedPosition(owner.position, 1, (at) =>
+      this.world.canMonsterOccupy(at),
+    );
     if (!position) return null;
     const summon = new Monster({
       id: `monster-summon:${owner.id}:${this.summonGeneration++}`,
@@ -399,7 +423,9 @@ export class SpawnManager {
   ): string | "unknown-type" | "no-space" {
     const type = this.content.monsterTypes.get(typeId);
     if (!type) return "unknown-type";
-    const position = this.world.findUnoccupiedPosition(near, searchRadius);
+    const position = this.world.findUnoccupiedPosition(near, searchRadius, (at) =>
+      this.world.canMonsterOccupy(at),
+    );
     if (!position) return "no-space";
     const monster = new Monster({
       id: ownerId === GM_SPAWN_OWNER_ID
@@ -502,22 +528,28 @@ export class SpawnManager {
    * unusable tile before the last player left must not be stranded there.
    */
   private spawnPositionFor(slot: SlotState): Position | null {
+    const { kind, home } = slot.definition;
     const dormant = slot.dormantCreature?.position;
-    if (dormant && this.canPlaceAt(dormant)) return dormant;
-    return this.canPlaceAt(slot.definition.home) ? slot.definition.home : null;
+    if (dormant && this.canPlaceAt(dormant, kind)) return dormant;
+    return this.canPlaceAt(home, kind) ? home : null;
   }
 
   /**
    * Canary places spawns with `FLAG_IGNOREBLOCKITEM` and without
    * `FLAG_PATHFINDING` (map.cpp `Map::placeCreature`): a "blockpath" tile — a
    * table, a counter, a stone pile — blocks pathfinding but never a spawn.
-   * Only ground and another creature do.
+   * Only ground, another creature, and — for monsters — a protection zone do
+   * (`Tile::queryAdd`, tile.cpp).
    */
-  private canPlaceAt(position: Position): boolean {
+  private canPlaceAt(
+    position: Position,
+    kind: SpawnSlotDefinition["kind"],
+  ): boolean {
     return (
       Boolean(this.world.getTile(position)) &&
       this.world.isWalkable(position) &&
-      !this.world.isOccupied(position)
+      !this.world.isOccupied(position) &&
+      (kind !== "monster" || this.world.canMonsterOccupy(position))
     );
   }
 
@@ -713,6 +745,7 @@ export class SpawnManager {
           Math.abs(candidate.y - owner.home.y),
         ) <= this.config.ai.despawnRadius &&
         this.world.isPathable(candidate) &&
+        this.world.canMonsterOccupy(candidate) &&
         !this.world.isOccupied(candidate),
     );
     if (!position) return false;

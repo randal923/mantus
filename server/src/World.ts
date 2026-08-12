@@ -141,8 +141,16 @@ export class World {
   }
 
   canCreaturePathTo(creature: Creature, position: Position, now: number): boolean {
-    if (!this.isPathable(position)) return false;
+    // One tile read for both flags: this runs per visited node of every
+    // monster path search.
+    const tile = this.map.getTile(position);
+    if (!tile?.pathable) return false;
     if (!(creature instanceof Monster)) return true;
+    // Canary runs every candidate tile of a monster path through
+    // `Tile::queryAdd` (map.cpp `Map::getPathMatching`), which refuses a
+    // protection zone, so chases route around a town instead of piling up
+    // against its border.
+    if (tile.protectionZone) return false;
     const field = this.fieldTypeAt(position, now);
     if (field === "energy") return creature.type.flags.canWalkOnEnergy;
     if (field === "fire") return creature.type.flags.canWalkOnFire;
@@ -273,8 +281,21 @@ export class World {
     this.occupancy.releasePosition(position, reservationId);
   }
 
-  findUnoccupiedPosition(preferred: Position, maxRadius: number): Position | null {
-    return this.occupancy.findUnoccupiedPosition(preferred, maxRadius);
+  findUnoccupiedPosition(
+    preferred: Position,
+    maxRadius: number,
+    isAllowed?: (position: Position) => boolean,
+  ): Position | null {
+    return this.occupancy.findUnoccupiedPosition(
+      preferred,
+      maxRadius,
+      isAllowed,
+    );
+  }
+
+  /** Where a monster may stand: never a protection zone (Canary tile.cpp). */
+  canMonsterOccupy(position: Position): boolean {
+    return !this.isProtectionZone(position);
   }
 
   /** Players within the view box centered on (x, y). */

@@ -68,6 +68,21 @@ export class MovementRules {
   }
 
   /**
+   * Canary's `Tile::queryAdd` refuses a monster on a protection-zone tile
+   * outright (tile.cpp), so nothing hostile — lured, summoned, wandering, or
+   * fleeing — can ever set foot in a town. Players and NPCs are unaffected.
+   */
+  private monsterZoneBlocked(
+    creature: Creature,
+    destination: Position,
+  ): boolean {
+    return (
+      creature instanceof Monster &&
+      (this.map.getTile(destination)?.protectionZone ?? false)
+    );
+  }
+
+  /**
    * Validates and applies one step. All rules live here, at execution time:
    * walk-speed cooldown, bounds, blocked tiles, occupancy (charter rules 4, 8).
    */
@@ -293,6 +308,9 @@ export class MovementRules {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
     if (creature instanceof Player && this.pzBlocked(creature, destination)) {
+      return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
+    }
+    if (this.monsterZoneBlocked(creature, destination)) {
       return { moved: false, turned, reason: "blocked", retryAfterMs: 0 };
     }
     if (

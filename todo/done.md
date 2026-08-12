@@ -5616,3 +5616,78 @@ variant) are not modelled. Everything still dead is listed tile by tile in
 `todo/teleport-gaps.md` and summarised under "Accepted gaps" in `TODO.md` (gated portals, use-activated teleports, citizen tiles,
 swimming-only vortices, two blocked-destination portals, and ~1,140 unattributed
 zero-destination placements).
+
+## 2026-08-12 — Monsters spawned, walked and were summoned inside protection zones
+
+**Problem**: monsters could stand in town. Thirteen enabled monster spawn
+points sit on protection-zone tiles in the imported map (fauns and boogies in
+Feyrist, snakes and rabbits outside Thais and Carlin, a blood crab under
+Rookgaard), and nothing stopped the rest from walking in: `MovementRules`
+enforced the protection zone only against pz-locked *players*, so any lured
+monster, any monster summon and any wandering creature could follow someone
+into a temple or depot and park there. `/spawn` inside the Thais temple placed
+a rat on the spot, which is how the report came in.
+
+**Canary**: `Tile::queryAdd` (`src/items/tile.cpp:664`) refuses a monster on a
+tile flagged `TILESTATE_PROTECTIONZONE` outright — placement *and* movement,
+the only exception being familiars whose master is not attacking (we have no
+familiars). Monster pathfinding runs every candidate tile through the same
+check (`Map::getPathMatching`, `src/map/map.cpp:138`, and
+`Monster::canWalkTo`), so a chase routes around a town rather than dead-ending
+at its border. `utevo res` places with `force=false`
+(`data/scripts/spells/support/summon_creature.lua`), so summoning inside a
+protection zone fails for lack of room. The one place Canary contradicts
+itself is the runtime respawn: `SpawnMonster::spawnMonster` calls
+`placeCreature(..., forceLogin=true)` (`spawn_monster.cpp:225`), which skips
+`queryAdd` entirely — that is exactly how monsters end up standing in a town
+there. Its *startup* path (`internalPlaceCreature`, `force=false`) refuses
+them. We follow the startup rule in both cases; the deviation is deliberate
+and commented at the call site.
+
+**What changed**:
+
+- `MovementRules.monsterZoneBlocked` refuses any `Monster` step onto a
+  protection-zone tile — ordinary steps, chases, and forced fear movement.
+- `World.canCreaturePathTo` rejects protection-zone tiles for monsters, so
+  paths route around a town instead of piling up on its border. It now reads
+  the tile once for both flags (it runs per visited node of every path search).
+- `World.canMonsterOccupy` is the single "may a monster stand here" predicate;
+  `TileOccupancy.findUnoccupiedPosition` takes an optional filter so monster
+  placements can pass it.
+- `SpawnManager` drops monster spawn slots whose home is a protection zone at
+  load (13 of 83,369 on the world map; NPC slots — 234 of 1,008 sit in towns
+  by design — are untouched), refuses to place a monster on one at spawn time,
+  and applies the same rule to GM `/spawn`, world-event spawns, player summons
+  (`utevo res`) and monster-to-monster summons.
+- `MonsterEventService`'s "teleport to the player" event skips the relocation
+  when the target reached a town during its two-second warning.
+- GM `/spawn` inside a zone now answers "Monsters cannot stand in a protection
+  zone." instead of the generic no-free-tile line.
+- `playtest:look` stood in the Thais temple to summon its rat; it now steps
+  out to 32369,32260,7 for the spawn and returns.
+
+**Files**: `server/src/world/MovementRules.ts`, `server/src/World.ts`,
+`server/src/world/TileOccupancy.ts`, `server/src/spawn/SpawnManager.ts`,
+`server/src/creature/MonsterEventService.ts`,
+`server/src/gm/GmCommandHandler.ts`,
+`server/src/playtest/scenarios/lookDescriptions.ts` (+ tests in
+`SpawnManager.test.ts` and `MonsterBrain.test.ts`).
+
+**Verified**: 4 new unit tests — a monster spawn point inside a zone never
+spawns while an NPC point beside it still does; ad-hoc, event and player
+summons inside a zone are all refused while the same summon works one tile
+outside; a monster whose target flees into a zone never sets foot inside it
+across 113 brain ticks and drops the target; and a monster step, a feared step
+and a monster path into a zone are all refused while a player walks in
+unhindered. Each fails on the pre-fix code (checked by stubbing the guard).
+Full server suite 4009 passed, 0 failed; typecheck clean. Live against the
+real map (throwaway playtest probe on the local playtest DB): `/spawn rat`
+standing in the Thais temple is refused, the same command on the zone border
+places the rat on the first tile outside it, a rat spawned outside chased and
+wandered for 12 s across 16 steps without ever entering the zone — and the
+identical probe run against `main` spawns the rat inside the temple.
+
+**Residual risk**: a monster that is somehow already inside a zone (a quest
+lever relocation, a boss-room script) can still stand there; it can walk out
+but cannot path through zone tiles to do so. Nothing in the current content
+does that.

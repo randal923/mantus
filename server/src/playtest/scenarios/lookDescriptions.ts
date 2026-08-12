@@ -11,6 +11,8 @@ import { startPlaytestServer } from "../startPlaytestServer";
  * Run with: yarn playtest:look
  */
 const STAND = { x: 32_369, y: 32_241, z: 7 };
+/** The temple is a protection zone, where no monster may stand. */
+const MONSTER_SPOT = { x: 32_369, y: 32_260, z: 7 };
 const FIRE_SWORD = 3_280;
 const TOKEN = "dev-look-scenario";
 const CHARACTER = "Look Tester";
@@ -91,11 +93,17 @@ try {
   ok(await gmCommand("/level 30"));
   ok(await lookText({ kind: "creature", creatureId: playerId }, "self"));
 
-  step("summoning a rat and looking at it");
+  step("summoning a rat outside the temple and looking at it");
+  ok(
+    await gmCommand(
+      `/goto ${MONSTER_SPOT.x} ${MONSTER_SPOT.y} ${MONSTER_SPOT.z}`,
+    ),
+  );
   const beforeSpawn = client.mark();
   client.say("/spawn rat");
   const rat = await client.waitForCreatureNamed("Rat", { since: beforeSpawn });
   ok(await lookText({ kind: "creature", creatureId: rat.id }, "rat"));
+  ok(await gmCommand(`/goto ${STAND.x} ${STAND.y} ${STAND.z}`));
 
   step("dropping a fire sword and looking at it on the ground");
   await gmCommand("/i fire sword");
