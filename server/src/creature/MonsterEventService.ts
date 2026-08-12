@@ -111,7 +111,10 @@ export class MonsterEventService implements MonsterEventHooks {
       if (
         !(monster instanceof Monster) ||
         !player ||
-        !this.world.isPathable(entry.position)
+        !this.world.isPathable(entry.position) ||
+        // The target may have reached a town during the two-second warning;
+        // a monster never lands in a protection zone.
+        !this.world.canMonsterOccupy(entry.position)
       ) {
         continue;
       }

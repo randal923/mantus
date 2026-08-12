@@ -5,6 +5,7 @@ import type { MonsterType } from "../creature/MonsterType";
 import { gridMapData } from "../gridMapData";
 import { Player } from "../Player";
 import { makeCharacter } from "../test/makeCharacter";
+import { makeNpcType } from "../test/makeNpcType";
 import type { Visibility } from "../Visibility";
 import { World } from "../World";
 import type { CreatureContent } from "./CreatureContent";
@@ -107,6 +108,26 @@ const makeContent = (enabled = true): CreatureContent => ({
 const makeWorld = (blocked: ReadonlyArray<readonly [number, number]> = []) => {
   const world = new World(
     gridMapData({ name: "test", width: 8, height: 8, blocked }),
+    25,
+  );
+  world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
+  return world;
+};
+
+/** A 16x16 map whose north-west 7x7 corner is one town protection zone. */
+const makeProtectionZoneWorld = () => {
+  const protectionZones: Array<readonly [number, number, number]> = [];
+  for (let y = 0; y <= 6; y++) {
+    for (let x = 0; x <= 6; x++) protectionZones.push([x, y, 7]);
+  }
+  const world = new World(
+    gridMapData({
+      name: "test",
+      width: 16,
+      height: 16,
+      blocked: [],
+      protectionZones,
+    }),
     25,
   );
   world.addPlayer(new Player(makeCharacter("viewer"), { x: 1, y: 1, z: 7 }));
@@ -613,5 +634,97 @@ describe("SpawnManager", () => {
 
     expect(manager.challengeMonster(boss, owner, 1_000, 12_000)).toBe(false);
     expect(manager.pullMonsterToMelee(boss, 1, 1_000, 12_000)).toBe(false);
+  });
+
+  it("never spawns a monster on a protection-zone home, but still spawns NPCs", () => {
+    // A handful of imported spawn points sit inside town protection zones,
+    // where Canary's Tile::queryAdd refuses a monster outright (tile.cpp).
+    const world = makeProtectionZoneWorld();
+    const npcType = makeNpcType({ id: "banker", walkRadius: 0 });
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        monsterTypes: new Map([[monsterType.id, monsterType]]),
+        npcTypes: new Map([[npcType.id, npcType]]),
+        shopCatalogs: new Map(),
+        slots: [
+          {
+            id: "monster:slot-1",
+            kind: "monster",
+            typeId: monsterType.id,
+            home: { x: 3, y: 3, z: 7 },
+            radius: 0,
+            respawnMs: 1_000,
+            direction: "south",
+            enabled: true,
+          },
+          {
+            id: "npc:slot-1",
+            kind: "npc",
+            typeId: npcType.id,
+            home: { x: 4, y: 3, z: 7 },
+            radius: 0,
+            respawnMs: 1_000,
+            direction: "south",
+            enabled: true,
+          },
+        ],
+      },
+      config,
+    );
+
+    manager.tick(1_000);
+    manager.tick(2_000);
+    manager.tick(60_000);
+
+    expect(manager.protectionZoneSlots).toBe(1);
+    expect(manager.activeCreatureId("monster:slot-1")).toBeNull();
+    expect(manager.activeCreatureId("npc:slot-1")).not.toBeNull();
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("refuses ad-hoc and player summons inside a protection zone", () => {
+    const world = makeProtectionZoneWorld();
+    const summonable: MonsterType = {
+      ...monsterType,
+      flags: { ...monsterType.flags, summonable: true },
+    };
+    const owner = world.getPlayer("viewer");
+    if (!owner) throw new Error("expected the seeded player");
+    world.relocateCreature(owner, { x: 3, y: 3, z: 7 });
+    const manager = new SpawnManager(
+      world,
+      visibility,
+      {
+        monsterTypes: new Map([[summonable.id, summonable]]),
+        npcTypes: new Map(),
+        shopCatalogs: new Map(),
+        slots: [],
+      },
+      config,
+    );
+
+    // Every tile within reach of the temple is a protection zone.
+    expect(
+      manager.spawnMonsterNear(summonable.id, { x: 3, y: 3, z: 7 }, 1_000),
+    ).toBe("no-space");
+    expect(manager.summonForPlayer(owner, summonable.id, 1_000)).toBeNull();
+    expect(
+      manager.spawnEventMonsterNear(summonable.id, { x: 3, y: 3, z: 7 }, 1_000),
+    ).toBeNull();
+    expect(
+      [...world.allCreatures()].filter(
+        (creature) => creature.kind === "monster",
+      ),
+    ).toHaveLength(0);
+
+    // Outside the zone the same calls place normally.
+    world.relocateCreature(owner, { x: 10, y: 10, z: 7 });
+    expect(manager.summonForPlayer(owner, summonable.id, 1_100)).not.toBeNull();
   });
 });

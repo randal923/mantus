@@ -76,6 +76,24 @@ const makeWorld = (
     25,
   );
 
+/** An 8x8 map whose eastern three columns are a town protection zone. */
+const makeTownWorld = () => {
+  const protectionZones: Array<readonly [number, number, number]> = [];
+  for (let y = 0; y < 8; y++) {
+    for (let x = 5; x < 8; x++) protectionZones.push([x, y, 7]);
+  }
+  return new World(
+    gridMapData({
+      name: "town",
+      width: 8,
+      height: 8,
+      blocked: [],
+      protectionZones,
+    }),
+    25,
+  );
+};
+
 const makeMonster = (
   type: MonsterType = baseType,
   radius = 3,
@@ -581,5 +599,45 @@ describe("MonsterBrain", () => {
 
     expect(brain.state).toBe("chase");
     expect(monster.position).not.toEqual({ x: 2, y: 10, z: 7 });
+  });
+
+  it("stops at the border when its target flees into a protection zone", () => {
+    // Canary's Tile::queryAdd refuses a monster on a protection-zone tile
+    // (tile.cpp), so a lured creature can never follow anyone into a town.
+    const world = makeTownWorld();
+    const monster = makeMonster(baseType, 8);
+    const player = new Player(makeCharacter("target"), { x: 4, y: 2, z: 7 });
+    world.addCreature(monster);
+    world.addPlayer(player);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    brain.tick(world, 1_000, 32);
+    expect(brain.targetCreatureId).toBe(player.id);
+
+    world.relocateCreature(player, { x: 6, y: 2, z: 7 });
+    for (let now = 2_000; now <= 30_000; now += 250) {
+      brain.tick(world, now, 32);
+      expect(world.isProtectionZone(monster.position)).toBe(false);
+    }
+    expect(brain.targetCreatureId).toBeNull();
+  });
+
+  it("refuses a monster step and a monster path into a protection zone", () => {
+    const world = makeTownWorld();
+    const monster = makeMonster();
+    world.addCreature(monster);
+    world.relocateCreature(monster, { x: 4, y: 2, z: 7 });
+
+    expect(world.tryMoveCreature(monster, "east", 1_000).moved).toBe(false);
+    expect(world.tryMoveFearedCreature(monster, "east", 1_000).moved).toBe(false);
+    expect(world.canCreaturePathTo(monster, { x: 5, y: 2, z: 7 }, 1_000)).toBe(
+      false,
+    );
+
+    // A player at the same border walks in unhindered.
+    const player = new Player(makeCharacter("citizen"), { x: 4, y: 3, z: 7 });
+    world.addPlayer(player);
+    expect(world.tryMove(player, "east", 1_000).moved).toBe(true);
+    expect(player.position).toEqual({ x: 5, y: 3, z: 7 });
   });
 });

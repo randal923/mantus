@@ -549,7 +549,13 @@ export class GmCommandHandler {
       return;
     }
     if (result === "no-space") {
-      this.reply(session, false, "No free tile nearby to spawn on.");
+      this.reply(
+        session,
+        false,
+        this.world.isProtectionZone(player.position)
+          ? "Monsters cannot stand in a protection zone."
+          : "No free tile nearby to spawn on.",
+      );
       return;
     }
     this.reply(session, true, `Spawned ${typeId}.`);

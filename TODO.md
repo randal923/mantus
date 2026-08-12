@@ -1217,6 +1217,18 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Repo-wide known breakage
 
+- **`yarn playtest:look` fails at the fire-sword leg** (2026-08-12, found
+  while fixing monster spawns in protection zones — pre-existing, reproduced
+  on `main` against a freshly created playtest database). `/i fire sword`
+  succeeds, but the scenario then times out waiting for an
+  `inventory-updated` whose `inventory.containers` hold an item named "fire
+  sword", so the drop/look legs and everything after them never run. The
+  scenario is also not idempotent against the persistent playtest DB (a
+  second run dies earlier on `/level 30` → "Already level 30"); run it with
+  `PLAYTEST_DATABASE=<fresh name>` to see the real failure. Recommended fix:
+  find where a conjured item now lands (equipment slot? pouch? a container
+  the message reports separately) and assert on that, and give the scenario a
+  per-run character the way the newer scenarios do. Owner: Feature 52 (look).
 - **`yarn playtest:bestiary` fails on stale stage-gating assertions**
   (2026-08-01). The "add wiki" commit (898e2c3) deliberately made the
   bestiary detail sheet a public catalog — stage gating on stats/loot/

@@ -38,7 +38,15 @@ export class TileOccupancy {
     }
   }
 
-  findUnoccupiedPosition(preferred: Position, maxRadius: number): Position | null {
+  /**
+   * Nearest free walkable tile. `isAllowed` narrows what counts as free for
+   * the thing being placed — monsters pass a protection-zone rejection.
+   */
+  findUnoccupiedPosition(
+    preferred: Position,
+    maxRadius: number,
+    isAllowed: (position: Position) => boolean = () => true,
+  ): Position | null {
     for (let radius = 0; radius <= maxRadius; radius++) {
       for (let y = preferred.y - radius; y <= preferred.y + radius; y++) {
         for (let x = preferred.x - radius; x <= preferred.x + radius; x++) {
@@ -49,7 +57,11 @@ export class TileOccupancy {
             continue;
           }
           const position = { x, y, z: preferred.z };
-          if (this.map.isWalkable(position) && !this.isOccupied(position)) {
+          if (
+            this.map.isWalkable(position) &&
+            !this.isOccupied(position) &&
+            isAllowed(position)
+          ) {
             return position;
           }
         }
