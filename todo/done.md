@@ -5691,3 +5691,46 @@ identical probe run against `main` spawns the rat inside the temple.
 lever relocation, a boss-room script) can still stand there; it can walk out
 but cannot path through zone tiles to do so. Nothing in the current content
 does that.
+
+## 2026-08-28 — Production database moved from Supabase to Fly Postgres in dfw
+
+**Problem**: the game machine sat in dfw while every query crossed to
+Supabase in `aws-1-us-west-2` (~45 ms round trip), and login alone is ~28
+sequential round trips. The DB endgame was open because Fly Managed Postgres
+has no dfw region.
+
+**What changed**: created the unmanaged Fly Postgres app `mantus-db`
+(Postgres 18.1, `shared-cpu-1x`, 3 GB volume, dfw), a `mantus` login role
+that owns the `mantus` database (the `postgres` superuser is not used by the
+app), and migrated the data with the server stopped: `pg_dump -Fc --no-owner
+--no-privileges -n public` from the Supabase session port, run on the
+`mantus-db` machine itself (the flex image ships the pg 18 tools; nothing is
+installed locally), `pg_restore` as `mantus`, then an exact per-table
+`count(*)` diff across all 73 public tables (6 accounts, 11 characters, 256
+items, 16 062 audit rows, migrations at 79) — identical both in a live
+rehearsal and in the final run. No extensions or Supabase schemas were in
+use, so the schema restored unchanged. Prod `DATABASE_URL` now points at
+`postgres://mantus:…@mantus-db.flycast:5432/mantus` (Fly secret only);
+`SUPABASE_URL` stays for JWT verification. Volume snapshot retention raised
+from 5 to 14 days. Downtime 20:38–20:42 UTC; auto-start was disabled on the
+game machine for the window so an inbound connection could not revive it
+mid-copy, then restored.
+
+**Files**: `server/.env.example` (connection guidance), `TODO.md` (backup
+gap replaces the region gap; connection-budget note updated),
+`docs/server-capacity.md` (decision note), `gitworktree.md`.
+
+**Verified**: server booted against the new DB (world-seed check passed),
+TCP health check passing, `/api/public/highscores` serves the migrated
+characters, `pg_stat_activity` shows the app's pool connected as `mantus`.
+Dump files were deleted from the DB machine afterwards.
+`yarn db:migrate` run through `fly proxy 15432:5432 -a mantus-db` found and
+applied `080_default_loot_coins.sql` — prod had been one migration behind
+head since 2026-08-09 (the migration is a column default plus an idempotent
+loot-filter seed, so running it live was safe). Migration checksums 001–079
+matched the restored `schema_migrations`.
+
+**Residual risk**: single-node cluster with snapshot-only backups (TODO.md).
+Local `.env` still targets the old Supabase project, which now serves as the
+dev database and a frozen archive of the pre-move data; delete it only after
+the logical-backup job exists.

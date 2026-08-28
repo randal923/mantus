@@ -418,6 +418,13 @@ the client.
 
 ## Supabase versus Fly Managed Postgres
 
+**Decided 2026-08-28:** production moved off Supabase to unmanaged Fly
+Postgres (`mantus-db`, dfw, same region as the game machine, direct
+connection, no pooler). Managed Postgres was rejected because it has no dfw
+region (`ord` would cost ~22 ms per query); the price is self-managed backups
+and failover (see `TODO.md`). Supabase remains the identity provider only.
+The analysis below is kept for the numbers.
+
 Do not switch databases solely because the in-memory runtime handled 4,000
 players. The missing test is database latency and throughput, not an observed
 Supabase failure.

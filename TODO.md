@@ -423,19 +423,13 @@ limitations accepted during a session are recorded in the owning feature file
   four toggles to `ImbuementTrackerPanel` and persist them in `uiSettings`
   next to the other client-side display preferences, not in a new store.
 - **The Postgres connection budget is per-process, not shared** (2026-07-26,
-  largely resolved 2026-07-29 — see `todo/done.md`). `DATABASE_URL` now uses
-  the transaction pooler (port 6543), which multiplexes instead of pinning one
-  Postgres connection per pooled client, so `PG_POOL_MAX` no longer has to fit
-  inside the pooler's `pool_size` (15) and a second client — a rolling
-  deploy's old machine, a migration, a tool run — no longer trips
-  `EMAXCONNSESSION`. Still per-process: each server budgets `PG_POOL_MAX`
-  independently, so many processes can jointly exhaust the pooler's *server*
-  side. A direct connection remains the best option where IPv6 is available.
-  Note (2026-08-02): the 2026-07-29 fix only updated the local `.env`; the
-  prod Fly secret kept the session-pooler URL (port 5432) and prod hit
-  `EMAXCONNSESSION` persist failures until the secret was updated to 6543
-  with `fly secrets set -a mantus`. Fly secrets do not track `.env` — any
-  future `DATABASE_URL` change must be applied in both places.
+  updated 2026-08-28). Production now talks to unmanaged Fly Postgres
+  (`mantus-db`, dfw) over a direct connection — no pooler, so every pooled
+  client is a real backend. Each server process still budgets `PG_POOL_MAX`
+  independently (prod: unset → 10); a second world or a rolling deploy that
+  overlaps machines must stay under the cluster's `max_connections` (300 on
+  the flex image). Fly secrets do not track `.env` — any `DATABASE_URL`
+  change must be applied with `fly secrets set -a mantus` as well.
 - **A potion flask is destroyed when the drinker has no room for it**
   (2026-07-31, see `todo/done.md`). Canary's `player:addItem(potion.flask, 1)`
   defaults `canDropOnMap = true`, so a flask that fits nowhere in the
@@ -444,22 +438,20 @@ limitations accepted during a session are recorded in the owning feature file
   would mean creating a world item inside the potion transaction. Recommended
   fix when the world-item write joins that transaction: turn `discard` into a
   ground placement at the drinker's tile.
-- **The game server and its database are in different regions**
-  (2026-07-29, updated 2026-08-03). The app moved `iad` → `dfw` on 2026-08-03
-  (machine `781e0e3c270078`) because Spectrum Florida BGP ingresses at Fly's
-  Dallas edge — Randal's in-game ping was ~70 ms (35 ms Orlando→dfw edge +
-  33 ms dfw→iad backbone); hosting in dfw removes the backbone leg (~38-42 ms
-  expected). Caveat: this bets on the ISP's anycast routing persisting — if
-  Spectrum/Fly reroute Florida to iad, revisit (check with
-  `curl -s https://debug.fly.dev | grep Fly-Region`). `DATABASE_URL` still
-  points at `aws-1-us-west-2` (~45 ms per round trip from dfw, down from
-  ~60 ms). Login is serialized onto one connection (Feature 106), so its ~28
-  sequential round trips still set login time directly. The DB endgame is
-  open because **Fly Managed Postgres has no dfw region**: options are
-  unmanaged Fly Postgres in dfw (self-managed backups/failover) or MPG in
-  `ord` (~22 ms/query — undermines co-location). Decide before the planned
-  two-world split (US world + BR world in `gru`, which does have MPG);
-  co-location is worth more than the login query-count work.
+- **The production database has volume snapshots but no logical backups**
+  (2026-08-28). Prod moved from Supabase (`aws-1-us-west-2`, ~45 ms/query
+  from dfw) to unmanaged Fly Postgres `mantus-db` in dfw (~1 ms; machine
+  `1857604dc29068`, volume `vol_r7yd3x69229m89nr`, Postgres 18.1). Unmanaged
+  means Fly Support does not cover it: the only recovery today is the volume's
+  scheduled daily snapshot (retention raised to 14 days), and a lost or
+  corrupted volume loses up to a day of play — a rollback that would also need
+  reconciling against the audit log. The old Supabase project keeps a frozen
+  copy of the 2026-08-28 data. Recommended fix: a scheduled Fly machine in the
+  `mantus-db` app (`fly machine run --schedule daily`) that runs
+  `pg_dump -Fc` to a Tigris bucket with 30-day retention, plus a documented
+  restore drill. Also open: `mantus-db` is a single node, so a machine or host
+  failure is downtime until the snapshot is restored (`fly postgres` supports
+  a 2- or 3-node repmgr cluster if that matters before the second world).
 - **Four pre-existing Postgres integration failures at HEAD** (updated
   2026-07-26: the six `PgChestStore.integration.test.ts` failures are
   fixed — the store was always correct; the tests asserted `character_id`
