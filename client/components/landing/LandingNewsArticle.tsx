@@ -52,6 +52,11 @@ export function LandingNewsArticle({
       <h3 className="mb-4 font-display text-2xl font-semibold tracking-wide text-[#f2ece2]">
         {t(`${base}.title`)}
       </h3>
+      {article.tagline ? (
+        <p className="mb-6 text-center font-display text-3xl font-bold tracking-[0.08em] text-[#c9a06a] uppercase sm:text-4xl">
+          {t(`${base}.tagline`)}
+        </p>
+      ) : null}
       <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_13rem] sm:items-center">
         <div className="flex flex-col gap-4 text-[0.9375rem] leading-7 text-pretty text-[#918d87]">
           {paragraphsOf(`${base}.paragraphs`).map((paragraph) => (

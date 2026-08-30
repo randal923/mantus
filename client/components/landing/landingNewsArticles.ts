@@ -21,6 +21,8 @@ export type LandingNewsArticleImageData = {
 export type LandingNewsArticleData = {
   /** Locale key under `landing.news.items.<id>`. */
   id: string;
+  /** Renders the article's `tagline` locale string big and centered under the title. */
+  tagline?: boolean;
   image?: LandingNewsArticleImageData;
   sections?: readonly LandingNewsSectionData[];
 };
@@ -29,6 +31,7 @@ export type LandingNewsArticleData = {
 export const LANDING_NEWS_ARTICLES: readonly LandingNewsArticleData[] = [
   {
     id: "gatesOpen",
+    tagline: true,
     image: { src: "/images/landing/mantus-gameplay.webp", width: 1600, height: 796 },
     sections: [
       { id: "bot", visual: "huntingBot" },
