@@ -7,6 +7,9 @@ import { Player } from "../Player";
 import { Session } from "../Session";
 import { SessionRegistry } from "../SessionRegistry";
 import { makeCharacter } from "../test/makeCharacter";
+import { makeMonsterType } from "../test/makeMonsterType";
+import { SpawnManager } from "../spawn/SpawnManager";
+import type { Visibility } from "../Visibility";
 import { World } from "../World";
 import { WorldEventManager } from "./WorldEventManager";
 import type { WorldEventDefinition } from "./WorldEventDefinition";
@@ -120,12 +123,36 @@ function makeStore(options: { checkedAt?: Date } = {}) {
   return { store, state, runs, operatorActions, checkedAt };
 }
 
+/**
+ * A town whose interior (x 2..6, y 2..6) is a protection zone while the
+ * event's area (x 2..8, y 2..6) also covers the two street columns east of it,
+ * the way Thais' rat raid area covers the whole town, temple and depot included.
+ */
+const TOWN_PROTECTION_ZONE: ReadonlyArray<readonly [number, number, number]> =
+  Array.from({ length: 25 }, (_, index) => [2 + (index % 5), 2 + Math.floor(index / 5), 7] as const);
+
 function makeHarness(
   store?: WorldEventStore,
-  options: { events?: ReadonlyMap<string, WorldEventDefinition> } = {},
+  options: {
+    events?: ReadonlyMap<string, WorldEventDefinition>;
+    protectionZones?: ReadonlyArray<readonly [number, number, number]>;
+    spawnMonster?: (
+      world: World,
+      name: string,
+      position: Position,
+      now: number,
+    ) => boolean;
+  } = {},
 ) {
   const world = new World(
-    gridMapData({ name: "test", width: 12, height: 10, blocked: [], items: [] }),
+    gridMapData({
+      name: "test",
+      width: 12,
+      height: 10,
+      blocked: [],
+      items: [],
+      protectionZones: options.protectionZones,
+    }),
     25,
   );
   const registry = new SessionRegistry();
@@ -135,9 +162,10 @@ function makeHarness(
     registry,
     options.events ?? new Map([[EVENT.id, EVENT]]),
     new WorldActionRng(7),
-    (name, position) => {
+    (name, position, now) => {
       spawned.push({ name, position: { ...position } });
-      return true;
+      if (!options.spawnMonster) return true;
+      return options.spawnMonster(world, name, position, now);
     },
     store,
     () => new Date("2026-07-20T12:00:00.000Z"),
@@ -298,5 +326,106 @@ describe("WorldEventManager", () => {
     expect(
       harness.manager.requestOperatorStart(EVENT.id, "operator-1", 1_000),
     ).toBe("unavailable");
+  });
+  it("never hands a raid spawn a protection-zone tile, even when the area is mostly town", async () => {
+    // Thais' rat raid area spans the whole town, so most random picks land
+    // in the temple or depot. Canary's Tile::queryAdd refuses a monster on a
+    // protection zone (tile.cpp); the event manager must pick around it
+    // instead of handing those tiles to the spawner.
+    const { store } = makeStore();
+    const plague: WorldEventDefinition = {
+      ...EVENT,
+      stages: [
+        { kind: "spawn", monsters: [{ name: "Rat", amount: 40 }], advanceAfterMs: 10 },
+      ],
+    };
+    const harness = makeHarness(store, {
+      events: new Map([[plague.id, plague]]),
+      protectionZones: TOWN_PROTECTION_ZONE,
+    });
+    await harness.manager.start();
+    harness.manager.tick(1_000);
+    await nextTurn();
+    for (let now = 1_010; now <= 1_200; now += 10) harness.manager.tick(now);
+
+    expect(harness.spawned).toHaveLength(40);
+    const inTown = harness.spawned.filter((spawn) =>
+      harness.world.isProtectionZone(spawn.position),
+    );
+    expect(inTown).toEqual([]);
+    for (const spawn of harness.spawned) {
+      expect(spawn.position.x).toBeGreaterThanOrEqual(7);
+      expect(spawn.position.x).toBeLessThanOrEqual(8);
+    }
+    await harness.manager.stop();
+  });
+
+  it("places every raid monster outside the protection zone through the real spawner", async () => {
+    // End to end, wired the way GameServer wires it: the event manager picks
+    // the tile and SpawnManager.spawnEventMonsterNear places the creature.
+    // No live monster may stand in the zone, and the plague must still reach
+    // its full head count — the zone is avoided, not silently dropped.
+    const { store } = makeStore();
+    const rat = makeMonsterType({ id: "rat", name: "Rat" });
+    const plague: WorldEventDefinition = {
+      ...EVENT,
+      stages: [
+        { kind: "spawn", monsters: [{ name: "Rat", amount: 8 }], advanceAfterMs: 10 },
+      ],
+    };
+    let spawns: SpawnManager | undefined;
+    const harness = makeHarness(store, {
+      events: new Map([[plague.id, plague]]),
+      protectionZones: TOWN_PROTECTION_ZONE,
+      spawnMonster: (_world, _name, position, now) =>
+        spawns?.spawnEventMonsterNear(rat.id, position, now) !== null,
+    });
+    const visibility = {
+      announceCreatureSpawn: () => undefined,
+      announceCreatureLeave: () => undefined,
+      onCreatureStepped: () => undefined,
+      broadcastPose: () => undefined,
+      broadcastCreatureSpeech: () => undefined,
+    } as unknown as Visibility;
+    spawns = new SpawnManager(
+      harness.world,
+      visibility,
+      {
+        monsterTypes: new Map([[rat.id, rat]]),
+        npcTypes: new Map(),
+        shopCatalogs: new Map(),
+        slots: [],
+      },
+      {
+        activationRange: { x: 10, y: 10 },
+        retryMs: 100,
+        maxSpawnChecksPerTick: 32,
+        maxSpawnAttemptsPerTick: 8,
+        maxAiScansPerTick: 32,
+        maxAiWorkPerTick: 32,
+        ai: {
+          thinkIntervalMs: 250,
+          acquisitionRange: 8,
+          loseRange: 12,
+          despawnRadius: 50,
+          maxPathNodes: 16,
+          wanderChance: 0,
+          seed: 123,
+        },
+      },
+    );
+    await harness.manager.start();
+    harness.manager.tick(1_000);
+    await nextTurn();
+    for (let now = 1_010; now <= 1_100; now += 10) harness.manager.tick(now);
+
+    const monsters = [...harness.world.allCreatures()].filter(
+      (creature) => creature.kind === "monster",
+    );
+    expect(monsters).toHaveLength(8);
+    expect(
+      monsters.filter((monster) => harness.world.isProtectionZone(monster.position)),
+    ).toEqual([]);
+    await harness.manager.stop();
   });
 });

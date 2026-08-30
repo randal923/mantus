@@ -9,6 +9,10 @@ rules live in `client/AGENTS.md` and `client/ASSETS.md`.
 
 You can use Tibia Canary as source of information about the server of our project git@github.com:opentibiabr/canary.git
 
+DO NOT BE LAZY AND DO WHAT I ASK FOR THOROUGHLY. I MAKE THE SCOPE CALL, NOT YOU.
+
+Ask me questions before making assumptions.
+
 ## The golden rule
 
 The client sends **intents** ("walk north", "cast spell 2", "move item A to

@@ -101,6 +101,14 @@ const pool = new Pool({
 pool.on("error", (cause) => {
   console.error(`postgres pool error: ${cause.message}`);
 });
+// pool.on("error") only covers idle clients; a checked-out client whose
+// connection dies emits "error" itself and, unhandled, kills the process
+// (the in-flight query still rejects through its own promise).
+pool.on("connect", (client) => {
+  client.on("error", (cause) => {
+    console.error(`postgres client error: ${cause.message}`);
+  });
+});
 const accounts = new PgAccountStore(pool);
 const characters = new PgCharacterStore(pool);
 const itemCatalog = await loadItemCatalog();

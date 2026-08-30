@@ -5734,3 +5734,38 @@ matched the restored `schema_migrations`.
 Local `.env` still targets the old Supabase project, which now serves as the
 dev database and a frozen archive of the pre-move data; delete it only after
 the logical-backup job exists.
+
+## 2026-08-30 — Raid spawns were handed protection-zone tiles (rats in the Thais temple)
+
+**Problem**: Thais' rat plague was seen spawning rats inside protection
+zones on prod. Two causes. (1) The 2026-08-12 protection-zone exclusion
+(`agents/monster-pz-exclusion`) was never pushed: `origin/main` sat at
+`9f83542c` (Aug 11) and prod v96 was built from that sha, so the deployed
+server still had no monster/zone rule at all. (2) Even at head,
+`WorldEventManager.randomAreaPosition` only checked walkability and
+occupancy. The Thais raid area spans the whole town — 2005 of its 5333
+walkable tiles are protection zone — so ~38% of picks landed in the temple
+or depot and were handed to `SpawnManager.spawnEventMonsterNear`, which
+either shifted them up to 3 tiles (piling rats along the zone border) or
+returned `no-space` and silently lost the spawn.
+
+**What changed**: `randomAreaPosition` retries a pick that fails
+`world.canMonsterOccupy` (Canary `Tile::queryAdd`, tile.cpp), so the event
+manager only ever hands the spawner a tile a monster may stand on. Added
+`test/makeMonsterType.ts` (the `makeNpcType` counterpart) for tests that
+need a real `SpawnManager`.
+
+**Files**: `server/src/event/WorldEventManager.ts`,
+`server/src/event/WorldEventManager.test.ts`,
+`server/src/test/makeMonsterType.ts`, `gitworktree.md`, `todo/status.md`.
+
+**Verified**: new test "never hands a raid spawn a protection-zone tile"
+fails at the previous head (picks at (5,6), (2,4), (4,5) inside the zone)
+and passes with the fix; new end-to-end test wires `WorldEventManager` to a
+real `SpawnManager` the way `GameServer` does on a town map and asserts all
+8 raid monsters stand outside the zone; `yarn vitest run src/event
+src/spawn` 61/61, `tsc --noEmit` clean. Real-map PZ coverage of the raid
+area confirmed by loading `data/otservbr` and counting tile flags.
+
+**Residual risk**: none in code; the fix (and the 2026-08-12 one) only
+reaches players once main is pushed and the Fly deploy runs.

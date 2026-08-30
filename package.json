@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n next.js,server,storybook -c cyan,magenta,yellow \"yarn workspace client dev\" \"yarn workspace server dev\" \"yarn workspace client storybook --no-open\"",
+    "db:proxy": "fly proxy 15432:5432 -a mantus-db --bind-addr 0.0.0.0",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "assets:import": "node tools/importTibiaAssets.mjs",

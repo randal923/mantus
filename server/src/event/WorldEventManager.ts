@@ -251,7 +251,13 @@ export class WorldEventManager {
     }
   }
 
-  /** A walkable, unoccupied tile inside one of the event's areas. */
+  /**
+   * A walkable, unoccupied tile inside one of the event's areas where a
+   * monster may stand. Town raid areas (Thais' rat plague spans the whole
+   * town) cover the temple and depot, and Canary's `Tile::queryAdd` refuses a
+   * monster on a protection zone (tile.cpp), so those picks are retried
+   * rather than handed to the spawner to be shifted or dropped.
+   */
   private randomAreaPosition(event: WorldEventDefinition): Position | null {
     for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt += 1) {
       const area = this.rng.pick(event.areas);
@@ -271,6 +277,7 @@ export class WorldEventManager {
       };
       if (!this.world.isWalkable(position)) continue;
       if (this.world.isOccupied(position)) continue;
+      if (!this.world.canMonsterOccupy(position)) continue;
       return position;
     }
     return null;

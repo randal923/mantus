@@ -37,3 +37,4 @@ worktree is created, merged, or removed.
 | `agents/teleport-audit`          | done        |
 | `agents/monster-pz-exclusion`    | done        |
 | `agents/fly-postgres`            | done        |
+| `agents/raid-pz-exclusion`       | done        |
