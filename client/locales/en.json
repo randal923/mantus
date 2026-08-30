@@ -349,11 +349,40 @@
   "landing": {
     "nav": {
       "sections": "Landing page sections",
-      "features": "Features",
-      "vocations": "Vocations",
       "news": "News",
-      "media": "Media",
       "play": "Play Now"
+    },
+    "links": {
+      "vocations": "Vocations",
+      "highscores": "Highscores",
+      "online": "Who Is Online",
+      "guilds": "Guilds",
+      "serverInfo": "Server Info",
+      "wiki": "Wiki"
+    },
+    "hero": {
+      "title": "Old school. Unforgiving. Alive.",
+      "subtitle": "A free 2D MMORPG in your browser. One persistent world, five vocations, a player-run economy — and everything you earn can be lost.",
+      "cta": "Play Free",
+      "note": "No download. Free forever.",
+      "online_one": "{{count}} player online right now",
+      "online_other": "{{count}} players online right now",
+      "beta": "Closed Beta in September…"
+    },
+    "featured": {
+      "date": "August 30, 2026",
+      "title": "The Gates of Mantus Open",
+      "description": "Mantus is a free old-school 2D MMORPG in your browser — one persistent open world, five vocations, tactical combat and a player-run economy, watched over by a server that never cheats. The gates open soon: closed beta begins in September. Create your free account and be there when the first world goes live.",
+      "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
+    },
+    "news": {
+      "ticker": "News Ticker",
+      "items": {
+        "gatesOpen": {
+          "date": "August 30, 2026",
+          "title": "The Gates of Mantus Open"
+        }
+      }
     },
     "menu": {
       "playNote": "Free to play in your browser. No download required.",
@@ -384,85 +413,6 @@
         "action": "Account Login"
       }
     },
-    "hero": {
-      "eyebrow": "A persistent browser MMORPG",
-      "tagline": "A ruthless old-school world, forged anew",
-      "subtitle": "Mantus Online is a free classic-style 2D MMORPG: one persistent open world where every step, every trade, and every battle is real — and everything you earn can be lost.",
-      "cta": "Play Free",
-      "ctaSecondary": "Discover the World",
-      "note": "Free to play — runs in your browser",
-      "artAlt": "Key art of the world of Mantus",
-      "stats": {
-        "world": "One persistent world",
-        "vocations": "Five vocations to master",
-        "economy": "A player-driven economy"
-      }
-    },
-    "featured": {
-      "label": "Development Preview",
-      "date": "July 30, 2026",
-      "category": "World Dispatch",
-      "title": "Beneath the Citadel, the Astral Vault Stirs",
-      "description": "Surveyors have found a sealed chamber beneath the northern citadel. This preview explores the kind of dangerous group expedition, layered environmental story, and server-authored encounter we are building for Mantus.",
-      "action": "Prepare your character",
-      "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
-    },
-    "features": {
-      "title": "Forged for the Fearless",
-      "subtitle": "Everything that made classic MMORPGs matter — rebuilt with modern craft and a server that never cheats.",
-      "world": {
-        "title": "A Living Open World",
-        "description": "Explore a hand-crafted realm of cities, dungeons, and wilderness. Hunting grounds are contested, resources are finite, and the map remembers what you did."
-      },
-      "combat": {
-        "title": "Classic Tactical Combat",
-        "description": "Position, timing, and preparation decide fights. Master melee, ranged, and elemental magic — and respect the creatures that are stronger than you."
-      },
-      "economy": {
-        "title": "A Player-Driven Economy",
-        "description": "Every item is earned, traded, or crafted by players. Buy and sell on the market, bid at auctions, bank your gold, and own a house in the world."
-      },
-      "social": {
-        "title": "Rise Together",
-        "description": "Found guilds, form hunting parties, track friends with your VIP list, and carve your names into the history of the realm — or go to war over it."
-      }
-    },
-    "vocations": {
-      "title": "Choose Your Path",
-      "subtitle": "Five vocations, each with its own weapons, magic, and way of surviving the world. Choose wisely — mastery is a long road."
-    },
-    "news": {
-      "kicker": "From the realm",
-      "title": "Chronicles of Mantus",
-      "subtitle": "Dispatches from the developers and the world itself.",
-      "updated": "Updated weekly",
-      "items": {
-        "gatesOpen": {
-          "tag": "Announcement",
-          "date": "July 12, 2026",
-          "title": "The Gates of Mantus Open",
-          "excerpt": "The first world goes live. Create your free account, choose a vocation, and take your first steps into the realm."
-        },
-        "marketAndHouses": {
-          "tag": "Update",
-          "date": "June 28, 2026",
-          "title": "Market Stalls & House Deeds",
-          "excerpt": "The great market opens its doors and houses across the realm can now be bid on, owned, and furnished."
-        },
-        "roadToWar": {
-          "tag": "Development",
-          "date": "June 10, 2026",
-          "title": "The Road to Guild Wars",
-          "excerpt": "A look at what is coming next: guild banners, contested territory, and the systems that will decide who rules the wilds."
-        }
-      }
-    },
-    "overview": {
-      "kicker": "Enter the frontier",
-      "title": "One World. Countless Stories.",
-      "description": "Hunt through ancient forests, descend into forgotten ruins, trade what you recover, and build a name other players will remember. The realm is shared, persistent, and governed by the server — every victory is earned.",
-      "imageAlt": "A party of adventurers travels along a dark forest road toward a frontier watchtower"
-    },
     "world": {
       "unavailable": "Live world data is temporarily unavailable.",
       "status": {
@@ -472,13 +422,15 @@
         "players_one": "{{count}} player online",
         "players_other": "{{count}} players online",
         "world": "World",
-        "type": "World Type"
+        "type": "World Type",
+        "playersLabel": "Players online"
       },
       "highscores": {
         "title": "Highscores",
         "experience": "Experience",
         "level": "Lv. {{level}}",
-        "empty": "No public ranking data is available yet."
+        "empty": "No public ranking data is available yet.",
+        "all": "View all"
       },
       "boosted": {
         "title": "Today's Encounters",
@@ -486,20 +438,6 @@
         "boss": "Boosted Boss",
         "awaiting": "Awaiting daily rotation"
       }
-    },
-    "media": {
-      "title": "Glimpses of the World",
-      "subtitle": "Scenes from the realm, captured by those who survived them.",
-      "screenshots": {
-        "combat": "A party battles a dragon in its lair",
-        "city": "The city square at dusk",
-        "housing": "A furnished player house"
-      }
-    },
-    "callToAction": {
-      "title": "Your Legend Awaits",
-      "subtitle": "Creating an account is free and takes less than a minute. The world, however, will take years to conquer.",
-      "cta": "Create Free Account"
     },
     "footer": {
       "description": "A free, persistent 2D MMORPG built for deliberate combat, dangerous exploration, and a player-shaped world.",

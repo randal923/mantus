@@ -38,3 +38,4 @@ worktree is created, merged, or removed.
 | `agents/monster-pz-exclusion`    | done        |
 | `agents/fly-postgres`            | done        |
 | `agents/raid-pz-exclusion`       | done        |
+| `agents/landing-redesign`        | done        |

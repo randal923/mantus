@@ -5769,3 +5769,21 @@ area confirmed by loading `data/otservbr` and counting tile flags.
 
 **Residual risk**: none in code; the fix (and the 2026-08-12 one) only
 reaches players once main is pushed and the Fly deploy runs.
+
+## 2026-08-30 — Landing page redesign (`agents/landing-redesign`)
+
+- **Problem:** the landing page was a three-column portal of framed panels,
+  red banner headers and uppercase kicker labels; the key art was hidden
+  behind them and the copy was long and generic ("Citadel", "From the
+  realm", "Chronicles of Mantus").
+- **What changed:** landing page no longer uses `PublicSiteLayout`. New
+  `LandingHero` (full-bleed art, one headline, Play Free CTA, live player
+  count, quick links), `LandingFeatures` (three short pillars + road art),
+  hairline-divided `LandingNews`/`LandingNewsRow`, and a slim
+  `LandingWorldPanel` (status, top 5, boosted). Copy rewritten in en and
+  pt-BR; unused `landing.*` keys dropped. `mantus-citadel-hero.webp` renamed
+  to `mantus-hero.webp`. `Button` gained an `lg` size; `PublicAuthAction`
+  gained `guestLabel`. Other public pages keep `PublicSiteLayout` untouched.
+- **Verified:** tsc, eslint, client unit tests, storybook build +
+  headless screenshots at 1440px and 390px.
+- **Residual:** none.

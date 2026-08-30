@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { PublicAuthAction } from "../public-site/PublicAuthAction";
 import { useLandingWorldData } from "./useLandingWorldData";
 
 export function LandingWorldSidebar() {
@@ -10,49 +11,53 @@ export function LandingWorldSidebar() {
   const data = world.data;
 
   return (
-    <aside className="order-3 grid gap-4 md:col-span-2 md:grid-cols-3 xl:col-span-1 xl:grid-cols-1">
+    <aside className="order-3 grid gap-4 self-start md:col-span-2 md:grid-cols-2 xl:col-span-1 xl:grid-cols-1">
+      <section className="portal-box overflow-hidden">
+        <h2 className="portal-box-header font-display text-sm font-bold tracking-widest uppercase">
+          <span
+            aria-hidden
+            className="size-1.5 rotate-45 border border-ui-stone-light/60 bg-ui-stone-light/15"
+          />
+          <span className="portal-box-title">{t("landing.menu.account.title")}</span>
+        </h2>
+        <div className="relative z-[2] p-4">
+          <PublicAuthAction className="w-full justify-center" />
+          <p className="mt-3 text-center text-xs leading-relaxed text-ui-muted">
+            {t("landing.menu.playNote")}
+          </p>
+        </div>
+      </section>
+
       <section
         id="world-status"
         aria-live="polite"
-        className="ui-panel-frame relative scroll-mt-24 overflow-hidden"
+        className="portal-box scroll-mt-24 overflow-hidden"
       >
-        <h2 className="border-b border-ui-stone-light/15 bg-black/35 px-4 py-3 font-display text-xs font-bold tracking-widest text-ui-text-bright uppercase">
-          {t("landing.world.status.title")}
-        </h2>
-        <div className="flex items-center gap-4 p-4">
+        <h2 className="portal-box-header font-display text-sm font-bold tracking-widest uppercase">
           <span
-            className={`relative flex size-12 shrink-0 items-center justify-center rounded-full border ${
+            aria-hidden
+            className="size-1.5 rotate-45 border border-ui-stone-light/60 bg-ui-stone-light/15"
+          />
+          <span className="portal-box-title">{t("landing.world.status.title")}</span>
+        </h2>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <span
+            aria-hidden
+            className={`size-2.5 shrink-0 rounded-full ${
               data
-                ? "border-ui-success/50 bg-ui-success/10"
-                : "border-ui-stone-light/25 bg-black/25"
+                ? "bg-ui-success-light shadow-[0_0_12px_rgba(143,175,127,0.9)]"
+                : "bg-ui-muted"
             }`}
-          >
-            <span
-              className={`size-3 rounded-full ${
-                data
-                  ? "bg-ui-success shadow-[0_0_16px_rgba(97,119,88,0.8)]"
-                  : "bg-ui-muted"
-              }`}
-            />
-          </span>
-          <div>
-            <p className="font-display text-sm font-bold tracking-wider text-ui-text-bright uppercase">
-              {data
-                ? t("landing.world.status.online")
-                : world.status === "loading"
-                  ? t("common.loading")
-                  : t("landing.world.status.unknown")}
-            </p>
-            <p className="mt-1 text-sm text-ui-muted">
-              {data
-                ? t("landing.world.status.players", {
-                    count: data.playersOnline,
-                  })
-                : world.status === "loading"
-                  ? t("common.loading")
-                  : t("landing.world.unavailable")}
-            </p>
-          </div>
+          />
+          <p className="text-sm text-ui-text">
+            {data
+              ? t("landing.world.status.players", {
+                  count: data.playersOnline,
+                })
+              : world.status === "loading"
+                ? t("common.loading")
+                : t("landing.world.unavailable")}
+          </p>
         </div>
         <dl className="grid grid-cols-2 border-t border-ui-stone-light/15 bg-black/20">
           <div className="border-r border-ui-stone-light/15 p-3">
@@ -60,7 +65,7 @@ export function LandingWorldSidebar() {
               {t("landing.world.status.world")}
             </dt>
             <dd className="mt-1 text-sm font-medium text-ui-text-bright">
-              Mantus
+              {data?.worldName ?? "Mantus"}
             </dd>
           </div>
           <div className="p-3">
@@ -74,40 +79,29 @@ export function LandingWorldSidebar() {
         </dl>
       </section>
 
-      <section
-        id="highscores"
-        className="ui-panel-frame relative scroll-mt-24 overflow-hidden"
-      >
-        <div className="flex items-center justify-between border-b border-ui-stone-light/15 bg-black/35 px-4 py-3">
-          <h2 className="font-display text-xs font-bold tracking-widest text-ui-text-bright uppercase">
-            {t("landing.world.highscores.title")}
-          </h2>
-          <span className="text-xs text-ui-muted">
-            {t("landing.world.highscores.experience")}
-          </span>
-        </div>
+      <section id="highscores" className="portal-box scroll-mt-24 overflow-hidden">
+        <h2 className="portal-box-header font-display text-sm font-bold tracking-widest uppercase">
+          <span
+            aria-hidden
+            className="size-1.5 rotate-45 border border-ui-stone-light/60 bg-ui-stone-light/15"
+          />
+          <span className="portal-box-title">{t("landing.world.highscores.title")}</span>
+        </h2>
         {data?.highscores.length ? (
           <ol className="divide-y divide-ui-stone-light/10">
             {data.highscores.map((entry) => (
-              <li key={entry.name} className="flex items-center gap-3 px-4 py-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-sm border border-ui-gold/25 bg-black/30 font-display text-xs font-bold text-ui-gold">
+              <li key={entry.name} className="flex items-center gap-3 px-4 py-2.5">
+                <span className="w-4 shrink-0 font-display text-xs font-bold text-ui-gold">
                   {entry.rank}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <Link
-                    href={`/characters/${encodeURIComponent(entry.name)}`}
-                    className="block truncate text-sm font-medium text-ui-text-bright hover:text-ui-accent-light"
-                  >
-                    {entry.name}
-                  </Link>
-                  <span className="block truncate text-xs text-ui-muted">
-                    {entry.vocation}
-                  </span>
-                </span>
-                <span className="text-xs font-medium text-ui-text">
-                  {t("landing.world.highscores.level", {
-                    level: entry.level,
-                  })}
+                <Link
+                  href={`/characters/${encodeURIComponent(entry.name)}`}
+                  className="relative z-[2] min-w-0 flex-1 truncate text-sm font-medium text-ui-text-bright hover:text-ui-accent-light"
+                >
+                  {entry.name}
+                </Link>
+                <span className="shrink-0 text-xs font-medium text-ui-muted">
+                  {t("landing.world.highscores.level", { level: entry.level })}
                 </span>
               </li>
             ))}
@@ -119,28 +113,39 @@ export function LandingWorldSidebar() {
               : t("landing.world.highscores.empty")}
           </p>
         )}
+        <div className="border-t border-ui-stone-light/15 bg-black/20 px-4 py-2 text-right">
+          <Link
+            href="/highscores"
+            className="relative z-[2] text-xs text-ui-muted transition-colors hover:text-ui-text-bright"
+          >
+            {t("landing.world.highscores.all")}
+          </Link>
+        </div>
       </section>
 
-      <section className="ui-panel-frame relative overflow-hidden">
-        <h2 className="border-b border-ui-stone-light/15 bg-black/35 px-4 py-3 font-display text-xs font-bold tracking-widest text-ui-text-bright uppercase">
-          {t("landing.world.boosted.title")}
+      <section className="portal-box overflow-hidden">
+        <h2 className="portal-box-header font-display text-sm font-bold tracking-widest uppercase">
+          <span
+            aria-hidden
+            className="size-1.5 rotate-45 border border-ui-stone-light/60 bg-ui-stone-light/15"
+          />
+          <span className="portal-box-title">{t("landing.world.boosted.title")}</span>
         </h2>
         <dl className="divide-y divide-ui-stone-light/10">
-          <div className="p-4">
+          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
             <dt className="text-xs tracking-wide text-ui-muted uppercase">
               {t("landing.world.boosted.creature")}
             </dt>
-            <dd className="mt-1 font-display text-sm font-semibold text-ui-text-bright">
-              {data?.boosted.creature?.name ??
-                t("landing.world.boosted.awaiting")}
+            <dd className="text-right font-display text-sm font-semibold text-ui-text-bright">
+              {data?.boosted.creature?.name ?? "—"}
             </dd>
           </div>
-          <div className="p-4">
+          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
             <dt className="text-xs tracking-wide text-ui-muted uppercase">
               {t("landing.world.boosted.boss")}
             </dt>
-            <dd className="mt-1 font-display text-sm font-semibold text-ui-text-bright">
-              {data?.boosted.boss?.name ?? t("landing.world.boosted.awaiting")}
+            <dd className="text-right font-display text-sm font-semibold text-ui-text-bright">
+              {data?.boosted.boss?.name ?? "—"}
             </dd>
           </div>
         </dl>

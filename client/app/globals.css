@@ -48,17 +48,17 @@
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 58%,
-    rgb(0 0 0 / 92%) 70%,
-    rgb(0 0 0 / 52%) 86%,
+    #000 62%,
+    rgb(0 0 0 / 85%) 74%,
+    rgb(0 0 0 / 40%) 88%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 58%,
-    rgb(0 0 0 / 92%) 70%,
-    rgb(0 0 0 / 52%) 86%,
+    #000 62%,
+    rgb(0 0 0 / 85%) 74%,
+    rgb(0 0 0 / 40%) 88%,
     transparent 100%
   );
 }
@@ -223,7 +223,7 @@
 .ui-action-cluster::before {
   position: absolute;
   inset: 4px;
-  border: 1px solid rgb(154 157 150 / 12%);
+  border: 1px solid rgb(186 168 126 / 13%);
   border-radius: 0.125rem;
   pointer-events: none;
   content: "";
@@ -820,4 +820,107 @@ a {
 ::selection {
   color: #e6e3dc;
   background: #681710;
+}
+
+/* Public-site portal chrome (tibia.com-style layout, forged-iron look) */
+.portal-box {
+  position: relative;
+  border: 1px solid #3f423f;
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, rgb(26 28 27 / 93%), rgb(10 12 12 / 97%)),
+    url("/assets/ui/forged-stone-texture.webp") center / 520px 520px;
+  box-shadow:
+    0 14px 40px rgb(0 0 0 / 55%),
+    inset 0 1px 0 rgb(210 213 205 / 5%),
+    inset 0 0 0 2px rgb(0 0 0 / 32%);
+}
+
+.portal-box::before {
+  position: absolute;
+  inset: 4px;
+  z-index: 1;
+  border: 1px solid rgb(186 168 126 / 13%);
+  border-radius: 2px;
+  pointer-events: none;
+  content: "";
+}
+
+.portal-box-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgb(0 0 0 / 70%);
+  color: #e4e1da;
+  background:
+    linear-gradient(180deg, rgb(48 51 50 / 76%), rgb(13 15 15 / 90%)),
+    url("/assets/ui/forged-stone-texture.webp") center / 280px 280px;
+  box-shadow:
+    inset 0 1px 0 rgb(226 226 219 / 8%),
+    inset 0 -1px 0 rgb(0 0 0 / 55%);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 75%);
+}
+
+.portal-box-header::after {
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgb(214 213 205 / 8%);
+  border-radius: 2px;
+  pointer-events: none;
+  content: "";
+}
+
+.portal-box-title {
+  background: linear-gradient(180deg, #f2efe7 0%, #cbc9c2 55%, #8f8b82 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 85%));
+  text-shadow: none;
+}
+
+
+
+/* Diablo-style CTA for public-site buttons: thorned steel frame, blood-red interior */
+.portal-cta {
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 50% 130%, rgb(198 65 50 / 40%), transparent 62%),
+    linear-gradient(180deg, rgb(118 24 15 / 88%), rgb(52 9 6 / 94%)),
+    url("/assets/ui/forged-stone-texture.webp") center / 220px 220px !important;
+  background-clip: padding-box !important;
+  height: auto;
+  padding: 0.8em 2.2em;
+  box-shadow:
+    inset 0 1px 0 rgb(255 218 207 / 12%),
+    inset 0 0 12px rgb(0 0 0 / 55%),
+    0 6px 18px rgb(0 0 0 / 45%);
+  color: #f0e4c8;
+  letter-spacing: 0.18em;
+  transition:
+    filter 150ms,
+    box-shadow 150ms,
+    transform 100ms;
+}
+
+
+.portal-cta::before {
+  border-radius: 0;
+}
+
+.portal-cta:hover:not(:disabled) {
+  filter: brightness(1.28) saturate(1.15);
+  box-shadow:
+    inset 0 1px 0 rgb(255 218 207 / 16%),
+    inset 0 0 16px rgb(120 20 8 / 60%),
+    0 0 22px rgb(190 60 30 / 35%),
+    0 6px 18px rgb(0 0 0 / 45%);
+  transform: none;
+}
+
+.portal-cta:active:not(:disabled) {
+  filter: brightness(0.95);
+  transform: translateY(1px);
 }

@@ -7,7 +7,7 @@ export function PublicSiteArtworkHeader() {
       className="pointer-events-none absolute inset-x-0 top-16 z-0 isolate h-[42rem] overflow-hidden"
     >
       <Image
-        src="/images/landing/mantus-citadel-hero.webp"
+        src="/images/landing/mantus-hero.webp"
         alt=""
         fill
         priority

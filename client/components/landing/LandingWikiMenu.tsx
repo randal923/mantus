@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { LandingMenuLink } from "./LandingMenuLink";
@@ -10,29 +9,29 @@ const WIKI_LINKS = [
   { key: "pvp", href: "/wiki/pvp" },
 ] as const;
 
-/** Collapsible Wiki group in the landing sidebar; opens on /wiki pages. */
+/** Collapsible Wiki group in the landing sidebar; open by default. */
 export function LandingWikiMenu() {
   const { t } = useAppTranslation();
-  // Typed `string`, but Storybook's next/navigation mock returns null.
-  const pathname = usePathname() as string | null;
-  const [open, setOpen] = useState(() => pathname?.startsWith("/wiki") ?? false);
+  const [open, setOpen] = useState(true);
   const listId = useId();
 
   return (
-    <section className="border-b border-ui-stone-light/15 last:border-b-0">
-      <h2
-        className={`bg-black/35 font-display text-xs font-bold tracking-widest text-ui-text-bright uppercase ${
-          open ? "border-b border-ui-stone-light/15" : ""
-        }`}
-      >
+    <section>
+      <h2 className="portal-box-header p-0 font-display text-sm font-bold tracking-widest uppercase">
         <button
           type="button"
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
           onClick={() => setOpen((current) => !current)}
-          className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left transition-colors hover:bg-white/5"
+          className="relative z-[2] flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left uppercase transition-colors hover:brightness-110"
         >
-          {t("landing.menu.wiki.title")}
+          <span className="flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="size-1.5 rotate-45 border border-ui-stone-light/60 bg-ui-stone-light/15"
+            />
+            <span className="portal-box-title">{t("landing.menu.wiki.title")}</span>
+          </span>
           <svg
             aria-hidden
             viewBox="0 0 12 12"

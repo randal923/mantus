@@ -5,10 +5,10 @@ not copied from Tibia or another game. All three use the established Mantus
 palette: near-black forged iron, cold slate, muted pewter, oxblood accents,
 and tightly controlled cyan or ember light.
 
-## `mantus-citadel-hero.webp`
+## `mantus-hero.webp`
 
 Wide painterly key art of a lone armored traveler crossing a rain-dark stone
-causeway toward a mountain citadel under a cold moon. The traveler and gate
+causeway toward a mountain fortress under a cold moon. The traveler and gate
 sit on the right, leaving calm negative space for the page copy on the left.
 No text, logos, UI, modern objects, or recognizable third-party locations.
 

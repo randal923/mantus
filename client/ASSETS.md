@@ -134,7 +134,7 @@ and be stored in a web-optimized format.
 - `mantus-coin.png` — original transparent Mantus Coin icon: a forged
   silver-and-obsidian coin with cyan mantis sigil and restrained gold edge
   marks, generated for the account wallet and store UI.
-- `public/images/landing/mantus-citadel-hero.webp` — original wide citadel
+- `public/images/landing/mantus-hero.webp` — original wide fortress
   key art for the public website hero.
 - `public/images/landing/astral-vault.webp` — original ritual-vault editorial
   art for the featured news story.

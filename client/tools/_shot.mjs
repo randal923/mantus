@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+import http from "node:http"; import fs from "node:fs"; import path from "node:path";
+const root = process.argv[2], id = process.argv[3], out = process.argv[4];
+const mime = {".html":"text/html",".js":"text/javascript",".css":"text/css",".json":"application/json",".webp":"image/webp",".png":"image/png",".svg":"image/svg+xml",".woff2":"font/woff2"};
+const srv = http.createServer((req,res)=>{ let p=decodeURIComponent(req.url.split("?")[0]); let f=path.join(root,p); if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){ f=path.join(process.cwd(),"public",p);} if(!fs.existsSync(f)){res.statusCode=404;return res.end();} res.setHeader("content-type",mime[path.extname(f)]||"application/octet-stream"); fs.createReadStream(f).pipe(res);});
+await new Promise(r=>srv.listen(0,r)); const port=srv.address().port;
+const b = await chromium.launch({executablePath: process.env.HOME+"/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell"});
+const pg = await b.newPage({viewport:{width:1440,height:900}});
+await pg.goto(`http://localhost:${port}/iframe.html?id=${id}&viewMode=story`); await pg.waitForTimeout(2500);
+await pg.screenshot({path: out, fullPage:true}); await b.close(); srv.close();

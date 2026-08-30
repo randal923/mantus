@@ -14,7 +14,7 @@ export function PublicSiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-ui-stone-light/20 bg-black/90 shadow-2xl shadow-black/60 backdrop-blur-md">
-      <div className="h-1 bg-linear-to-r from-ui-accent-deep via-ui-accent-light to-ui-accent-deep" />
+      <div className="h-1 bg-linear-to-r from-ui-stone-dark via-ui-stone-light to-ui-stone-dark" />
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6">
         <Link
           href="/"

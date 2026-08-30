@@ -12,12 +12,15 @@ interface PublicAuthActionProps {
   readonly className?: string;
   readonly size?: ButtonSize;
   readonly variant?: ButtonVariant;
+  /** Label shown to visitors instead of "Log In". */
+  readonly guestLabel?: string;
 }
 
 export function PublicAuthAction({
-  className,
+  className = "",
   size = "md",
   variant = "primary",
+  guestLabel,
 }: PublicAuthActionProps) {
   const { t } = useAppTranslation();
   const signedIn = usePublicAuthSession();
@@ -29,7 +32,7 @@ export function PublicAuthAction({
         href="/play"
         variant={variant}
         size={size}
-        className={className}
+        className={`portal-cta ${className}`}
       >
         {t("landing.nav.play")}
       </ButtonLink>
@@ -41,10 +44,10 @@ export function PublicAuthAction({
       <Button
         variant={variant}
         size={size}
-        className={className}
+        className={`portal-cta ${className}`}
         onClick={() => setLoginOpen(true)}
       >
-        {t("publicSite.logIn")}
+        {guestLabel ?? t("publicSite.logIn")}
       </Button>
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
     </>

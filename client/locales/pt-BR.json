@@ -349,11 +349,40 @@
   "landing": {
     "nav": {
       "sections": "Seções da página inicial",
-      "features": "Recursos",
-      "vocations": "Vocações",
       "news": "Notícias",
-      "media": "Mídia",
       "play": "Jogar Agora"
+    },
+    "links": {
+      "vocations": "Vocações",
+      "highscores": "Recordes",
+      "online": "Quem Está Online",
+      "guilds": "Guildas",
+      "serverInfo": "Servidor",
+      "wiki": "Wiki"
+    },
+    "hero": {
+      "title": "Old school. Implacável. Vivo.",
+      "subtitle": "Um MMORPG 2D gratuito no seu navegador. Um mundo persistente, cinco vocações, uma economia feita pelos jogadores — e tudo o que você conquista pode ser perdido.",
+      "cta": "Jogar Grátis",
+      "note": "Sem download. Grátis para sempre.",
+      "online_one": "{{count}} jogador online agora",
+      "online_other": "{{count}} jogadores online agora",
+      "beta": "Beta Fechado em Setembro…"
+    },
+    "featured": {
+      "date": "30 de agosto de 2026",
+      "title": "Os Portões de Mantus se Abrem",
+      "description": "Mantus é um MMORPG 2D old-school e gratuito no navegador — um mundo aberto persistente, cinco vocações, combate tático e uma economia dirigida pelos jogadores, sob um servidor que nunca trapaceia. Os portões se abrem em breve: o beta fechado começa em setembro. Crie sua conta gratuita e esteja lá quando o primeiro mundo entrar no ar.",
+      "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
+    },
+    "news": {
+      "ticker": "Mural de Notícias",
+      "items": {
+        "gatesOpen": {
+          "date": "30 de agosto de 2026",
+          "title": "Os Portões de Mantus se Abrem"
+        }
+      }
     },
     "menu": {
       "playNote": "Jogue grátis no navegador. Nenhum download é necessário.",
@@ -384,85 +413,6 @@
         "action": "Acessar Conta"
       }
     },
-    "hero": {
-      "eyebrow": "Um MMORPG persistente no navegador",
-      "tagline": "Um mundo implacável à moda antiga, forjado de novo",
-      "subtitle": "Mantus Online é um MMORPG 2D gratuito de estilo clássico: um mundo aberto persistente onde cada passo, cada troca e cada batalha é real — e tudo o que você conquista pode ser perdido.",
-      "cta": "Jogue Grátis",
-      "ctaSecondary": "Descubra o Mundo",
-      "note": "Gratuito — roda no seu navegador",
-      "artAlt": "Arte principal do mundo de Mantus",
-      "stats": {
-        "world": "Um mundo persistente",
-        "vocations": "Cinco vocações para dominar",
-        "economy": "Uma economia dirigida por jogadores"
-      }
-    },
-    "featured": {
-      "label": "Prévia de Desenvolvimento",
-      "date": "30 de julho de 2026",
-      "category": "Comunicado do Mundo",
-      "title": "Sob a Cidadela, o Cofre Astral Desperta",
-      "description": "Exploradores encontraram uma câmara selada sob a cidadela do norte. Esta prévia mostra o tipo de expedição em grupo perigosa, narrativa ambiental e encontro controlado pelo servidor que estamos construindo para Mantus.",
-      "action": "Prepare seu personagem",
-      "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
-    },
-    "features": {
-      "title": "Forjado para os Destemidos",
-      "subtitle": "Tudo o que fez os MMORPGs clássicos importarem — reconstruído com técnica moderna e um servidor que nunca trapaceia.",
-      "world": {
-        "title": "Um Mundo Aberto Vivo",
-        "description": "Explore um reino feito à mão com cidades, masmorras e regiões selvagens. Os campos de caça são disputados, os recursos são finitos e o mapa lembra o que você fez."
-      },
-      "combat": {
-        "title": "Combate Tático Clássico",
-        "description": "Posicionamento, tempo e preparação decidem as lutas. Domine o corpo a corpo, o ataque à distância e a magia elemental — e respeite as criaturas mais fortes que você."
-      },
-      "economy": {
-        "title": "Economia Dirigida por Jogadores",
-        "description": "Cada item é conquistado, negociado ou criado por jogadores. Compre e venda no mercado, dê lances em leilões, guarde seu ouro no banco e tenha uma casa no mundo."
-      },
-      "social": {
-        "title": "Cresçam Juntos",
-        "description": "Funde guildas, monte grupos de caça, acompanhe amigos com sua lista VIP e grave seus nomes na história do reino — ou entre em guerra por ele."
-      }
-    },
-    "vocations": {
-      "title": "Escolha Seu Caminho",
-      "subtitle": "Cinco vocações, cada uma com suas próprias armas, magias e formas de sobreviver ao mundo. Escolha com sabedoria — a maestria é uma longa estrada."
-    },
-    "news": {
-      "kicker": "Direto do reino",
-      "title": "Crônicas de Mantus",
-      "subtitle": "Comunicados dos desenvolvedores e do próprio mundo.",
-      "updated": "Atualizado semanalmente",
-      "items": {
-        "gatesOpen": {
-          "tag": "Anúncio",
-          "date": "12 de julho de 2026",
-          "title": "Os Portões de Mantus se Abrem",
-          "excerpt": "O primeiro mundo entra no ar. Crie sua conta gratuita, escolha uma vocação e dê seus primeiros passos no reino."
-        },
-        "marketAndHouses": {
-          "tag": "Atualização",
-          "date": "28 de junho de 2026",
-          "title": "Mercado & Escrituras de Casas",
-          "excerpt": "O grande mercado abre suas portas e as casas do reino agora podem ser leiloadas, possuídas e mobiliadas."
-        },
-        "roadToWar": {
-          "tag": "Desenvolvimento",
-          "date": "10 de junho de 2026",
-          "title": "O Caminho para as Guerras de Guilda",
-          "excerpt": "Uma prévia do que vem a seguir: estandartes de guilda, territórios disputados e os sistemas que decidirão quem domina as terras selvagens."
-        }
-      }
-    },
-    "overview": {
-      "kicker": "Entre na fronteira",
-      "title": "Um Mundo. Inúmeras Histórias.",
-      "description": "Cace em florestas antigas, desça até ruínas esquecidas, negocie o que encontrar e construa um nome que outros jogadores lembrarão. O reino é compartilhado, persistente e governado pelo servidor — cada vitória é conquistada.",
-      "imageAlt": "Um grupo de aventureiros segue por uma estrada escura na floresta em direção a uma torre de vigia"
-    },
     "world": {
       "unavailable": "Os dados do mundo estão temporariamente indisponíveis.",
       "status": {
@@ -472,13 +422,15 @@
         "players_one": "{{count}} jogador online",
         "players_other": "{{count}} jogadores online",
         "world": "Mundo",
-        "type": "Tipo de Mundo"
+        "type": "Tipo de Mundo",
+        "playersLabel": "Jogadores online"
       },
       "highscores": {
         "title": "Recordes",
         "experience": "Experiência",
         "level": "Nv. {{level}}",
-        "empty": "Ainda não há dados públicos de classificação."
+        "empty": "Ainda não há dados públicos de classificação.",
+        "all": "Ver todos"
       },
       "boosted": {
         "title": "Encontros de Hoje",
@@ -486,20 +438,6 @@
         "boss": "Chefe Impulsionado",
         "awaiting": "Aguardando a rotação diária"
       }
-    },
-    "media": {
-      "title": "Vislumbres do Mundo",
-      "subtitle": "Cenas do reino, capturadas por quem sobreviveu a elas.",
-      "screenshots": {
-        "combat": "Um grupo enfrenta um dragão em seu covil",
-        "city": "A praça da cidade ao entardecer",
-        "housing": "Uma casa de jogador mobiliada"
-      }
-    },
-    "callToAction": {
-      "title": "Sua Lenda Aguarda",
-      "subtitle": "Criar uma conta é grátis e leva menos de um minuto. O mundo, porém, levará anos para ser conquistado.",
-      "cta": "Criar Conta Grátis"
     },
     "footer": {
       "description": "Um MMORPG 2D gratuito e persistente feito para combate deliberado, exploração perigosa e um mundo moldado pelos jogadores.",
