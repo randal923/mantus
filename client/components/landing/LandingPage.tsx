@@ -2,22 +2,28 @@
 
 import { PublicSiteArtworkHeader } from "../public-site/PublicSiteArtworkHeader";
 import { PublicSiteShell } from "../public-site/PublicSiteShell";
-import { LandingBanner } from "./LandingBanner";
+import { LandingCommunityBand } from "./LandingCommunityBand";
 import { LandingFeaturedArticle } from "./LandingFeaturedArticle";
 import { LandingNavigation } from "./LandingNavigation";
 import { LandingNewsTicker } from "./LandingNewsTicker";
 import { LandingWorldSidebar } from "./LandingWorldSidebar";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 export function LandingPage() {
+  const { t } = useAppTranslation();
+
   return (
     <PublicSiteShell>
       <PublicSiteArtworkHeader />
-      <LandingBanner />
-      <main className="relative z-10 mx-auto grid w-full max-w-7xl gap-5 px-4 pb-10 sm:px-6 md:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[13rem_minmax(0,1fr)_17.5rem]">
+      <main className="relative z-10 mx-auto grid w-full max-w-7xl gap-7 px-4 pt-8 pb-12 sm:px-6 md:grid-cols-[14.5rem_minmax(0,1fr)] xl:grid-cols-[14.5rem_minmax(0,1fr)_18rem]">
         <LandingNavigation />
         <div className="order-1 flex min-w-0 flex-col gap-5 md:order-2">
-          <LandingNewsTicker />
+          <h2 className="font-display text-lg font-semibold tracking-[0.14em] text-[#e8e3db] uppercase">
+            {t("landing.menu.news.latest")}
+          </h2>
           <LandingFeaturedArticle />
+          <LandingNewsTicker />
+          <LandingCommunityBand />
         </div>
         <LandingWorldSidebar />
       </main>

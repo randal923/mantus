@@ -443,6 +443,16 @@
       "description": "A free, persistent 2D MMORPG built for deliberate combat, dangerous exploration, and a player-shaped world.",
       "links": "Footer links",
       "copyright": "© {{year}} Mantus Online. All rights reserved."
+    },
+    "community": {
+      "title": "Join the community",
+      "description": "Hunts, guild wars, and world events are shaped by players. Find your crew before the gates open.",
+      "discord": "Discord",
+      "forum": "Forum"
+    },
+    "vip": {
+      "description": "Standing bonuses for every character on your account: EXP bonus, protected imbuements, and more.",
+      "cta": "Learn more"
     }
   },
   "character": {

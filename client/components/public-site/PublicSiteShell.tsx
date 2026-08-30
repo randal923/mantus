@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useLanguageInitialization } from "../../i18n/useLanguageInitialization";
 import { PublicSiteFooter } from "./PublicSiteFooter";
 import { PublicSiteHeader } from "./PublicSiteHeader";
+import { PublicSiteTopbar } from "./PublicSiteTopbar";
 
 interface PublicSiteShellProps {
   readonly children: ReactNode;
@@ -15,12 +16,9 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   return (
     <div
       id="top"
-      className="ui-backdrop relative isolate min-h-screen w-full scroll-smooth font-tibia"
+      className="relative isolate min-h-screen w-full scroll-smooth bg-[#0a0a0a] font-tibia text-ui-text"
     >
-      <div
-        aria-hidden
-        className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.035]"
-      />
+      <PublicSiteTopbar />
       <PublicSiteHeader />
       {children}
       <PublicSiteFooter />

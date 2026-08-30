@@ -1,6 +1,6 @@
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 
-type MantusLogoSize = "sm" | "lg";
+type MantusLogoSize = "sm" | "md" | "lg";
 
 interface MantusLogoProps {
   size?: MantusLogoSize;
@@ -9,11 +9,13 @@ interface MantusLogoProps {
 
 const NAME_CLASS: Record<MantusLogoSize, string> = {
   sm: "text-xl",
+  md: "text-3xl",
   lg: "text-5xl sm:text-6xl",
 };
 
 const SUBTITLE_CLASS: Record<MantusLogoSize, string> = {
   sm: "text-[0.5rem]",
+  md: "text-[0.625rem]",
   lg: "mt-1 text-xs",
 };
 
