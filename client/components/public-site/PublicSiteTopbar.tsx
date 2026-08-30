@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "../../lib/public/communityLinks";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLandingWorldData } from "../landing/useLandingWorldData";
 import { useLanguageStore } from "../../stores/useLanguageStore";
@@ -41,7 +42,9 @@ export function PublicSiteTopbar() {
       </div>
       <div className="flex shrink-0 items-center gap-4">
         <a
-          href="#"
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-2 transition-colors hover:text-ui-text-bright"
         >
           <DiscordIcon className="size-4" />

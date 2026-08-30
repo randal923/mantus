@@ -1464,11 +1464,3 @@ limitations accepted during a session are recorded in the owning feature file
   bound. Recommended fix: anchor monotonicNow to `Date.now()` at startup and
   re-anchor when `Date.now()` and the monotonic clock diverge past a
   threshold, keeping in-tick monotonicity. Owner: server time.
-
-- 2026-08-30: The redesigned public-site landing chrome (topbar, hero,
-  community band) links Discord and Forum actions to `#` placeholders —
-  the user chose to include the layout before a Discord server/forum
-  exists. Recommended fix: once the Discord invite URL exists, put it in a
-  single constant (e.g. `client/lib/public/communityLinks.ts`) and wire
-  `PublicSiteTopbar` and `LandingCommunityBand` to it (the hero and Forum
-  button were since removed). Owner: public site.

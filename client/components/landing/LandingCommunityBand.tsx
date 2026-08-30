@@ -1,5 +1,6 @@
 "use client";
 
+import { DISCORD_INVITE_URL } from "../../lib/public/communityLinks";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { DiscordIcon } from "../ui/DiscordIcon";
 
@@ -18,7 +19,12 @@ export function LandingCommunityBand() {
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-3">
-        <a href="#" className="portal-btn-ghost px-6 py-3">
+        <a
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="portal-btn-ghost px-6 py-3"
+        >
           <DiscordIcon className="size-4" />
           {t("landing.community.discord")}
         </a>

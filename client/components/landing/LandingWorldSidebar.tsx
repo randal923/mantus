@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DISCORD_INVITE_URL } from "../../lib/public/communityLinks";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { DiscordIcon } from "../ui/DiscordIcon";
 import { PublicAuthAction } from "../public-site/PublicAuthAction";
@@ -19,7 +20,12 @@ export function LandingWorldSidebar() {
         </h2>
         <div className="p-4">
           <PublicAuthAction className="w-full justify-center" />
-          <a href="#" className="portal-btn-ghost mt-2.5 w-full py-2.5">
+          <a
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="portal-btn-ghost mt-2.5 w-full py-2.5"
+          >
             <DiscordIcon className="size-4" />
             {t("landing.community.discord")}
           </a>
