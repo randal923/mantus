@@ -369,18 +369,18 @@
       "online_other": "{{count}} players online right now",
       "beta": "Closed Beta in September…"
     },
-    "featured": {
-      "date": "August 30, 2026",
-      "title": "The Gates of Mantus Open",
-      "description": "Mantus is a free old-school 2D MMORPG in your browser — one persistent open world, five vocations, tactical combat and a player-run economy, watched over by a server that never cheats. The gates open soon: closed beta begins in September. Create your free account and be there when the first world goes live.",
-      "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
-    },
     "news": {
       "ticker": "News Ticker",
       "items": {
         "gatesOpen": {
           "date": "August 30, 2026",
-          "title": "The Gates of Mantus Open"
+          "title": "The Gates of Mantus Open",
+          "paragraphs": [
+            "Mantus is a free old-school 2D MMORPG in your browser — one persistent open world, five vocations, tactical combat and a player-run economy, watched over by a server that never cheats.",
+            "The gates open soon: closed beta begins in September.",
+            "Create your free account and be there when the first world goes live."
+          ],
+          "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
         }
       }
     },

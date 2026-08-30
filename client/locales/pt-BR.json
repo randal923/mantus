@@ -369,18 +369,18 @@
       "online_other": "{{count}} jogadores online agora",
       "beta": "Beta Fechado em Setembro…"
     },
-    "featured": {
-      "date": "30 de agosto de 2026",
-      "title": "Os Portões de Mantus se Abrem",
-      "description": "Mantus é um MMORPG 2D old-school e gratuito no navegador — um mundo aberto persistente, cinco vocações, combate tático e uma economia dirigida pelos jogadores, sob um servidor que nunca trapaceia. Os portões se abrem em breve: o beta fechado começa em setembro. Crie sua conta gratuita e esteja lá quando o primeiro mundo entrar no ar.",
-      "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
-    },
     "news": {
       "ticker": "Mural de Notícias",
       "items": {
         "gatesOpen": {
           "date": "30 de agosto de 2026",
-          "title": "Os Portões de Mantus se Abrem"
+          "title": "Os Portões de Mantus se Abrem",
+          "paragraphs": [
+            "Mantus é um MMORPG 2D old-school e gratuito no navegador — um mundo aberto persistente, cinco vocações, combate tático e uma economia dirigida pelos jogadores, sob um servidor que nunca trapaceia.",
+            "Os portões se abrem em breve: o beta fechado começa em setembro.",
+            "Crie sua conta gratuita e esteja lá quando o primeiro mundo entrar no ar."
+          ],
+          "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
         }
       }
     },
