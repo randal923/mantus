@@ -449,10 +449,6 @@
       "description": "Caçadas, guerras de guilda e eventos do mundo são feitos pelos jogadores. Encontre seu grupo antes que os portões se abram.",
       "discord": "Discord",
       "forum": "Fórum"
-    },
-    "vip": {
-      "description": "Bônus permanentes para todos os personagens da sua conta: bônus de EXP, imbuements protegidos e mais.",
-      "cta": "Saiba mais"
     }
   },
   "character": {

@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLandingWorldData } from "../landing/useLandingWorldData";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { DiscordIcon } from "../ui/DiscordIcon";
 import { LanguageFlagButtons } from "../ui/LanguageFlagButtons";
+import { MantusLogo } from "../ui/MantusLogo";
 
-/** Thin status bar above the header: live player count, Discord, language. */
+/** Thin status bar at the top of the site: logo, live player count, Discord, language. */
 export function PublicSiteTopbar() {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -15,8 +17,15 @@ export function PublicSiteTopbar() {
   const data = world.data;
 
   return (
-    <div className="relative z-40 flex h-10 items-center justify-between gap-4 border-b border-white/5 bg-[#080808]/75 px-4 text-xs text-[#6e6a66] backdrop-blur-sm sm:px-8">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="relative z-40 flex min-h-12 items-center justify-between gap-4 border-b border-white/5 bg-[#080808]/75 px-4 py-1.5 text-xs text-[#6e6a66] backdrop-blur-sm sm:px-8">
+      <div className="flex min-w-0 items-center gap-4">
+        <Link
+          href="/"
+          aria-label={t("brand.name")}
+          className="shrink-0 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ui-gold/60"
+        >
+          <MantusLogo size="sm" />
+        </Link>
         {data && (
           <>
             <span

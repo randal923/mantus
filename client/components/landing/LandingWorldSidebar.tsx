@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { DiscordIcon } from "../ui/DiscordIcon";
 import { PublicAuthAction } from "../public-site/PublicAuthAction";
-import { LandingVipCard } from "./LandingVipCard";
 import { useLandingWorldData } from "./useLandingWorldData";
 
 export function LandingWorldSidebar() {
@@ -66,8 +65,6 @@ export function LandingWorldSidebar() {
           <span className="text-[#b8b3ac]">Open PvP</span>
         </div>
       </section>
-
-      <LandingVipCard />
 
       <section id="highscores" className="portal-box scroll-mt-28 overflow-hidden">
         <h2 className="portal-box-header">

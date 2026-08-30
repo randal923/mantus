@@ -870,7 +870,6 @@ a {
   justify-content: center;
   gap: 0.625rem;
   border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 6px;
   background: rgb(20 20 20 / 72%);
   color: #c9c4bd;
   font-family: var(--font-cinzel, Georgia), serif;

@@ -449,10 +449,6 @@
       "description": "Hunts, guild wars, and world events are shaped by players. Find your crew before the gates open.",
       "discord": "Discord",
       "forum": "Forum"
-    },
-    "vip": {
-      "description": "Standing bonuses for every character on your account: EXP bonus, protected imbuements, and more.",
-      "cta": "Learn more"
     }
   },
   "character": {
