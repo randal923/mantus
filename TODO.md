@@ -1470,5 +1470,5 @@ limitations accepted during a session are recorded in the owning feature file
   the user chose to include the layout before a Discord server/forum
   exists. Recommended fix: once the Discord invite URL exists, put it in a
   single constant (e.g. `client/lib/public/communityLinks.ts`) and wire
-  `PublicSiteTopbar`, `LandingBanner`, and `LandingCommunityBand` to it;
-  drop or wire the Forum button likewise. Owner: public site.
+  `PublicSiteTopbar` and `LandingCommunityBand` to it (the hero and Forum
+  button were since removed). Owner: public site.

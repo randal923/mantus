@@ -22,9 +22,6 @@ export function LandingCommunityBand() {
           <DiscordIcon className="size-4" />
           {t("landing.community.discord")}
         </a>
-        <a href="#" className="portal-btn-ghost px-6 py-3">
-          {t("landing.community.forum")}
-        </a>
       </div>
     </section>
   );
