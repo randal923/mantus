@@ -803,6 +803,14 @@ a {
   background: #681710;
 }
 
+/* Public-site pages reserve the scrollbar gutter so short pages (no
+   scrollbar) and long pages render at the same width — no layout shift
+   when navigating. Scoped via :has so the fullscreen game route keeps
+   its edge-to-edge viewport. */
+html:has(.portal-site) {
+  scrollbar-gutter: stable;
+}
+
 /* Public-site portal chrome (Mantus landing design: flat dark panels over a fixed hero) */
 .portal-box {
   position: relative;

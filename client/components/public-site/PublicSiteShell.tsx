@@ -15,7 +15,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   return (
     <div
       id="top"
-      className="relative isolate min-h-screen w-full scroll-smooth bg-[#0a0a0a] font-tibia text-ui-text"
+      className="portal-site relative isolate min-h-screen w-full scroll-smooth bg-[#0a0a0a] font-tibia text-ui-text"
     >
       <PublicSiteTopbar />
       {children}
