@@ -18,20 +18,20 @@ export function PublicProfileAccountInformation({
 
   return (
     <PublicProfileSection title={t("publicProfile.accountInformation")}>
-      <dl className="m-3 overflow-hidden border border-ui-stone-light/15 sm:m-4">
-        <div className="grid gap-1 bg-white/6 px-4 py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
-          <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+      <dl className="divide-y divide-white/5">
+        <div className="grid gap-1 px-[1.125rem] py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
+          <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
             {t("publicProfile.characterCreated")}:
           </dt>
-          <dd className="text-sm text-ui-text-bright">
+          <dd className="text-sm text-[#b8b3ac]">
             {new Intl.DateTimeFormat(dateLocale, {
               dateStyle: "long",
               timeStyle: "short",
             }).format(new Date(createdAt))}
           </dd>
         </div>
-        <div className="grid gap-1 bg-black/15 px-4 py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
-          <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+        <div className="grid gap-1 px-[1.125rem] py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
+          <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
             {t("publicProfile.accountStatus")}:
           </dt>
           <dd className="text-sm text-ui-muted">

@@ -11,11 +11,11 @@ export function PvpWikiPage() {
   return (
     <PublicSiteLayout>
       <div className="grid gap-5">
-        <header className="ui-panel-frame relative overflow-hidden p-5 sm:p-6">
-          <p className="font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
+        <header className="portal-box portal-box-warm overflow-hidden p-5 sm:p-6">
+          <p className="font-display text-[0.6875rem] font-normal tracking-[0.24em] text-[#a8524c] uppercase">
             {t("websiteWikiPvp.eyebrow")}
           </p>
-          <h1 className="mt-2 font-display text-xl font-bold tracking-wide text-ui-text-bright uppercase">
+          <h1 className="mt-2 font-display text-2xl font-semibold tracking-wide text-[#f2ece2]">
             {t("websiteWikiPvp.title")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-ui-muted">
@@ -26,9 +26,9 @@ export function PvpWikiPage() {
         {SECTIONS.map((section) => (
           <section
             key={section}
-            className="ui-panel-frame relative overflow-hidden p-5 sm:p-6"
+            className="portal-box overflow-hidden p-5 sm:p-6"
           >
-            <h2 className="font-display text-lg font-bold tracking-wide text-ui-text-bright uppercase">
+            <h2 className="font-display text-xl font-semibold tracking-wide text-[#f2ece2]">
               {t(`websiteWikiPvp.sections.${section}.title`)}
             </h2>
             <p className="mt-2 text-sm leading-6 text-ui-text">

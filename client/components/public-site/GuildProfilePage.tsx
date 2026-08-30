@@ -31,24 +31,24 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
     <PublicSiteLayout>
       <div className="grid gap-5">
         {guild.status === "loading" && (
-          <section className="ui-panel-frame relative p-10 text-center text-sm text-ui-muted">
+          <section className="portal-box p-10 text-center text-sm text-ui-muted">
             {t("common.loading")}…
           </section>
         )}
         {guild.status === "unavailable" && (
-          <section className="ui-panel-frame relative p-10 text-center text-sm text-ui-muted">
+          <section className="portal-box p-10 text-center text-sm text-ui-muted">
             {t("publicSite.unavailable")}
           </section>
         )}
         {guild.status === "not-found" && (
-          <section className="ui-panel-frame relative flex flex-col items-center gap-5 p-10 text-center">
-            <h2 className="font-display text-xl font-bold text-ui-text-bright uppercase">
+          <section className="portal-box flex flex-col items-center gap-5 p-10 text-center">
+            <h2 className="font-display text-xl font-semibold text-[#f2ece2]">
               {t("websiteGuilds.profile.notFoundTitle")}
             </h2>
             <p className="max-w-md text-sm leading-6 text-ui-muted">
               {t("websiteGuilds.profile.notFoundDescription", { name })}
             </p>
-            <ButtonLink href="/guilds" variant="primary">
+            <ButtonLink href="/guilds" variant="primary" className="portal-cta">
               {t("websiteGuilds.profile.backToGuilds")}
             </ButtonLink>
           </section>
@@ -56,11 +56,11 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
 
         {data && (
           <>
-            <header className="ui-panel-frame relative overflow-hidden p-5 sm:p-6">
-              <p className="font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
+            <header className="portal-box portal-box-warm overflow-hidden p-5 sm:p-6">
+              <p className="font-display text-[0.6875rem] font-normal tracking-[0.24em] text-[#a8524c] uppercase">
                 {t("websiteGuilds.profile.eyebrow")}
               </p>
-              <h1 className="mt-2 font-display text-xl font-bold tracking-wide text-ui-text-bright uppercase">
+              <h1 className="mt-2 font-display text-2xl font-semibold tracking-wide text-[#f2ece2]">
                 {data.name}
               </h1>
               {data.motd && (
@@ -70,7 +70,7 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
               )}
               <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+                  <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
                     {t("websiteGuilds.profile.founded")}:
                   </dt>
                   <dd className="text-ui-text-bright">
@@ -78,7 +78,7 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
                   </dd>
                 </div>
                 <div className="flex items-center gap-2">
-                  <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+                  <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
                     {t("websiteGuilds.profile.guildLevel")}:
                   </dt>
                   <dd className="text-ui-text-bright tabular-nums">
@@ -86,7 +86,7 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
                   </dd>
                 </div>
                 <div className="flex items-center gap-2">
-                  <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+                  <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
                     {t("websiteGuilds.members")}:
                   </dt>
                   <dd className="flex items-center gap-2 text-ui-text-bright tabular-nums">
@@ -107,15 +107,15 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
               </dl>
             </header>
 
-            <section className="ui-panel-frame relative overflow-hidden">
-              <div className="border-b border-ui-stone-light/15 bg-black/30 px-5 py-4">
-                <h2 className="font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+            <section className="portal-box overflow-hidden">
+              <div className="border-b border-white/5 px-[1.125rem] py-3">
+                <h2 className="font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
                   {t("websiteGuilds.profile.membersTitle")}
                 </h2>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-2xl border-collapse text-left text-sm">
-                  <thead className="border-b border-ui-stone-light/15 bg-white/3 text-xs tracking-wide text-ui-muted uppercase">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead className="border-b border-white/5 text-[0.6875rem] tracking-[0.16em] text-[#66625e] uppercase">
                     <tr>
                       <th className="px-5 py-3 font-medium">
                         {t("websiteGuilds.profile.name")}
@@ -134,7 +134,7 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ui-stone-light/10">
+                  <tbody className="divide-y divide-white/5">
                     {data.members.map((member, index) => {
                       const firstOfRank =
                         index === 0 ||
@@ -142,11 +142,11 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
                       return (
                         <Fragment key={member.name}>
                           {firstOfRank && (
-                            <tr className="bg-black/25">
+                            <tr>
                               <th
                                 scope="colgroup"
                                 colSpan={5}
-                                className="px-5 py-2.5 text-left font-display text-xs font-bold tracking-widest text-ui-gold uppercase"
+                                className="px-5 py-2.5 text-left font-display text-[0.6875rem] font-normal tracking-[0.2em] text-[#c9a06a] uppercase"
                               >
                                 {member.rankName}
                               </th>
@@ -156,7 +156,7 @@ export function GuildProfilePage({ name }: GuildProfilePageProps) {
                             <td className="px-5 py-3">
                               <Link
                                 href={`/characters/${encodeURIComponent(member.name)}`}
-                                className="font-medium text-ui-text-bright hover:text-ui-accent-light"
+                                className="text-[#b8b3ac] transition-colors hover:text-ui-text-bright"
                               >
                                 {member.name}
                               </Link>

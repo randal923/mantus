@@ -15,9 +15,9 @@ export function OnlinePlayersPage() {
 
   return (
     <PublicSiteLayout>
-      <section className="ui-panel-frame relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ui-stone-light/15 bg-black/30 px-5 py-4">
-          <h2 className="font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+      <section className="portal-box overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 px-[1.125rem] py-3">
+          <h2 className="font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
             {t("online.world")}
           </h2>
           <p className="flex items-center gap-2 text-sm text-ui-text">
@@ -46,8 +46,8 @@ export function OnlinePlayersPage() {
         )}
         {online.data && online.data.players.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-xl border-collapse text-left text-sm">
-              <thead className="border-b border-ui-stone-light/15 bg-white/3 text-xs tracking-wide text-ui-muted uppercase">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="border-b border-white/5 text-[0.6875rem] tracking-[0.16em] text-[#66625e] uppercase">
                 <tr>
                   <th className="px-5 py-3 font-medium">{t("online.name")}</th>
                   <th className="px-5 py-3 font-medium">
@@ -59,7 +59,7 @@ export function OnlinePlayersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ui-stone-light/10">
+              <tbody className="divide-y divide-white/5">
                 {online.data.players.map((player) => (
                   <tr
                     key={player.name}
@@ -68,7 +68,7 @@ export function OnlinePlayersPage() {
                     <td className="px-5 py-3">
                       <Link
                         href={`/characters/${encodeURIComponent(player.name)}`}
-                        className="font-medium text-ui-text-bright hover:text-ui-accent-light"
+                        className="text-[#b8b3ac] transition-colors hover:text-ui-text-bright"
                       >
                         {player.name}
                       </Link>

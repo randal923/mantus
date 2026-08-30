@@ -30,24 +30,24 @@ export function CharacterProfilePage({ name }: CharacterProfilePageProps) {
 
       <div>
         {profile.status === "loading" && (
-          <section className="ui-panel-frame relative p-10 text-center text-sm text-ui-muted">
+          <section className="portal-box p-10 text-center text-sm text-ui-muted">
             {t("common.loading")}…
           </section>
         )}
         {profile.status === "unavailable" && (
-          <section className="ui-panel-frame relative p-10 text-center text-sm text-ui-muted">
+          <section className="portal-box p-10 text-center text-sm text-ui-muted">
             {t("publicSite.unavailable")}
           </section>
         )}
         {profile.status === "not-found" && (
-          <section className="ui-panel-frame relative flex flex-col items-center gap-5 p-10 text-center">
-            <h2 className="font-display text-xl font-bold text-ui-text-bright uppercase">
+          <section className="portal-box flex flex-col items-center gap-5 p-10 text-center">
+            <h2 className="font-display text-xl font-semibold text-[#f2ece2]">
               {t("publicProfile.notFoundTitle")}
             </h2>
             <p className="max-w-lg text-sm leading-6 text-ui-muted">
               {t("publicProfile.notFoundDescription", { name })}
             </p>
-            <ButtonLink href="/characters" variant="primary">
+            <ButtonLink href="/characters" variant="primary" className="portal-cta">
               {t("publicProfile.searchAgain")}
             </ButtonLink>
           </section>

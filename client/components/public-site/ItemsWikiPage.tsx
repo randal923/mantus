@@ -22,11 +22,11 @@ export function ItemsWikiPage() {
   return (
     <PublicSiteLayout>
       <div className="grid gap-5">
-        <header className="ui-panel-frame relative overflow-hidden p-5 sm:p-6">
-          <p className="font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
+        <header className="portal-box portal-box-warm overflow-hidden p-5 sm:p-6">
+          <p className="font-display text-[0.6875rem] font-normal tracking-[0.24em] text-[#a8524c] uppercase">
             {t("websiteWikiItems.eyebrow")}
           </p>
-          <h1 className="mt-2 font-display text-xl font-bold tracking-wide text-ui-text-bright uppercase">
+          <h1 className="mt-2 font-display text-2xl font-semibold tracking-wide text-[#f2ece2]">
             {t("websiteWikiItems.title")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-ui-muted">
@@ -38,7 +38,7 @@ export function ItemsWikiPage() {
           <div className="px-1">
             <h2
               id="rarity-grades"
-              className="font-display text-lg font-bold tracking-wide text-ui-text-bright uppercase"
+              className="font-display text-xl font-semibold tracking-wide text-[#f2ece2]"
             >
               {t("websiteWikiItems.rarities.title")}
             </h2>

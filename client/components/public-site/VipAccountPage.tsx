@@ -95,8 +95,8 @@ export function VipAccountPage() {
   return (
     <PublicSiteLayout>
       <div className="grid gap-5">
-        <section className="ui-panel-frame relative overflow-hidden p-6">
-          <h1 className="font-display text-xl font-bold tracking-widest text-ui-text-bright uppercase">
+        <section className="portal-box portal-box-warm overflow-hidden p-6">
+          <h1 className="font-display text-2xl font-semibold tracking-wide text-[#f2ece2]">
             {t("vipAccount.title")}
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ui-text">
@@ -107,14 +107,14 @@ export function VipAccountPage() {
           </p>
         </section>
 
-        <section className="ui-panel-frame relative overflow-hidden">
-          <h2 className="border-b border-ui-stone-light/15 bg-black/30 px-5 py-4 font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+        <section className="portal-box overflow-hidden">
+          <h2 className="border-b border-white/5 px-[1.125rem] py-3 font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
             {t("vipAccount.tableTitle")}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-ui-stone-light/15 bg-black/20 text-xs tracking-wide text-ui-muted uppercase">
+                <tr className="border-b border-white/5 text-[0.6875rem] tracking-[0.16em] text-[#66625e] uppercase">
                   <th scope="col" className="px-5 py-3 font-medium">
                     {t("vipAccount.benefit")}
                   </th>
@@ -123,16 +123,16 @@ export function VipAccountPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ui-stone-light/10">
+              <tbody className="divide-y divide-white/5">
                 {BENEFITS.map((benefit) => (
                   <tr key={benefit.key} className="odd:bg-white/2">
                     <th
                       scope="row"
-                      className="px-5 py-3 align-top font-display font-bold whitespace-nowrap text-ui-text-bright"
+                      className="px-5 py-3 align-top font-display font-semibold whitespace-nowrap text-[#e4e1da]"
                     >
                       {t(`vipAccount.benefits.${benefit.key}.name`)}
                       {!benefit.live && (
-                        <span className="ml-2 rounded-sm border border-ui-stone-light/25 px-1.5 py-0.5 text-[10px] font-normal tracking-wide text-ui-muted uppercase">
+                        <span className="ml-2 rounded-sm border border-white/10 px-1.5 py-0.5 text-[10px] font-normal tracking-wide text-ui-muted uppercase">
                           {t("vipAccount.comingSoon")}
                         </span>
                       )}
@@ -150,15 +150,15 @@ export function VipAccountPage() {
           </div>
         </section>
 
-        <section className="ui-panel-frame relative overflow-hidden">
-          <h2 className="border-b border-ui-stone-light/15 bg-black/30 px-5 py-4 font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+        <section className="portal-box overflow-hidden">
+          <h2 className="border-b border-white/5 px-[1.125rem] py-3 font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
             {t("vipAccount.includedTitle")}
           </h2>
-          <ul className="divide-y divide-ui-stone-light/10">
+          <ul className="divide-y divide-white/5">
             {INCLUDED_KEYS.map((key) => (
               <li
                 key={key}
-                className="px-5 py-3 text-sm text-ui-text odd:bg-white/2"
+                className="px-5 py-3 text-sm text-ui-text"
               >
                 {t(`vipAccount.included.${key}`)}
               </li>

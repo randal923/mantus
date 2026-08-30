@@ -10,9 +10,9 @@ export function PublicProfileSection({
   children,
 }: PublicProfileSectionProps) {
   return (
-    <section className="ui-panel-frame relative overflow-hidden">
-      <h2 className="border-b border-ui-accent/35 bg-[linear-gradient(90deg,rgba(91,16,12,0.82),rgba(20,22,21,0.92)_62%)] px-5 py-3 font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
-        {title}
+    <section className="portal-box overflow-hidden">
+      <h2 className="portal-box-header">
+        <span className="portal-box-title">{title}</span>
       </h2>
       {children}
     </section>

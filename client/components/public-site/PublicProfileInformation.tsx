@@ -51,18 +51,16 @@ export function PublicProfileInformation({
 
   return (
     <PublicProfileSection title={t("publicProfile.characterInformation")}>
-      <dl className="m-3 overflow-hidden border border-ui-stone-light/15 sm:m-4">
-        {rows.map(([label, value], index) => (
+      <dl className="divide-y divide-white/5">
+        {rows.map(([label, value]) => (
           <div
             key={label}
-            className={`grid gap-1 px-4 py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4 ${
-              index % 2 === 0 ? "bg-white/6" : "bg-black/15"
-            }`}
+            className="grid gap-1 px-[1.125rem] py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4"
           >
-            <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+            <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
               {label}:
             </dt>
-            <dd className="min-w-0 text-sm leading-5 text-ui-text-bright">
+            <dd className="min-w-0 text-sm leading-5 text-[#b8b3ac]">
               {value}
             </dd>
           </div>

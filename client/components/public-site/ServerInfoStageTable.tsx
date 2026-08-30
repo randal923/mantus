@@ -14,15 +14,15 @@ export function ServerInfoStageTable({
   const { t } = useAppTranslation();
 
   return (
-    <div className="border-t border-ui-stone-light/10 first:border-t-0 md:border-t-0 md:border-l md:first:border-l-0">
-      <h3 className="bg-black/20 px-5 py-3 font-display text-xs font-bold tracking-widest text-ui-accent-light uppercase">
+    <div className="border-t border-white/5 first:border-t-0 md:border-t-0 md:border-l md:first:border-l-0">
+      <h3 className="border-b border-white/5 px-[1.125rem] py-3 font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
         {title}
       </h3>
-      <dl className="divide-y divide-ui-stone-light/10">
+      <dl className="divide-y divide-white/5">
         {rows.map((row) => (
           <div
             key={row.minLevel}
-            className="flex items-center justify-between gap-4 px-5 py-2.5 odd:bg-white/2"
+            className="flex items-center justify-between gap-4 px-5 py-2.5"
           >
             <dt className="text-sm text-ui-text">
               {row.maxLevel === null
@@ -32,7 +32,7 @@ export function ServerInfoStageTable({
                     max: row.maxLevel,
                   })}
             </dt>
-            <dd className="font-display text-sm font-bold text-ui-gold">
+            <dd className="font-display text-sm font-semibold text-[#c9a06a]">
               {row.multiplier}x
             </dd>
           </div>

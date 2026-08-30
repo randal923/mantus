@@ -19,28 +19,26 @@ export function PublicProfileDeaths({
   return (
     <PublicProfileSection title={t("publicProfile.recentDeaths")}>
       {deaths.length === 0 ? (
-        <p className="m-3 bg-white/6 px-4 py-3 text-sm text-ui-muted sm:m-4">
+        <p className="px-[1.125rem] py-4 text-sm text-ui-muted">
           {t("publicProfile.noRecentDeaths")}
         </p>
       ) : (
-        <ol className="m-3 divide-y divide-ui-stone-light/15 overflow-hidden border border-ui-stone-light/15 sm:m-4">
-          {deaths.map((death, index) => (
+        <ol className="divide-y divide-white/5">
+          {deaths.map((death) => (
             <li
               key={`${death.occurredAt}-${death.level}-${death.cause}`}
-              className={`grid gap-1 px-4 py-3 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4 ${
-                index % 2 === 0 ? "bg-white/6" : "bg-black/15"
-              }`}
+              className="grid gap-1 px-[1.125rem] py-3 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4"
             >
               <time
                 dateTime={death.occurredAt}
-                className="text-sm font-medium text-ui-gold"
+                className="text-sm font-medium text-[#c9a06a]"
               >
                 {new Intl.DateTimeFormat(dateLocale, {
                   dateStyle: "medium",
                   timeStyle: "short",
                 }).format(new Date(death.occurredAt))}
               </time>
-              <span className="text-sm text-ui-text-bright">
+              <span className="text-sm text-[#b8b3ac]">
                 {death.cause ||
                   t("publicProfile.deathAtLevel", { level: death.level })}
               </span>

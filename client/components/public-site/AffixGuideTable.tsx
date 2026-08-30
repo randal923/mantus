@@ -21,9 +21,9 @@ export function AffixGuideTable() {
   const { t } = useAppTranslation();
 
   return (
-    <section className="ui-panel-frame relative overflow-hidden">
-      <header className="border-b border-ui-stone-light/15 bg-black/35 px-5 py-4">
-        <h2 className="font-display text-lg font-bold tracking-wide text-ui-text-bright uppercase">
+    <section className="portal-box overflow-hidden">
+      <header className="border-b border-white/5 px-[1.125rem] py-4">
+        <h2 className="font-display text-xl font-semibold tracking-wide text-[#f2ece2]">
           {t("websiteWikiItems.affixes.title")}
         </h2>
         <p className="mt-1 text-sm leading-6 text-ui-muted">
@@ -33,10 +33,10 @@ export function AffixGuideTable() {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[38rem] text-sm">
           <thead>
-            <tr className="border-b border-ui-stone-light/15 bg-black/25 text-left">
+            <tr className="border-b border-white/5 text-left">
               <th
                 scope="col"
-                className="px-5 py-3 font-display text-xs font-bold tracking-wide text-ui-gold uppercase"
+                className="px-5 py-3 font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase"
               >
                 {t("websiteWikiItems.affixes.affix")}
               </th>
@@ -51,7 +51,7 @@ export function AffixGuideTable() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-ui-stone-light/10">
+          <tbody className="divide-y divide-white/5">
             {WIKI_AFFIX_GUIDE.map((entry) => (
               <tr key={entry.id}>
                 <th scope="row" className="px-5 py-3 text-left font-normal">

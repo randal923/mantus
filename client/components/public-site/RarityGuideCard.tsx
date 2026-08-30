@@ -33,7 +33,7 @@ export function RarityGuideCard({
   const { t } = useAppTranslation();
 
   return (
-    <article className="ui-panel-frame relative overflow-hidden">
+    <article className="portal-box overflow-hidden">
       <div className="grid lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0 p-5 sm:p-6">
           <h3
@@ -43,13 +43,13 @@ export function RarityGuideCard({
           </h3>
           <dl className="mt-4 grid gap-3 text-sm">
             <div className="grid gap-1">
-              <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+              <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
                 {t("websiteWikiItems.rarities.affixCountLabel")}
               </dt>
               <dd className="text-ui-text tabular-nums">{affixCount}</dd>
             </div>
             <div className="grid gap-1">
-              <dt className="font-display text-xs font-bold tracking-wide text-ui-gold uppercase">
+              <dt className="font-display text-[0.6875rem] font-normal tracking-[0.18em] text-[#6e6a66] uppercase">
                 {t("websiteWikiItems.rarities.powerLabel")}
               </dt>
               <dd className="text-ui-text tabular-nums">
@@ -58,7 +58,7 @@ export function RarityGuideCard({
             </div>
           </dl>
         </div>
-        <div className="flex items-center justify-center border-t border-ui-stone-light/15 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),rgba(0,0,0,0.4)_72%)] p-4 lg:border-t-0 lg:border-l">
+        <div className="flex items-center justify-center border-t border-white/5 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),rgba(0,0,0,0.4)_72%)] p-4 lg:border-t-0 lg:border-l">
           <ItemTooltip item={example} />
         </div>
       </div>

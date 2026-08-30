@@ -11,8 +11,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePublicApiData } from "../../hooks/usePublicApiData";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
-import { Button } from "../ui/Button";
-import { Dropdown } from "../ui/Dropdown";
+import { PortalSelect } from "./PortalSelect";
 import { PublicSiteLayout } from "./PublicSiteLayout";
 
 export function HighscoresPage() {
@@ -34,12 +33,12 @@ export function HighscoresPage() {
   return (
     <PublicSiteLayout>
       <div className="grid gap-5">
-        <aside className="ui-panel-frame relative h-fit overflow-hidden p-5">
-          <h2 className="font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+        <aside className="portal-box h-fit overflow-hidden p-5">
+          <h2 className="font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
             {t("websiteHighscores.filters")}
           </h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <Dropdown<HighscoreCategory>
+            <PortalSelect<HighscoreCategory>
               ariaLabel={t("websiteHighscores.category")}
               label={t("websiteHighscores.category")}
               value={category}
@@ -52,7 +51,7 @@ export function HighscoresPage() {
                 setPage(0);
               }}
             />
-            <Dropdown<CharacterVocation | "all">
+            <PortalSelect<CharacterVocation | "all">
               ariaLabel={t("websiteHighscores.vocation")}
               label={t("websiteHighscores.vocation")}
               value={vocation}
@@ -72,15 +71,15 @@ export function HighscoresPage() {
               }}
             />
           </div>
-          <p className="mt-5 border-t border-ui-stone-light/15 pt-4 text-xs leading-5 text-ui-muted">
+          <p className="mt-5 border-t border-white/5 pt-4 text-xs leading-5 text-ui-muted">
             {t("websiteHighscores.updateNote")}
           </p>
         </aside>
 
-        <section className="ui-panel-frame relative min-w-0 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ui-stone-light/15 bg-black/30 px-5 py-4">
+        <section className="portal-box min-w-0 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 px-[1.125rem] py-3">
             <div>
-              <h2 className="font-display text-sm font-bold tracking-widest text-ui-text-bright uppercase">
+              <h2 className="font-display text-[0.6875rem] font-normal tracking-[0.22em] text-[#6e6a66] uppercase">
                 {t(`websiteHighscores.categories.${category}`)}
               </h2>
               <p className="mt-1 text-xs text-ui-muted">
@@ -116,8 +115,8 @@ export function HighscoresPage() {
           )}
           {ranking.data && ranking.data.entries.length > 0 && (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-2xl border-collapse text-left text-sm">
-                <thead className="border-b border-ui-stone-light/15 bg-white/3 text-xs tracking-wide text-ui-muted uppercase">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead className="border-b border-white/5 text-[0.6875rem] tracking-[0.16em] text-[#66625e] uppercase">
                   <tr>
                     <th className="px-5 py-3 font-medium">
                       {t("websiteHighscores.rank")}
@@ -131,24 +130,26 @@ export function HighscoresPage() {
                     <th className="px-5 py-3 text-right font-medium">
                       {t("websiteHighscores.level")}
                     </th>
-                    <th className="px-5 py-3 text-right font-medium">
-                      {t("websiteHighscores.value")}
-                    </th>
+                    {category !== "experience" && (
+                      <th className="px-5 py-3 text-right font-medium">
+                        {t("websiteHighscores.value")}
+                      </th>
+                    )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ui-stone-light/10">
+                <tbody className="divide-y divide-white/5">
                   {ranking.data.entries.map((entry) => (
                     <tr
                       key={`${entry.rank}-${entry.name}`}
                       className="transition-colors hover:bg-white/3"
                     >
-                      <td className="px-5 py-3 font-display font-bold text-ui-gold">
+                      <td className="px-5 py-3 font-display font-semibold text-[#c9a06a]">
                         {entry.rank}
                       </td>
                       <td className="px-5 py-3">
                         <Link
                           href={`/characters/${encodeURIComponent(entry.name)}`}
-                          className="font-medium text-ui-text-bright hover:text-ui-accent-light"
+                          className="text-[#b8b3ac] transition-colors hover:text-ui-text-bright"
                         >
                           {entry.name}
                         </Link>
@@ -159,9 +160,11 @@ export function HighscoresPage() {
                       <td className="px-5 py-3 text-right text-ui-text">
                         {entry.level.toLocaleString()}
                       </td>
-                      <td className="px-5 py-3 text-right font-medium text-ui-text-bright">
-                        {BigInt(entry.value).toLocaleString()}
-                      </td>
+                      {category !== "experience" && (
+                        <td className="px-5 py-3 text-right font-medium text-ui-text-bright">
+                          {BigInt(entry.value).toLocaleString()}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -170,22 +173,24 @@ export function HighscoresPage() {
           )}
 
           {ranking.data && (
-            <div className="flex items-center justify-between border-t border-ui-stone-light/15 px-5 py-4">
-              <Button
-                size="sm"
+            <div className="flex items-center justify-between border-t border-white/5 px-5 py-4">
+              <button
+                type="button"
+                className="portal-btn-ghost px-5 py-2 disabled:pointer-events-none disabled:opacity-40"
                 disabled={page === 0}
                 onClick={() => setPage((current) => Math.max(0, current - 1))}
               >
                 {t("websiteHighscores.previous")}
-              </Button>
+              </button>
               <span className="text-xs text-ui-muted">
                 {t("websiteHighscores.page", {
                   current: ranking.data.page + 1,
                   total: ranking.data.totalPages,
                 })}
               </span>
-              <Button
-                size="sm"
+              <button
+                type="button"
+                className="portal-btn-ghost px-5 py-2 disabled:pointer-events-none disabled:opacity-40"
                 disabled={page + 1 >= ranking.data.totalPages}
                 onClick={() =>
                   setPage((current) =>
@@ -194,7 +199,7 @@ export function HighscoresPage() {
                 }
               >
                 {t("websiteHighscores.next")}
-              </Button>
+              </button>
             </div>
           )}
         </section>
