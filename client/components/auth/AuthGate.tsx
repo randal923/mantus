@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import GameWindow from "../GameWindow";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
@@ -10,6 +11,7 @@ import { LoginScreen } from "./LoginScreen";
 
 export function AuthGate() {
   const { t } = useAppTranslation();
+  const router = useRouter();
   useLanguageInitialization();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
@@ -56,6 +58,7 @@ export function AuthGate() {
       onLogout={async () => {
         const { error } = await getSupabaseClient().auth.signOut();
         if (error) throw error;
+        router.replace("/");
       }}
     />
   );
