@@ -376,13 +376,53 @@
           "date": "30 de agosto de 2026",
           "title": "Os Portões de Mantus se Abrem",
           "paragraphs": [
-            "Mantus é um MMORPG 2D old-school e gratuito no navegador — um mundo aberto persistente, cinco vocações, combate tático e uma economia dirigida pelos jogadores, sob um servidor que nunca trapaceia.",
-            "Os portões se abrem em breve: o beta fechado começa em setembro.",
-            "Crie sua conta gratuita e esteja lá quando o primeiro mundo entrar no ar."
+            "No coração, Mantus é um OT. Ele mantém o espírito dos clássicos servidores de Open Tibia, mas foi construído do zero para rodar direto no navegador. E onde as regras antigas deixaram de fazer sentido, a gente mudou. Veja o que ele tem de diferente."
           ],
-          "imageAlt": "Três aventureiros diante de um selo brilhante em um antigo cofre subterrâneo"
+          "sections": {
+            "bot": {
+              "title": "Um Bot de Caça Para Todos",
+              "paragraphs": [
+                "Bot estraga o jogo quando só quem trapaceia tem um. Então em Mantus todo jogador tem o mesmo bot de caça, embutido no próprio cliente.",
+                "Escolha um local de caça e aperte iniciar. Toda caçada já vem com os waypoints prontos, e se você quiser fazer do seu jeito é só arrastar, adicionar ou remover qualquer um deles no mapa. Seu personagem anda pela rota e luta sob as mesmas regras do servidor que valem para todo mundo. Pode testar aqui mesmo:"
+              ]
+            },
+            "huntFinder": {
+              "title": "Não Sabe Onde Caçar?",
+              "paragraphs": [
+                "O Guia de Caças conhece todos os locais de caça do mundo. Diga seu nível, sua vocação e o tamanho do grupo e ele sugere um lugar, conta o que vive por lá e até desenha no mapa o caminho da cidade até a entrada. Experimente aí embaixo, os botões funcionam. Sem precisar abrir a wiki."
+              ]
+            },
+            "pvp": {
+              "title": "PvP Com Consequências de Verdade",
+              "paragraphs": [
+                "A maioria dos servidores corta seu dano pela metade quando você acerta outro jogador. Aqui a gente simplesmente não faz isso. Em Mantus seus ataques acertam jogadores com a mesma força que acertam monstros. Um 1v1 vale a pena de verdade, personagens de nível alto são realmente assustadores, e seguimos balanceando cada vocação com esse objetivo em mente."
+              ]
+            },
+            "rarity": {
+              "title": "Itens Que Sorteiam Raridade",
+              "paragraphs": [
+                "Todo equipamento que uma criatura derruba tem chance de sair Incomum, Raro, Épico ou Lendário. Esses itens carregam afixos, pequenos bônus aleatórios em cima dos atributos base. Graus mais altos sorteiam mais bônus, e mais fortes também, então duas fire swords nunca são exatamente iguais."
+              ]
+            },
+            "autoloot": {
+              "title": "Auto Loot de Fábrica",
+              "paragraphs": [
+                "Ninguém sente falta de clicar em cada corpo. Coloque os itens que importam na sua lista de coleta, escolha quais graus valem o espaço na mochila, e seu personagem pega tudo na hora em que a criatura cai."
+              ]
+            },
+            "beta": {
+              "title": "Os Portões Abrem em Setembro",
+              "paragraphs": [
+                "O beta fechado começa em setembro. Crie sua conta gratuita agora e esteja lá quando o primeiro mundo entrar no ar."
+              ]
+            }
+          },
+          "imageAlt": "Visão do jogo Mantus no navegador: um monge em um salão de pedra, com a barra de ações, o minimapa e os botões de bot do cliente na tela"
         }
-      }
+      },
+      "expandImage": "Ver em tamanho maior",
+      "closeImage": "Fechar imagem",
+      "interactive": "Demonstração ao vivo. Pode clicar!"
     },
     "menu": {
       "playNote": "Jogue grátis no navegador. Nenhum download é necessário.",

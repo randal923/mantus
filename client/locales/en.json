@@ -376,13 +376,53 @@
           "date": "August 30, 2026",
           "title": "The Gates of Mantus Open",
           "paragraphs": [
-            "Mantus is a free old-school 2D MMORPG in your browser — one persistent open world, five vocations, tactical combat and a player-run economy, watched over by a server that never cheats.",
-            "The gates open soon: closed beta begins in September.",
-            "Create your free account and be there when the first world goes live."
+            "At its heart, Mantus is an OT. It keeps the spirit of the classic Open Tibia servers, but it was built from scratch to run right in your browser. And where the old ways stopped making sense, we changed them. Here is what makes it different."
           ],
-          "imageAlt": "Three adventurers stand before a glowing seal in an ancient underground vault"
+          "sections": {
+            "bot": {
+              "title": "A Hunting Bot for Everyone",
+              "paragraphs": [
+                "Botting ruins a game when only the cheaters have one. So in Mantus every player gets the same hunting bot, built right into the client.",
+                "Pick a hunting ground and press start. Every hunt already comes with its waypoints set for you, and if you want to do things your own way you can drag, add or delete any of them on the map. Your character walks the route and fights under the same server rules as everybody else. Go on, try it right here:"
+              ]
+            },
+            "huntFinder": {
+              "title": "Not Sure Where to Hunt?",
+              "paragraphs": [
+                "The Hunt Finder knows every hunting ground in the world. Tell it your level, vocation and team size and it will suggest a spot, tell you what lives there, and even draw the walk from town to the entrance on the map. Try it below, the buttons work. No wiki tab needed."
+              ]
+            },
+            "pvp": {
+              "title": "PvP With Real Stakes",
+              "paragraphs": [
+                "Most servers cut your damage in half when you hit another player. We simply do not. In Mantus your attacks hit players exactly as hard as they hit monsters. A 1v1 is actually worth fighting, high level characters are genuinely scary, and we keep tuning every vocation with that goal in mind."
+              ]
+            },
+            "rarity": {
+              "title": "Items That Roll Rarity",
+              "paragraphs": [
+                "Any equipment a creature drops has a chance to come out Uncommon, Rare, Epic or Legendary. Those items carry affixes, little random bonuses on top of the base stats. Higher grades roll more bonuses, and stronger ones too, so no two fire swords are ever quite the same."
+              ]
+            },
+            "autoloot": {
+              "title": "Auto Loot, Built In",
+              "paragraphs": [
+                "Nobody misses clicking every single corpse. Put the items you care about on your pick up list, choose which grades are worth your backpack space, and your character grabs them the moment a creature falls."
+              ]
+            },
+            "beta": {
+              "title": "The Gates Open in September",
+              "paragraphs": [
+                "The closed beta starts in September. Create your free account now and be there when the first world goes live."
+              ]
+            }
+          },
+          "imageAlt": "In-game view of Mantus in the browser: a monk stands in a stone temple hall, with the action bar, minimap and the client&aposs bot buttons on screen"
         }
-      }
+      },
+      "expandImage": "View full size",
+      "closeImage": "Close image",
+      "interactive": "Live demo. Click around!"
     },
     "menu": {
       "playNote": "Free to play in your browser. No download required.",
