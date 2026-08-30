@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
 import { MantusLogo } from "../ui/MantusLogo";
 import { GoogleIcon } from "./GoogleIcon";
 
@@ -16,6 +15,12 @@ interface LoginPanelProps {
   error?: string | null;
   notice?: string | null;
 }
+
+const LABEL_CLASS =
+  "font-display text-[0.6875rem] tracking-[0.22em] text-[#6e6a66] uppercase";
+
+const INPUT_CLASS =
+  "w-full rounded-md border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm text-ui-text outline-none placeholder:text-[#5a5754] focus:border-white/25";
 
 export function LoginPanel({
   onSignIn,
@@ -38,51 +43,48 @@ export function LoginPanel({
   return (
     <section
       aria-label={t("auth.signInLabel")}
-      className={`${embedded ? "px-1 py-2 sm:px-2" : "ui-panel-frame px-7 py-8 sm:px-9"} relative isolate flex w-full flex-col gap-5 overflow-hidden font-tibia text-ui-text`}
+      className={`${embedded ? "px-1 py-1 sm:px-2" : "portal-box portal-box-warm px-7 py-8 sm:px-9"} flex w-full flex-col gap-5 font-tibia text-ui-text`}
     >
-      {!embedded && (
-        <div
-          aria-hidden
-          className="texture-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.045] mix-blend-soft-light"
-        />
-      )}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-12 top-0 -z-10 h-32 bg-radial from-ui-accent/15 to-transparent blur-2xl"
-      />
       <header className="flex flex-col items-center gap-2 text-center">
         <h1 className="contents">
           <MantusLogo className="mb-2" />
         </h1>
-        <p className="text-xs tracking-[0.34em] text-ui-gold uppercase">
-          {t("auth.welcomeBack")}
-        </p>
-        <p className="text-sm text-ui-muted">{t("auth.enterWorld")}</p>
+        <p className={LABEL_CLASS}>{t("auth.welcomeBack")}</p>
+        <p className="text-sm text-[#97928c]">{t("auth.enterWorld")}</p>
       </header>
-      <div aria-hidden className="ui-divider" />
+      <div aria-hidden className="h-px bg-white/5" />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input
-          label={t("auth.email")}
-          type="email"
-          autoComplete="email"
-          required
-          disabled={busy}
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-        <Input
-          label={t("auth.password")}
-          type="password"
-          autoComplete="current-password"
-          required
-          minLength={6}
-          disabled={busy}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <label className="flex flex-col gap-2 has-disabled:pointer-events-none has-disabled:opacity-45">
+          <span className={LABEL_CLASS}>{t("auth.email")}</span>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            disabled={busy}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className={INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-2 has-disabled:pointer-events-none has-disabled:opacity-45">
+          <span className={LABEL_CLASS}>{t("auth.password")}</span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            required
+            minLength={6}
+            disabled={busy}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className={INPUT_CLASS}
+          />
+        </label>
         {error && (
-          <p role="alert" className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200">
+          <p
+            role="alert"
+            className="border-l-2 border-[#7e1f1f] bg-[#7e1f1f]/10 px-3 py-2 text-sm text-red-200"
+          >
             {error}
           </p>
         )}
@@ -92,7 +94,12 @@ export function LoginPanel({
           </p>
         )}
         <div className="mt-1 grid grid-cols-2 gap-3">
-          <Button type="submit" variant="primary" disabled={busy}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="portal-cta"
+            disabled={busy}
+          >
             {busy && (
               <span
                 aria-hidden
@@ -101,34 +108,35 @@ export function LoginPanel({
             )}
             {busy ? t("auth.entering") : t("auth.signIn")}
           </Button>
-          <Button
+          <button
             type="button"
             disabled={busy}
             onClick={() => onSignUp(email, password)}
+            className="portal-btn-ghost px-4 py-2.5 disabled:pointer-events-none disabled:opacity-40"
           >
             {t("auth.createAccount")}
-          </Button>
+          </button>
         </div>
       </form>
 
       <div
         aria-hidden
-        className="flex items-center gap-3 text-xs tracking-[0.22em] text-ui-muted uppercase"
+        className={`flex items-center gap-3 ${LABEL_CLASS}`}
       >
-        <span className="h-px flex-1 bg-linear-to-r from-transparent to-ui-gold/35" />
+        <span className="h-px flex-1 bg-linear-to-r from-transparent to-white/15" />
         {t("auth.or")}
-        <span className="h-px flex-1 bg-linear-to-l from-transparent to-ui-gold/35" />
+        <span className="h-px flex-1 bg-linear-to-l from-transparent to-white/15" />
       </div>
 
-      <Button
+      <button
         type="button"
         disabled={busy}
         onClick={onGoogle}
-        className="w-full"
+        className="portal-btn-ghost w-full py-3 disabled:pointer-events-none disabled:opacity-40"
       >
         <GoogleIcon />
         {t("auth.continueWithGoogle")}
-      </Button>
+      </button>
     </section>
   );
 }
