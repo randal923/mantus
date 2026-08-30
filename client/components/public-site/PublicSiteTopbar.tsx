@@ -17,7 +17,8 @@ export function PublicSiteTopbar() {
   const data = world.data;
 
   return (
-    <div className="relative z-40 flex min-h-12 items-center justify-between gap-4 border-b border-white/5 bg-[#080808]/75 px-4 py-1.5 text-xs text-[#6e6a66] backdrop-blur-sm sm:px-8">
+    <div className="relative z-40 border-b border-white/5 bg-[#080808]/75 text-xs text-[#6e6a66] backdrop-blur-sm">
+      <div className="mx-auto flex min-h-12 w-full max-w-7xl items-center justify-between gap-4 px-4 py-1.5 sm:px-6">
       <div className="flex min-w-0 items-center gap-4">
         <Link
           href="/"
@@ -47,7 +48,8 @@ export function PublicSiteTopbar() {
           {t("landing.community.discord")}
         </a>
         <span aria-hidden className="h-3.5 w-px bg-white/10" />
-        <LanguageFlagButtons language={language} onChange={setLanguage} />
+          <LanguageFlagButtons language={language} onChange={setLanguage} />
+        </div>
       </div>
     </div>
   );
