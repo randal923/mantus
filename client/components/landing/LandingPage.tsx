@@ -21,8 +21,8 @@ export function LandingPage() {
           <h2 className="font-display text-lg font-semibold tracking-[0.14em] text-[#e8e3db] uppercase">
             {t("landing.menu.news.latest")}
           </h2>
-          <LandingFeaturedArticle />
           <LandingNewsTicker />
+          <LandingFeaturedArticle />
           <LandingCommunityBand />
         </div>
         <LandingWorldSidebar />
