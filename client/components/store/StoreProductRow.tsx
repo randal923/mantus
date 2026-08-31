@@ -15,8 +15,8 @@ interface StoreProductRowProps {
 
 /**
  * One row of the store's product list, laid out like the official store's:
- * the icon on the left, the product name beside it, and a price button per
- * variant underneath the name.
+ * the icon on the left, the product name and its one-line summary beside it,
+ * and a price button per variant underneath.
  *
  * Selecting and buying are separate controls rather than a clickable row
  * wrapping the price buttons, so the buttons are never nested inside another
@@ -59,6 +59,11 @@ export function StoreProductRow({
         <p className="block max-w-full truncate text-left font-display text-base font-bold text-ui-text-bright transition-colors group-hover:text-ui-gold">
           {product.name}
         </p>
+        {product.summary && (
+          <p className="mt-1 line-clamp-2 text-left text-sm leading-5 text-ui-muted">
+            {product.summary}
+          </p>
+        )}
         <div className="pointer-events-auto relative z-10 mt-auto flex flex-wrap justify-end gap-1.5 pt-2">
           {product.subOffers.map((offer) => (
             <StorePriceButton

@@ -39,6 +39,12 @@ export const STORE_LIMITS = {
   /** Coin-history page size; the server never returns more than this. */
   maxHistoryEntries: 50,
   maxDescriptionLength: 2_048,
+  /**
+   * The one-line summary each listed product carries: its description's
+   * first sentence, so a shelf reads without selecting anything. Sized so a
+   * full page of 12 stays a few KB, far under the message cap.
+   */
+  maxSummaryLength: 240,
   maxNameLength: 64,
 } as const;
 
@@ -132,10 +138,11 @@ export const storeSubOfferSchema = z
   .strict();
 
 /**
- * A product as it appears in a list. Descriptions are deliberately absent:
- * they run to hundreds of characters and a page of 26 would blow the message
- * cap, so the client asks for one when the player selects it — the same split
- * Canary makes between `S_StoreOffers` and `S_RequestPurchaseData`.
+ * A product as it appears in a list. Full descriptions are deliberately
+ * absent: they run to hundreds of characters and a page of them would blow
+ * the message cap, so the client asks for one when the player selects it —
+ * the same split Canary makes between `S_StoreOffers` and
+ * `S_RequestPurchaseData`. A list entry carries only a short `summary`.
  */
 export const storeProductSchema = z
   .object({
@@ -143,6 +150,8 @@ export const storeProductSchema = z
     name: z.string().min(1).max(64),
     kind: storeProductKindSchema,
     icon: storeIconSchema,
+    /** First prose line of the description, for the shelf row. */
+    summary: z.string().min(1).max(STORE_LIMITS.maxSummaryLength).optional(),
     /** Canary's offer states; drives the "New"/"Sale" corner badge. */
     highlight: z.enum(["new", "sale"]).optional(),
     subOffers: z

@@ -6044,3 +6044,24 @@ reaches players once main is pushed and the Fly deploy runs.
   under the old id (nothing is re-delivered). Templated lines are
   deliberately plain; a hand-written line for any item goes in
   `OFFER_OVERRIDES`.
+
+## 2026-08-30 — Store shelf rows show a one-line product summary (`agents/store-row-summary`)
+
+- **Problem:** the product list never showed any description — the
+  protocol sends full descriptions only for the selected product (detail
+  pane), so after the catalog description pass the shelf still read as bare
+  names with empty cards.
+- **What changed:** `storeProductSchema` gained an optional `summary`
+  (≤ `STORE_LIMITS.maxSummaryLength` = 240); `toStoreProduct` fills it via
+  `server/src/store/storeProductSummary.ts` — the description's first
+  non-tag line, cut at a word boundary — and `StoreProductRow` renders it
+  under the name (two-line clamp). Full descriptions still travel on select.
+- **Files:** `protocol/src/store.ts`, `server/src/store/storeProductSummary.ts`
+  (+ test), `server/src/store/storeCatalog.ts`,
+  `client/components/store/StoreProductRow.tsx`,
+  `client/stories/StoreModal.stories.tsx`.
+- **Verified:** typecheck; server store suite (29) and client store suites
+  (40); eslint; a script projected every real category page through
+  `toStoreProduct` + `storeOffersMessageSchema` with an 80-char disabled
+  reason on each product — worst page well under the 16 KB
+  `maxMessageBytes` cap.

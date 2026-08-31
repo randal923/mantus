@@ -34,6 +34,8 @@ const PREMIUM: StoreProduct = {
   id: "premium-time",
   name: "Premium Time",
   kind: "premium",
+
+  summary: "Enhance your gaming experience by gaining additional abilities and advantages.",
   icon: { kind: "symbol", symbol: "premium" },
   subOffers: [
     { id: "premium-30", price: 250 },
@@ -58,6 +60,8 @@ const OWNED_MOUNT: StoreProduct = {
   id: "mounts-armoured-war-horse",
   name: "Armoured War Horse",
   kind: "mount",
+
+  summary: "A dangerous black beauty.",
   icon: MOUNT_ICON,
   subOffers: [
     {
@@ -73,6 +77,8 @@ const NAME_CHANGE: StoreProduct = {
   id: "extra-services-character-name-change",
   name: "Character Name Change",
   kind: "name-change",
+
+  summary: "Tired of your current character name? Purchase a new one!",
   icon: { kind: "symbol", symbol: "name-change" },
   subOffers: [{ id: "name-change", price: 250 }],
 };
