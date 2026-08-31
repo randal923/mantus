@@ -61,6 +61,12 @@ export function GameCommerceOverlays() {
   const setShopSession = useGameWindowStore((state) => state.setShopSession);
   const setStoreOpen = useGameWindowStore((state) => state.setStoreOpen);
   const setStoreSession = useGameWindowStore((state) => state.setStoreSession);
+  const coinOrderSession = useGameWindowStore(
+    (state) => state.coinOrderSession,
+  );
+  const setCoinOrderSession = useGameWindowStore(
+    (state) => state.setCoinOrderSession,
+  );
   const setMarketSelectedItem = useGameWindowStore(
     (state) => state.setMarketSelectedItem,
   );
@@ -103,6 +109,41 @@ export function GameCommerceOverlays() {
                     purchasedOfferId: null,
                     error: sent ? null : "failed",
                   }
+                : current,
+            );
+          }}
+          coinOrderSession={coinOrderSession}
+          onOpenCoinOrders={() => {
+            setCoinOrderSession({
+              packages: [],
+              order: null,
+              pending: true,
+              completed: null,
+              error: null,
+            });
+            runtime.clientRef.current?.openCoinOrders();
+          }}
+          onCloseCoinOrders={() => setCoinOrderSession(null)}
+          onBuyCoins={(packageId) => {
+            const sent =
+              runtime.clientRef.current?.createCoinOrder(packageId) ?? false;
+            setCoinOrderSession((current) =>
+              current
+                ? {
+                    ...current,
+                    pending: sent,
+                    completed: null,
+                    error: sent ? null : "failed",
+                  }
+                : current,
+            );
+          }}
+          onCancelCoinOrder={(orderId) => {
+            const sent =
+              runtime.clientRef.current?.cancelCoinOrder(orderId) ?? false;
+            setCoinOrderSession((current) =>
+              current
+                ? { ...current, pending: sent, error: sent ? null : "failed" }
                 : current,
             );
           }}

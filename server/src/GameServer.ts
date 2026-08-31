@@ -177,6 +177,10 @@ import { VipService } from "./social/VipService";
 import type { VipStore } from "./social/VipStore";
 import { MantusStoreService } from "./store/MantusStoreService";
 import { StoreOperatorService } from "./store/StoreOperatorService";
+import { PixOrderService } from "./payments/PixOrderService";
+import { PixWebhookApi } from "./payments/PixWebhookApi";
+import type { PixOrderStore } from "./payments/PixOrderStore";
+import type { PixProvider } from "./payments/PixProvider";
 import type { MantusStoreStore } from "./store/MantusStoreStore";
 import { loadCreatureContent } from "./spawn/loadCreatureContent";
 import { SpawnManager } from "./spawn/SpawnManager";
@@ -230,6 +234,10 @@ export interface GameServerDeps {
   rewards?: RewardStore;
   daily?: DailyRewardStore;
   worldEvents?: WorldEventStore;
+  pixOrders?: PixOrderStore;
+  pixProvider?: PixProvider;
+  pixWebhookSecret?: string;
+  pixPayerEmailFallback?: string;
   /** Read-only money-supply sweep; absent in tests and memory-only runs. */
   currencyReconciler?: CurrencyReconciler;
   worldItemDeltas?: WorldItemDeltas;
@@ -331,6 +339,8 @@ export class GameServer {
   private readonly moderation: ModerationService;
   private readonly store: MantusStoreService;
   private readonly storeOperator: StoreOperatorService;
+  private readonly pixOrders: PixOrderService | null;
+  private readonly pixWebhook: PixWebhookApi | null;
   private readonly npcs: NpcHandler;
   private readonly spawns: SpawnManager | null;
   private readonly loop: TickLoop;
@@ -454,6 +464,22 @@ export class GameServer {
       this.loginLoads,
     );
     this.storeOperator = new StoreOperatorService(this.registry, deps.store);
+    this.pixOrders =
+      deps.pixOrders && deps.pixProvider
+        ? new PixOrderService(this.registry, deps.pixOrders, deps.pixProvider, {
+            ...(deps.pixPayerEmailFallback
+              ? { payerEmailFallback: deps.pixPayerEmailFallback }
+              : {}),
+          })
+        : null;
+    this.pixWebhook =
+      this.pixOrders && deps.pixWebhookSecret
+        ? new PixWebhookApi({
+            secret: deps.pixWebhookSecret,
+            service: this.pixOrders,
+            trustProxyHeader: config.trustProxyHeader,
+          })
+        : null;
     this.vips = new VipService(
       this.world,
       this.registry,
@@ -1413,6 +1439,14 @@ export class GameServer {
       },
     });
     this.httpServer = createServer((request, response) => {
+      if (
+        this.pixWebhook &&
+        request.url !== undefined &&
+        this.pixWebhook.matches(request.url)
+      ) {
+        void this.pixWebhook.handle(request, response);
+        return;
+      }
       void publicApi.handle(request, response);
     });
     this.httpServer.maxHeadersCount = 50;
@@ -1471,6 +1505,7 @@ export class GameServer {
       console.warn(`world event registration failed: ${reason}`);
     });
     this.loop.start();
+    this.pixOrders?.startReconciliation();
     this.heartbeat = setInterval(
       () => this.pingSessions(),
       this.config.heartbeatMs,
@@ -1572,6 +1607,7 @@ export class GameServer {
       this.moderation.tick(now);
       this.store.applyResolvedOutcomes(now);
       this.storeOperator.applyResolvedOutcomes();
+      this.pixOrders?.applyResolvedOutcomes();
       this.gems.applyResolvedOutcomes(now);
       this.language.applyResolvedOutcomes();
       this.uiSettings.applyResolvedOutcomes();
@@ -2111,6 +2147,12 @@ export class GameServer {
       case "store-history":
         this.store.handle(session, intent, now);
         return;
+      case "coin-order-open":
+      case "coin-order-create":
+      case "coin-order-cancel":
+        if (this.pixOrders) this.pixOrders.handle(session, intent, now);
+        else session.send({ type: "coin-order-failed", reason: "unavailable" });
+        return;
       case "highscores-get":
         this.highscores.handle(session, intent, now);
         return;
@@ -2288,6 +2330,10 @@ export class GameServer {
     this.store.applyResolvedOutcomes(monotonicNow());
     await this.storeOperator.stop();
     this.storeOperator.applyResolvedOutcomes();
+    if (this.pixOrders) {
+      await this.pixOrders.stop();
+      this.pixOrders.applyResolvedOutcomes();
+    }
     await this.chests.stop();
     this.chests.applyResolvedOutcomes(monotonicNow());
     await this.rewards.stop();

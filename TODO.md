@@ -1464,3 +1464,16 @@ limitations accepted during a session are recorded in the owning feature file
   bound. Recommended fix: anchor monotonicNow to `Date.now()` at startup and
   re-anchor when `Date.now()` and the monotonic clock diverge past a
   threshold, keeping in-tick monotonicity. Owner: server time.
+
+- 2026-08-30: Pix payments ship with three accepted stopgaps. (1) An
+  `amount-mismatch` or balance-cap-parked (`paid`) order only logs a
+  `PIX ALERT` line — there is no operator command to resolve or refund it;
+  resolution is manual SQL plus the audit trail. (2) Refund handling is
+  claw-back only (min(balance, coins), shortfall audited as `pix-refund`);
+  there is no MED dispute flow and no account flag/lock when the shortfall
+  is non-zero. (3) `PIX_PAYER_EMAIL_FALLBACK` defaults to a placeholder
+  domain when an account has no e-mail. Also: the
+  `PgPixOrderStore.integration.test.ts` fraud/concurrency suite is wired
+  into test:integration but has not run yet in the WSL session (docker
+  Postgres unavailable) — run it before the first production deploy.
+  Owner: payments.

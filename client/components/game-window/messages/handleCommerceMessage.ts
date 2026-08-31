@@ -95,6 +95,44 @@ export function handleCommerceMessage(
     return true;
   }
 
+  if (message.type === "coin-order-state") {
+    state.setCoinOrderSession((current) =>
+      current
+        ? {
+            packages: message.packages,
+            order: message.order,
+            pending: false,
+            completed: current.completed,
+            error: current.error,
+          }
+        : current,
+    );
+    return true;
+  }
+
+  if (message.type === "coin-order-completed") {
+    state.setMantusCoins(message.balance);
+    state.setCoinOrderSession((current) =>
+      current
+        ? {
+            ...current,
+            order: null,
+            pending: false,
+            completed: { orderId: message.orderId, coins: message.coins },
+            error: null,
+          }
+        : current,
+    );
+    return true;
+  }
+
+  if (message.type === "coin-order-failed") {
+    state.setCoinOrderSession((current) =>
+      current ? { ...current, pending: false, error: message.reason } : current,
+    );
+    return true;
+  }
+
   if (message.type === "bank-opened") {
     state.setBankBalance(message.balance);
     state.setShopSession(null);

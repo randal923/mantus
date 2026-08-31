@@ -5787,3 +5787,55 @@ reaches players once main is pushed and the Fly deploy runs.
 - **Verified:** tsc, eslint, client unit tests, storybook build +
   headless screenshots at 1440px and 390px.
 - **Residual:** none.
+
+## 2026-08-30 — Pix payments: real-money Mantus Coin top-ups (Mercado Pago)
+
+- **Problem:** there was no way to buy Mantus Coins with real money; "payment
+  provider" had been open on the store status row since the catalog shipped.
+- **What changed:** server-pinned package catalog (7 tiers at 10 coins per
+  real, R$10→100 up to R$1000→10000) in
+  `server/src/payments/PIX_COIN_PACKAGES.ts`; `pix_orders` table (migration
+  081) with a one-pending-order-per-account partial unique index, a unique
+  provider-payment index, a one-way status machine
+  (pending→paid→credited / cancelled / expired / refunded) and five new audit
+  event types. `PixOrderService` handles the `coin-order-open/create/cancel`
+  intents (per-account cooldown, resume lane for orders stranded before the
+  provider answered, provider-cancel-before-local-cancel so the pay race can
+  never lose money), `MercadoPagoProvider` is a fetch-based client
+  (X-Idempotency-Key = order id, integer centavos converted at the boundary,
+  snapshot whitelisted under the 8 KB jsonb cap), `PixWebhookApi` validates
+  the HMAC x-signature, rate-limits, acks then hands off — the webhook is
+  only a hint; settling always re-fetches the payment from the API.
+  `PgPixOrderStore.settleApproved` credits in ONE transaction (order flip +
+  account balance + coin-ledger row keyed `pix-credit:<order>` + audit row),
+  refuses amount mismatches, parks credits that would breach the balance cap
+  as `paid`, and refunds claw back min(balance, coins) with the shortfall
+  audited. A 60 s reconciliation sweep expires stale orders (best-effort
+  provider cancel) and settles payments whose webhooks were lost. Client: a
+  Get Coins button in the store opens `CoinOrderDialog` — package grid → QR
+  rendered locally from the brcode (`qrcode` dep) with copia-e-cola copy and
+  cancel — and `coin-order-completed` updates the live balance. i18n en +
+  pt-BR.
+- **Files:** `protocol/src/coinOrders.ts` (+ message unions),
+  `server/db/migrations/081_pix_orders.sql`, `server/src/payments/*` (+ 4
+  test files), GameServer/index wiring, `server/.env.example`
+  (MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_WEBHOOK_SECRET,
+  PIX_NOTIFICATION_URL, PIX_PAYER_EMAIL_FALLBACK),
+  `client/components/store/CoinOrderDialog.tsx` / `PixQrCode.tsx`,
+  StoreModal/GameCommerceOverlays/game-window store state,
+  `client/lib/store/formatCentavosBRL.ts`, locales.
+- **Verified:** protocol/server/client typecheck; 33 payment unit tests
+  (signature vectors incl. forged/tampered secrets and replays; webhook
+  forged-signature, oversized body, rate limit, non-numeric id; service
+  catalog pinning, cooldown, cancel-vs-pay race, mismatch-never-credits,
+  refund clamp); full client suite (479) and lint on every touched file.
+  `PgPixOrderStore.integration.test.ts` (13 fraud/concurrency cases:
+  duplicate-webhook race credits exactly once, create race leaves one pending
+  order, cancel/expiry races still credit paid money, refund race refunds
+  once and clamps at zero, balance-cap parking then credit) is wired into
+  `test:integration` but was NOT run in this session — the local docker
+  Postgres is unavailable in this WSL distro.
+- **Residual risk:** amount-mismatch and balance-cap-parked orders only log
+  `PIX ALERT` — no operator UI; refunds are claw-back only (no MED dispute
+  flow); the payer-email fallback is a placeholder domain; production still
+  needs Fly secrets, the MP webhook registration, and migration 081 applied.

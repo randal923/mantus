@@ -49,6 +49,7 @@ import type { ReportSessionState } from "./ReportSessionState";
 import type { ScreenMessageState } from "./ScreenMessageState";
 import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
+import type { CoinOrderSessionState } from "./CoinOrderSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
 import type { MinimapRoute } from "../../../lib/minimap/MinimapRoute";
@@ -179,6 +180,7 @@ export interface GameWindowState {
   shopSession: ShopSessionState | null;
   storeOpen: boolean;
   storeSession: StoreSessionState | null;
+  coinOrderSession: CoinOrderSessionState | null;
   mailboxSession: MailboxSessionState | null;
   lootSessions: ReadonlyArray<LootSessionState>;
   gameMenuOpen: boolean;

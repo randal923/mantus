@@ -638,7 +638,11 @@
       "name-invalid": "That name cannot be used.",
       "name-required": "Enter the new character name first.",
       "in-combat": "You cannot use this while in combat.",
-      "inbox-full": "Your character cannot carry any more items."
+      "inbox-full": "Your character cannot carry any more items.",
+      "pending-order-exists": "You already have an open Pix order. Cancel it before creating a new one.",
+      "package-not-found": "That coin package is not available.",
+      "order-not-found": "That Pix order no longer exists.",
+      "cancel-failed": "The order could not be cancelled — the payment may already be on its way. Your coins will be credited shortly."
     },
     "home": "Home",
     "empty": "No offers in this category.",
@@ -664,7 +668,23 @@
       "temple-teleport": "Transport"
     },
     "priceLabel": "Buy for {{price}} Mantus Coins",
-    "priceLabelWithCount": "Buy {{count}} for {{price}} Mantus Coins"
+    "priceLabelWithCount": "Buy {{count}} for {{price}} Mantus Coins",
+    "getCoins": "Get Coins",
+    "getCoinsTitle": "Get Mantus Coins",
+    "getCoinsIntro": "Pay with Pix. Choose a package, scan the QR code with your bank app or copy the code. Coins are credited to your account as soon as the payment is confirmed.",
+    "packageLabel": "{{coins}} Mantus Coins",
+    "buyFor": "Buy for {{price}}",
+    "pixCopy": "Copy Pix code",
+    "pixCopied": "Copied.",
+    "pixWaiting": "Waiting for your payment…",
+    "pixExpires": "This code expires at {{time}}.",
+    "cancelOrder": "Cancel order",
+    "cancelling": "Cancelling…",
+    "orderCompleted": "Payment received! {{coins}} Mantus Coins were added to your account.",
+    "pixErrors": {
+      "unavailable": "Pix payments are unavailable right now. Please try again in a moment.",
+      "failed": "The Pix order could not be created. Please try again."
+    }
   },
   "connection": {
     "connecting": "Connecting",

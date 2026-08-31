@@ -172,6 +172,11 @@ import {
   storeStateMessageSchema,
 } from "./store";
 import {
+  coinOrderCompletedMessageSchema,
+  coinOrderFailedMessageSchema,
+  coinOrderStateMessageSchema,
+} from "./coinOrders";
+import {
   tradeActionFailedMessageSchema,
   tradeClosedMessageSchema,
   tradeStateMessageSchema,
@@ -659,6 +664,9 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   storeHistoryStateMessageSchema,
   storePurchaseCompletedMessageSchema,
   storeActionFailedMessageSchema,
+  coinOrderStateMessageSchema,
+  coinOrderCompletedMessageSchema,
+  coinOrderFailedMessageSchema,
   depotStateMessageSchema,
   depotActionFailedMessageSchema,
   mailboxOpenedMessageSchema,

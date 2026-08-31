@@ -45,6 +45,7 @@ import type { NpcDialogueState } from "./NpcDialogueState";
 import type { ReportSessionState } from "./ReportSessionState";
 import type { ShopSessionState } from "./ShopSessionState";
 import type { StoreSessionState } from "./StoreSessionState";
+import type { CoinOrderSessionState } from "./CoinOrderSessionState";
 import type { WorldLoadProgress } from "./WorldLoadProgress";
 import type { ActionBarEditorRequest } from "../../action-bar/ActionBarEditorRequest";
 import type { MinimapRoute } from "../../../lib/minimap/MinimapRoute";
@@ -166,6 +167,9 @@ export interface GameWindowStoreActions {
   setShopSession: (value: SetStateAction<ShopSessionState | null>) => void;
   setStoreOpen: (value: SetStateAction<boolean>) => void;
   setStoreSession: (value: SetStateAction<StoreSessionState | null>) => void;
+  setCoinOrderSession: (
+    value: SetStateAction<CoinOrderSessionState | null>,
+  ) => void;
   setMailboxSession: (value: SetStateAction<MailboxSessionState | null>) => void;
   setLootSessions: (
     value: SetStateAction<ReadonlyArray<LootSessionState>>,

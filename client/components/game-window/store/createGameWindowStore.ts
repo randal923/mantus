@@ -178,6 +178,7 @@ export function createGameWindowStore({
       shopSession: null,
       storeOpen: false,
       storeSession: null,
+      coinOrderSession: null,
       mailboxSession: null,
       lootSessions: [],
       gameMenuOpen: false,
@@ -532,6 +533,10 @@ export function createGameWindowStore({
         set((state) => ({
           storeSession: resolveStateAction(value, state.storeSession),
         })),
+      setCoinOrderSession: (value) =>
+        set((state) => ({
+          coinOrderSession: resolveStateAction(value, state.coinOrderSession),
+        })),
       setMailboxSession: (value) =>
         set((state) => ({
           mailboxSession: resolveStateAction(value, state.mailboxSession),
@@ -664,6 +669,7 @@ export function createGameWindowStore({
           shopSession: null,
           storeOpen: false,
           storeSession: null,
+          coinOrderSession: null,
           partyPanelVisible: false,
           guildModalOpen: false,
           guildToast: null,

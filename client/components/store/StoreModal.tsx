@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { StoreProduct } from "@tibia/protocol";
+import type { CoinOrderSessionState } from "../game-window/types/CoinOrderSessionState";
 import type { StoreSessionState } from "../game-window/types/StoreSessionState";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
+import { CoinOrderDialog } from "./CoinOrderDialog";
 import { StoreCategoryList } from "./StoreCategoryList";
 import { StoreProductRow } from "./StoreProductRow";
 import { StorePurchaseConfirm } from "./StorePurchaseConfirm";
@@ -21,6 +23,11 @@ interface StoreModalProps {
   onOpenHome: () => void;
   onSelectProduct: (productId: string) => void;
   onPurchase: (offerId: string, newName?: string) => void;
+  coinOrderSession: CoinOrderSessionState | null;
+  onOpenCoinOrders: () => void;
+  onCloseCoinOrders: () => void;
+  onBuyCoins: (packageId: string) => void;
+  onCancelCoinOrder: (orderId: string) => void;
 }
 
 /**
@@ -41,6 +48,11 @@ export function StoreModal({
   onOpenHome,
   onSelectProduct,
   onPurchase,
+  coinOrderSession,
+  onOpenCoinOrders,
+  onCloseCoinOrders,
+  onBuyCoins,
+  onCancelCoinOrder,
 }: StoreModalProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -116,6 +128,13 @@ export function StoreModal({
             <p className="mt-2 border-t border-ui-gold/15 pt-2 text-xs text-ui-muted">
               {t("store.currentPremium", { count: premiumDaysRemaining })}
             </p>
+            <Button
+              variant="primary"
+              className="mt-3 w-full"
+              onClick={onOpenCoinOrders}
+            >
+              {t("store.getCoins")}
+            </Button>
           </div>
         </aside>
 
@@ -211,6 +230,15 @@ export function StoreModal({
           )}
         </div>
       </div>
+
+      {coinOrderSession && (
+        <CoinOrderDialog
+          session={coinOrderSession}
+          onClose={onCloseCoinOrders}
+          onBuy={onBuyCoins}
+          onCancelOrder={onCancelCoinOrder}
+        />
+      )}
 
       {confirming && (
         <StorePurchaseConfirm

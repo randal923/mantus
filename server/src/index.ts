@@ -48,6 +48,8 @@ import { PgRewardStore } from "./reward/PgRewardStore";
 import { PgDailyRewardStore } from "./daily/PgDailyRewardStore";
 import { PgWorldEventStore } from "./event/PgWorldEventStore";
 import { PgMantusStore } from "./store/PgMantusStore";
+import { PgPixOrderStore } from "./payments/PgPixOrderStore";
+import { MercadoPagoProvider } from "./payments/MercadoPagoProvider";
 import { WorldItemSeeder } from "./item/WorldItemSeeder";
 import { loadServerConfig } from "./loadServerConfig";
 
@@ -156,6 +158,21 @@ const gems = new PgGemStore(pool);
 const cooldowns = new PgCooldownStore(pool);
 const moderation = new PgModerationStore(pool);
 const store = new PgMantusStore(pool, itemCatalog);
+const mercadoPagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+const pixWebhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+const pixProvider = mercadoPagoAccessToken
+  ? new MercadoPagoProvider(
+      mercadoPagoAccessToken,
+      process.env.PIX_NOTIFICATION_URL,
+    )
+  : undefined;
+const pixOrders = pixProvider ? new PgPixOrderStore(pool) : undefined;
+if (pixProvider && !pixWebhookSecret) {
+  console.warn(
+    "MERCADOPAGO_WEBHOOK_SECRET is not set: the Pix webhook endpoint is " +
+      "disabled; payments settle via the reconciliation sweep only.",
+  );
+}
 const chests = new PgChestStore(pool, itemCatalog);
 const rewards = new PgRewardStore(pool, itemCatalog);
 const daily = new PgDailyRewardStore(pool, itemCatalog);
@@ -209,6 +226,10 @@ const server = new GameServer(serverConfig, {
   cooldowns,
   moderation,
   store,
+  pixOrders,
+  pixProvider,
+  pixWebhookSecret,
+  pixPayerEmailFallback: process.env.PIX_PAYER_EMAIL_FALLBACK,
   chests,
   rewards,
   daily,

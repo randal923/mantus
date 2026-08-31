@@ -178,6 +178,11 @@ import {
 } from "./party";
 import { shopBuyMessageSchema, shopSellMessageSchema } from "./shop";
 import {
+  coinOrderCancelMessageSchema,
+  coinOrderCreateMessageSchema,
+  coinOrderOpenMessageSchema,
+} from "./coinOrders";
+import {
   storeCategoryMessageSchema,
   storeDescriptionMessageSchema,
   storeHistoryMessageSchema,
@@ -770,6 +775,9 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   storeHistoryMessageSchema,
   storeOpenMessageSchema,
   storePurchaseMessageSchema,
+  coinOrderOpenMessageSchema,
+  coinOrderCreateMessageSchema,
+  coinOrderCancelMessageSchema,
   depotDepositMessageSchema,
   depotWithdrawMessageSchema,
   depotBrowseMessageSchema,

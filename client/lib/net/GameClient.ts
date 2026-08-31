@@ -776,6 +776,18 @@ export class GameClient {
     return this.send({ type: "store-open" });
   }
 
+  openCoinOrders(): boolean {
+    return this.send({ type: "coin-order-open" });
+  }
+
+  createCoinOrder(packageId: string): boolean {
+    return this.send({ type: "coin-order-create", packageId });
+  }
+
+  cancelCoinOrder(orderId: string): boolean {
+    return this.send({ type: "coin-order-cancel", orderId });
+  }
+
   openStoreCategory(categoryId: string, page: number): boolean {
     return this.send({ type: "store-category", categoryId, page });
   }

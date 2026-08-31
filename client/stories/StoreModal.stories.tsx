@@ -104,6 +104,11 @@ const meta = {
     onOpenHome: fn(),
     onSelectProduct: fn(),
     onPurchase: fn(),
+    coinOrderSession: null,
+    onOpenCoinOrders: fn(),
+    onCloseCoinOrders: fn(),
+    onBuyCoins: fn(),
+    onCancelCoinOrder: fn(),
   },
 } satisfies Meta<typeof StoreModal>;
 
