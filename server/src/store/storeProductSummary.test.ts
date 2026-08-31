@@ -11,10 +11,16 @@ describe("storeProductSummary", () => {
     ).toBe("A ferocious cabinet. It opens as a container.");
   });
 
-  it("keeps a tagged line's own text out of the summary", () => {
-    expect(storeProductSummary("{info} added directly to Prey dialog")).toBe(
-      "{info} added directly to Prey dialog",
-    );
+  it("prefers plain prose over a tagged line", () => {
+    expect(
+      storeProductSummary("{info} usable 500 times a piece\nFill up potions!"),
+    ).toBe("Fill up potions!");
+  });
+
+  it("strips the marker when only tagged lines carry text", () => {
+    expect(
+      storeProductSummary("{character}\n{info} added directly to Prey dialog"),
+    ).toBe("added directly to Prey dialog");
   });
 
   it("is empty when the description has no prose", () => {
