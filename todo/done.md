@@ -6103,3 +6103,30 @@ reaches players once main is pushed and the Fly deploy runs.
   checked) — wording nits belong in `storeTranslations.pt-BR.json`, then
   `yarn store:catalog`. Adding a third language means a new table + template
   strings in the importer, nothing on the client.
+
+## 2026-08-30 — Store copy: premium benefits from the website, cosmetics text-free, exercise summaries (`agents/store-premium-copy`)
+
+- **Problem:** Premium Time still carried Canary's generic pitch ("access to
+  Premium areas, ships, more spells…"), none of which is what this server's
+  VIP grants; outfits and mounts carried lore paragraphs nobody reads; the
+  exercise-weapon row summary said "Use it to train…" without the two facts
+  that matter (speed, charges).
+- **What changed:** `tools/importCanaryStoreCatalog.mjs` now runs under tsx
+  (`yarn store:catalog`) and builds the Premium Time description from the
+  website's own `vipAccount` locale copy + `PREMIUM_BENEFITS`/`HOUSE_LIMITS`
+  (mirrors `VipAccountPage.tsx`; "coming soon" benefits excluded), so
+  store, site and server share one benefit list. Outfits/addons have no
+  description; mounts only state their speed bonus ("Grants +10 speed while
+  mounted." — every catalog mount has speed 10). Exercise-weapon text opens
+  with "Trains <skill> 5x as fast as an ordinary exercise weapon — 14,000
+  charges." (locale-formatted numbers). The importer prunes translation-table
+  entries no longer referenced (276 → 115).
+- **Files:** `tools/importCanaryStoreCatalog.mjs`, `package.json`,
+  `server/src/store/storeCatalogData.ts` (generated),
+  `tools/storeTranslations.pt-BR.json`, `server/src/store/EXERCISE_WEAPON_CATEGORY.ts`.
+- **Verified:** typecheck; server store suite (30); client store suites (40);
+  tools tests + parity; eslint; `assertStoreCatalog` booted, premium text
+  1412/1555 chars (limit 2048), summaries sampled in both languages.
+- **Residual risk:** the premium text is regenerated only by
+  `yarn store:catalog` — editing `vipAccount` copy or `PREMIUM_BENEFITS`
+  needs a regen to reach the store.

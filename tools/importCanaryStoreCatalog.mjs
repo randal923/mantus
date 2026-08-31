@@ -14,10 +14,13 @@
 // upgrades (exercise dummies, shrines, mailboxes) ARE supported: they deliver
 // as decoration kits that unwrap on an owned house tile.
 //
-// Usage: node tools/importCanaryStoreCatalog.mjs [path-to-canary]
+// Usage: yarn store:catalog [path-to-canary]   (runs under tsx: the premium
+// text reads the game's own constants from protocol/src)
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { HOUSE_LIMITS } from "../protocol/src/house.ts";
+import { PREMIUM_BENEFITS } from "../protocol/src/premiumBenefits.ts";
 import {
   constantName,
   parseCanaryStoreCatalogModule,
@@ -31,6 +34,7 @@ const catalogRoot = join(
 );
 const itemCatalogPath = join(here, "../server/data/item-catalog.json");
 const translationsPath = join(here, "storeTranslations.pt-BR.json");
+const localesDir = join(here, "../client/locales");
 const outfitDataPath = join(here, "../server/src/outfit/outfitCatalogData.ts");
 const outPath = join(here, "../server/src/store/storeCatalogData.ts");
 
@@ -100,6 +104,114 @@ function localizedName(english) {
   const ptBr = CATEGORY_NAMES_PT_BR[english];
   if (!ptBr) throw new Error(`no Portuguese name for category "${english}"`);
   return { en: english, "pt-BR": ptBr };
+}
+
+/**
+ * The Premium Time text is this server's own, not Canary's: the same VIP
+ * benefit list the website shows (client/locales/*.json `vipAccount`), filled
+ * from the same constants the game applies, so store, site and server can
+ * never disagree about what premium buys. Mirrors VipAccountPage.tsx; a
+ * benefit the site marks "coming soon" is left out of a paid offer's text.
+ */
+const PREMIUM_BENEFIT_ROWS = [
+  {
+    key: "wheelCooldown",
+    values: {
+      percent: Math.round((1 - PREMIUM_BENEFITS.wheelCooldownMultiplier) * 100),
+    },
+  },
+  { key: "protectedImbuement", values: {} },
+  {
+    key: "expBonus",
+    values: {
+      percent: Math.round((PREMIUM_BENEFITS.experienceMultiplier - 1) * 100),
+    },
+  },
+  {
+    key: "criticalChance",
+    values: { percent: PREMIUM_BENEFITS.criticalChancePercent },
+  },
+  {
+    key: "exerciseSpeed",
+    values: {
+      percent: Math.round((PREMIUM_BENEFITS.exerciseSpeedMultiplier - 1) * 100),
+    },
+  },
+  {
+    key: "healthRegen",
+    values: {
+      amount: PREMIUM_BENEFITS.regeneration.healthAmount,
+      seconds: PREMIUM_BENEFITS.regeneration.intervalMs / 1_000,
+    },
+  },
+  {
+    key: "manaRegen",
+    values: {
+      amount: PREMIUM_BENEFITS.regeneration.manaAmount,
+      seconds: PREMIUM_BENEFITS.regeneration.intervalMs / 1_000,
+    },
+  },
+  {
+    key: "proficiency",
+    values: {
+      percent: Math.round(
+        (PREMIUM_BENEFITS.proficiencyExperienceMultiplier - 1) * 100,
+      ),
+    },
+  },
+  { key: "fullBless", values: {} },
+  { key: "loginPriority", values: {} },
+  {
+    key: "houseAbsence",
+    values: {
+      freeDays: HOUSE_LIMITS.absenceEvictionDays,
+      premiumDays: HOUSE_LIMITS.premiumAbsenceEvictionDays,
+    },
+  },
+];
+const PREMIUM_INCLUDED_KEYS = [
+  "market",
+  "houses",
+  "huntingTasks",
+  "imbuements",
+  "stamina",
+  "vipList",
+];
+
+function premiumDescription() {
+  const text = {};
+  for (const language of ["en", "pt-BR"]) {
+    const vip = JSON.parse(
+      readFileSync(join(localesDir, `${language}.json`), "utf8"),
+    ).vipAccount;
+    const fill = (template, values) =>
+      template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+        if (!(key in values)) throw new Error(`vipAccount text needs ${key}`);
+        return String(values[key]);
+      });
+    const benefits = PREMIUM_BENEFIT_ROWS.map(({ key, values }) => {
+      const row = vip.benefits[key];
+      if (!row) throw new Error(`vipAccount.benefits.${key} missing in ${language}`);
+      return `• ${row.name}: ${fill(row.description, values)}`;
+    });
+    const included = PREMIUM_INCLUDED_KEYS.map((key) => {
+      const line = vip.included[key];
+      if (!line) throw new Error(`vipAccount.included.${key} missing in ${language}`);
+      return `• ${line}`;
+    });
+    text[language] = [
+      vip.intro,
+      "",
+      ...benefits,
+      "",
+      `${vip.includedTitle}:`,
+      ...included,
+      "",
+      "{usablebyall}",
+      "{activated}",
+    ].join("\n");
+  }
+  return text;
 }
 
 /** Parent categories, keyed by the `parent` name the child modules declare. */
@@ -202,11 +314,12 @@ function loadOutfitCatalog() {
   }
   const mounts = new Map();
   for (const match of source.matchAll(
-    /\{ mountId: (\d+), name: "([^"]*)", lookType: (\d+)/g,
+    /\{ mountId: (\d+), name: "([^"]*)", lookType: (\d+), speed: (\d+)/g,
   )) {
     mounts.set(Number(match[1]), {
       name: match[2],
       lookType: Number(match[3]),
+      speed: Number(match[4]),
     });
   }
   if (outfits.size === 0 || mounts.size === 0) {
@@ -255,7 +368,20 @@ const TAG_ONLY_LINE = /^\{[a-z0-9|]+\}$/i;
  * templated lines are written in both languages here; tag-only text is
  * language-neutral markup and passes through unchanged.
  */
-function localizedDescription(description, itemType, { name, kind }, override) {
+function localizedDescription(description, itemType, mapped, override) {
+  const { name, kind } = mapped;
+  // Outfits and mounts sell on their looks alone: no lore, no tag lines. A
+  // mount that grants speed says so, since that is the one thing to compare.
+  if (kind === "outfit" || kind === "outfit-addon") return { en: "", "pt-BR": "" };
+  if (kind === "mount") {
+    return mapped.speed > 0
+      ? {
+          en: `Grants +${mapped.speed} speed while mounted.`,
+          "pt-BR": `Concede +${mapped.speed} de velocidade enquanto montado.`,
+        }
+      : { en: "", "pt-BR": "" };
+  }
+  if (kind === "premium") return premiumDescription();
   if (override?.description) {
     return {
       en: override.description,
@@ -495,6 +621,7 @@ function toGrant(offer, context) {
       id: `mount-${mountId}`,
       icon: { kind: "mount", lookType: mount.lookType },
       grant: { kind: "mount", mountId },
+      speed: mount.speed,
     };
   }
 
@@ -728,7 +855,7 @@ function importCatalog() {
           "itemTypeId" in mapped.grant
             ? itemTypes.get(mapped.grant.itemTypeId)
             : undefined,
-          { name, kind: mapped.kind },
+          { name, kind: mapped.kind, speed: mapped.speed },
           override,
         ),
         icon: mapped.icon ?? {
@@ -824,6 +951,22 @@ if (missingTranslations.size > 0) {
 }
 
 writeFileSync(outPath, serialized);
+
+const usedEnglish = new Set(
+  [...productsByCategory.values()].flatMap((products) =>
+    products.map((product) => product.description.en),
+  ),
+);
+const liveTranslations = [...TRANSLATIONS_PT_BR]
+  .filter(([english]) => usedEnglish.has(english))
+  .map(([en, ptBr]) => ({ en, "pt-BR": ptBr }));
+if (liveTranslations.length !== TRANSLATIONS_PT_BR.size) {
+  writeFileSync(translationsPath, `${JSON.stringify(liveTranslations, null, 2)}\n`);
+  console.log(
+    `Pruned ${TRANSLATIONS_PT_BR.size - liveTranslations.length} unused ` +
+      "pt-BR translation(s).",
+  );
+}
 
 const productCount = [...productsByCategory.values()].reduce(
   (total, products) => total + products.length,

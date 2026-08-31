@@ -51,13 +51,15 @@ export const EXERCISE_WEAPON_CATEGORY: StoreCatalogCategory = {
         kind: "charges" as const,
         description: {
           en:
-            `Use it to train ${family.trains} on an exercise dummy!\n\n` +
+            `Trains ${family.trains} ${tier.speedMultiplier}x as fast as an ` +
+            `ordinary exercise weapon — ${tier.charges.toLocaleString("en")} charges.\n\n` +
             "{character}\n{storeinbox}\n" +
             `{info} use it on an exercise dummy to train ${family.trains}\n` +
             `{info} trains ${tier.speedMultiplier}x as fast as an ordinary exercise weapon\n` +
             `{info} usable ${tier.charges} times a piece`,
           "pt-BR":
-            `Use em um boneco de treino para treinar ${trainsPtBr}!\n\n` +
+            `Treina ${trainsPtBr} ${tier.speedMultiplier}x mais rápido que uma ` +
+            `arma de treino comum — ${tier.charges.toLocaleString("pt-BR")} cargas.\n\n` +
             "{character}\n{storeinbox}\n" +
             `{info} use em um boneco de treino para treinar ${trainsPtBr}\n` +
             `{info} treina ${tier.speedMultiplier}x mais rápido que uma arma de treino comum\n` +

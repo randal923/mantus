@@ -80,8 +80,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Premium Time",
         "kind": "premium",
         "description": {
-          "en": "Enhance your gaming experience by gaining additional abilities and advantages:\n\n• access to Premium areas\n• use Tibia's transport system (ships, carpet)\n• more spells\n• rent houses\n• found guilds\n• offline training\n• larger depots\n• and many more\n\n{usablebyallicon} valid for all characters on this account\n{activated}",
-          "pt-BR": "Melhore sua experiência de jogo obtendo habilidades e vantagens adicionais:\n\n• acesso a áreas Premium\n• uso do sistema de transporte de Tibia (navios, tapete)\n• mais magias\n• alugar casas\n• fundar guildas\n• treino offline\n• depots maiores\n• e muito mais\n\n{usablebyallicon} válido para todos os personagens desta conta\n{activated}"
+          "en": "A VIP account grants every character on the account a set of standing bonuses, applied by the game server the moment your VIP time is running.\n\n• Wheel Cooldown: 30% lower cooldown on the Gift of Life passive and Avatar spells.\n• Protected Imbuement: No imbuement is consumed inside protection zones (including capacity and speed).\n• EXP Bonus: Every monster defeated grants a 10% experience bonus.\n• Additional Critical: All characters on the account have 3% more critical chance.\n• Exercise Speed: The speed of all exercise weapons is increased by 10%.\n• Health Regeneration: An additional 10 health regenerates every 3 seconds, with or without food.\n• Mana Regeneration: An additional 20 mana regenerates every 3 seconds, with or without food.\n• Proficiency Bonus: Weapon proficiency experience accrues 10% faster.\n• Full Bless: The Inquisition NPC Henricus offers VIP characters the full bless: one purchase grants every missing blessing at once.\n• Login Priority: When the world is full, VIP players wait ahead of all free accounts in the login queue.\n• House Absence: Stay offline for up to 10 days without losing your house, versus 7 days for free accounts.\n\nAlso part of VIP:\n• Create sell and buy offers on the Market.\n• Bid on and own a house.\n• An extra hunting task slot.\n• Access to premium imbuements.\n• The +50% green-stamina experience bonus.\n• A larger VIP buddy list.\n\n{usablebyall}\n{activated}",
+          "pt-BR": "Uma conta VIP concede a todos os personagens da conta um conjunto de bônus permanentes, aplicados pelo servidor enquanto seu tempo VIP estiver ativo.\n\n• Wheel Cooldown: 30% menos tempo de recarga no passivo Gift of Life e nas magias de Avatar.\n• Imbuement Protegido: Nenhum imbuement é consumido dentro de zonas de proteção (incluindo capacidade e velocidade).\n• Bônus de EXP: Cada monstro derrotado concede 10% de experiência a mais.\n• Crítico Adicional: Todos os personagens da conta têm 3% a mais de chance de crítico.\n• Velocidade de Exercício: A velocidade de todas as armas de exercício é aumentada em 10%.\n• Regeneração de Vida: 10 de vida adicional regenera a cada 3 segundos, com ou sem comida.\n• Regeneração de Mana: 20 de mana adicional regenera a cada 3 segundos, com ou sem comida.\n• Bônus de Proficiência: A experiência de proficiência de arma acumula 10% mais rápido.\n• Bless Completa: O NPC da Inquisição, Henricus, oferece a personagens VIP a bless completa: uma única compra concede todas as bênçãos que faltam de uma vez.\n• Prioridade de Login: Quando o mundo está cheio, jogadores VIP esperam à frente de todas as contas gratuitas na fila de login.\n• Ausência de Casa: Fique offline por até 10 dias sem perder sua casa, contra 7 dias para contas gratuitas.\n\nTambém faz parte do VIP:\n• Criar ofertas de compra e venda no Market.\n• Dar lances e possuir uma casa.\n• Um slot extra de hunting task.\n• Acesso a imbuements premium.\n• O bônus de +50% de experiência da stamina verde.\n• Uma lista de amigos VIP maior.\n\n{usablebyall}\n{activated}"
         },
         "icon": {
           "kind": "symbol",
@@ -2157,8 +2157,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Arbalester Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmed with a powerful crossbow, and gifted with steady hands as well as a sharp eye, the Arbalester is not one to be trifled with. Requiring both skill and strength to properly wield, the arbalest is a mighty tool in the hands of an able marksman, shooting deadly bolts across great distance.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nArmado com uma poderosa besta, e dotado de mãos firmes e de um olhar aguçado, o Arbalester não é alguém com quem se deva brincar. Exigindo tanto habilidade quanto força para ser manejada adequadamente, a balestra é uma ferramenta poderosa nas mãos de um atirador competente, disparando virotes mortais a grandes distâncias."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2183,8 +2183,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Arena Champion Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFight your bloody battles in the arena and become a darling of the crowd. Once you have made it to the top and everyone is cheering your name, the fashionable outfit of an Arena Champion will show the world what you are made of.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nTrave suas batalhas sangrentas na arena e torne-se o queridinho da multidão. Depois de chegar ao topo, com todos aclamando seu nome, o elegante traje de Arena Champion mostrará ao mundo do que você é feito."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2209,8 +2209,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Armoured Archer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmoured Archers are the epitome of invisible danger. Silently and nimbly, they advance in the background. For hours, they wait patiently, almost motionless, for the decisive moment. Just to be perfectly present in a deadly second.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Armoured Archers são o epítome do perigo invisível. Silenciosa e agilmente, eles avançam ao fundo. Por horas, esperam pacientemente, quase imóveis, pelo momento decisivo. Apenas para estarem perfeitamente presentes em um segundo mortal."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2235,8 +2235,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Beastmaster Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you have enough authority to make wild animals subservient to you? Become a Beastmaster and surround yourself with fearsome companions. When your beasts bare their teeth, your enemies will turn tails and run.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê tem autoridade suficiente para fazer animais selvagens se submeterem a você? Torne-se um Beastmaster e cerque-se de companheiros temíveis. Quando suas feras mostrarem os dentes, seus inimigos darão meia-volta e fugirão."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2261,8 +2261,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Breezy Garb Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nEven the most eager adventurers and toughest warriors need some time to rest and recharge. Enjoy tranquility and peace as you picnic in good company at one of your favourite places in Tibia. Put on your Breezy Garb outfit, grab your walking stick, a basket filled with tasty snacks and then head out into nature!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nAté os aventureiros mais ávidos e os guerreiros mais resistentes precisam de um tempo para descansar e recarregar as energias. Aproveite a tranquilidade e a paz enquanto faz um piquenique em boa companhia em um dos seus lugares favoritos de Tibia. Vista seu traje Breezy Garb, pegue sua bengala, uma cesta cheia de petiscos saborosos e parta rumo à natureza!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2287,8 +2287,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Ceremonial Garb Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you want to make a great entrance at a Tibian costume party, the Ceremonial Garb is certainly a good choice. With a drum over your shoulder and adorned with feathers you are perfectly dressed to lead a carnival parade through the streets of Thais.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você quer fazer uma grande entrada em uma festa à fantasia tibiana, o Ceremonial Garb é certamente uma boa escolha. Com um tambor no ombro e adornado com penas, você está perfeitamente vestido para liderar um desfile de carnaval pelas ruas de Thais."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2313,8 +2313,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Champion Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nProtect your body with heavy armour plates and spiky bones to teach your enemies the meaning of fear! The Champion outfit perfectly suits battle-hardened warriors who rely on their trusty sword and shield.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nProteja seu corpo com pesadas placas de armadura e ossos pontiagudos para ensinar aos seus inimigos o significado do medo! O traje Champion combina perfeitamente com guerreiros calejados que confiam em sua fiel espada e escudo."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2339,8 +2339,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Chaos Acolyte Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou have always felt like the cat among the pigeons and have a fable for dark magic? The Chaos Acolyte outfit is a perfect way to express your inner nature. Show your commitment for the higher cause and wreak havoc on your enemies in this unique outfit.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sempre se sentiu como uma raposa no galinheiro e tem uma queda por magia sombria? O traje Chaos Acolyte é a maneira perfeita de expressar sua natureza interior. Mostre seu comprometimento com a causa maior e semeie o caos entre seus inimigos com este traje único."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2365,8 +2365,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Conjurer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou recently graduated from the Magic Academy and want to bring your knowledge to good use? Congratulations, you are now an honourable disciple of magic! Open up a bottle of well-aged mana and treat yourself with the fashionable Conjurer outfit.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê se formou recentemente na Magic Academy e quer colocar seu conhecimento em bom uso? Parabéns, agora você é um honrado discípulo da magia! Abra uma garrafa de mana bem envelhecida e presenteie-se com o elegante traje Conjurer."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2391,8 +2391,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Death Herald Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDeath and decay are your ever-present companions? Your enemies are dropping like flies and your path is covered with their bodies? However, as decency demands, you want to at least give them a proper funeral? Then the Death Herald is just the right outfit for you.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nMorte e decadência são seus companheiros constantes? Seus inimigos caem como moscas e seu caminho está coberto de corpos? Mesmo assim, como manda a decência, você quer ao menos dar a eles um funeral digno? Então o Death Herald é o traje certo para você."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2417,8 +2417,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Dragon Knight Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Dragon Knight is ready for everything, channeling the primordial might of the winged, ancient beasts into weapons and armour. Their imposing demeanour and impressive appearance are often enough to quell any animosity towards them, and those who still dare oppose them are not long for this world.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Dragon Knight está pronto para tudo, canalizando o poder primordial das antigas feras aladas em armas e armaduras. Sua postura imponente e aparência impressionante costumam bastar para acabar com qualquer hostilidade contra eles, e aqueles que ainda ousam se opor a eles não têm muito tempo de vida."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2443,8 +2443,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Entrepreneur Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nSlaughter through hordes of monsters during your early morning hunt and kiss the hand of Queen Eloise later on at the evening reception in her historical residence. With the Entrepreneur outfit you will cut a fine figure on every occasion.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nMassacre hordas de monstros durante sua caçada matinal e beije a mão da Queen Eloise mais tarde, na recepção noturna em sua residência histórica. Com o traje Entrepreneur, você fará bonito em qualquer ocasião."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2469,8 +2469,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Evoker Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDance around flickering fires in the Evoker outfit while singing unholy chants to praise witchcraft and wizardry. Your faithful bat will always be by your side.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDance ao redor de fogueiras bruxuleantes com o traje Evoker enquanto entoa cânticos profanos em louvor à bruxaria e à feitiçaria. Seu fiel morcego estará sempre ao seu lado."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2495,8 +2495,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Fencer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThey are skilled, they are disciplined, they wield their weapon with deadly precision as a form of art. Fencers are true masters of the blade who can cut through anything and anyone in the blink of an eye. While being feared for their lethal attacks, they are also admired for their elegant and fierce style, their dashing looks. Do not be on the fence, be a fencer, or at least dress like one with this fashionable, cutting-edge outfit.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nEles são habilidosos, são disciplinados, empunham sua arma com precisão mortal como uma forma de arte. Os Fencers são verdadeiros mestres da lâmina, capazes de cortar qualquer coisa e qualquer um num piscar de olhos. Embora sejam temidos por seus ataques letais, também são admirados por seu estilo elegante e feroz e por sua aparência arrojada. Não fique em cima do muro: seja um fencer, ou pelo menos vista-se como um com este traje elegante e de ponta."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2521,8 +2521,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Flamefury Mage Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFlame fury mages not only embraced the fury to fire, they became it! Relishing in purging destruction they don't just want to see the world burn, but be an active part in it. They just love the smell of sulphur in the morning!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs magos Flame Fury não apenas abraçaram a fúria do fogo, eles se tornaram a própria fúria! Deleitando-se com a destruição purificadora, eles não querem apenas ver o mundo queimar, mas ser parte ativa disso. Eles simplesmente adoram o cheiro de enxofre pela manhã!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2547,8 +2547,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Forest Warden Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Forest Warden watches over all living things in the woods, be they plants or beasts. They have a special connection to the earth they tread on, the air they breathe, and the wind which whispers around them. Naturally, the suit that they don is not made out of dead vegetation, but is a living being itself.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Forest Warden vigia todos os seres vivos da floresta, sejam plantas ou animais. Eles têm uma conexão especial com a terra que pisam, o ar que respiram e o vento que sussurra ao seu redor. Naturalmente, a vestimenta que usam não é feita de vegetação morta, mas é um ser vivo por si só."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2573,8 +2573,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Frost Tracer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nTheir imposing appearance alone made many experienced warriors shudder. Frost Tracers are true giants that are used to survive even under the most inhospitable circumstances. Tough, strong and untamable, they follow their own path through roughness and obscurity. Nobody wants to mess with one of their kind.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSó a sua aparência imponente já fez muitos guerreiros experientes estremecerem. Os Frost Tracers são verdadeiros gigantes acostumados a sobreviver até nas circunstâncias mais inóspitas. Resistentes, fortes e indomáveis, eles seguem seu próprio caminho por entre a aspereza e a obscuridade. Ninguém quer se meter com um deles."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2599,8 +2599,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Ghost Blade Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nBeing a Ghost Blade means having mastered the way of the warrior. No matter the circumstances, these fighters retain full control over their body and mind, with the sole focus of vanquishing their foe. So great is their ability that they not only control the weapons in their hands perfectly, but two floating blades following them as well.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSer um Ghost Blade significa ter dominado o caminho do guerreiro. Não importam as circunstâncias, esses lutadores mantêm controle total sobre corpo e mente, com o único foco de derrotar seu inimigo. Tão grande é sua habilidade que eles controlam perfeitamente não só as armas em suas mãos, mas também duas lâminas flutuantes que os seguem."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2625,8 +2625,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Grove Keeper Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFeeling the springy grass under your feet and inhaling the spicy air of the forest is pure satisfaction for your soul? Every animal is your friend and you caringly look after trees and plants all the time? Then it is time to become one with nature: Become a Grove Keeper!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSentir a grama macia sob os pés e inalar o ar picante da floresta é pura satisfação para a sua alma? Todo animal é seu amigo e você cuida com carinho das árvores e plantas o tempo todo? Então é hora de se tornar um só com a natureza: torne-se um Grove Keeper!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2651,8 +2651,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Guidon Bearer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nCarrying the guidon of a unit, always marching in front, is not only an honour but also comes with great responsibility. Guidon bearers wield great power, they lead where others follow and keep the spirits of the troops up as they wave their flag against the golden suns of Tibia.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nCarregar o estandarte de uma unidade, marchando sempre à frente, não é apenas uma honra, mas também traz uma grande responsabilidade. Os portadores de estandarte detêm um grande poder: eles lideram onde outros seguem e mantêm o moral das tropas elevado enquanto agitam sua bandeira contra os sóis dourados de Tibia."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2677,8 +2677,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Herbalist Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herbalist outfit is the perfect outfit for all herbs collectors. Those of you who are aware that you do not necessarily have to reach into the mouth of a hydra to get a hydra tongue and those who know exactly where to get blood- and shadow-herbs will find a matching outfit for their daily hobby. Show the world your affinity for herbs and impress your friends with your knowledge of medicine and potions.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO traje Herbalist é o traje perfeito para todos os coletores de ervas. Aqueles entre vocês que sabem que não é necessariamente preciso enfiar a mão na boca de uma hydra para conseguir uma hydra tongue e aqueles que sabem exatamente onde encontrar blood-herbs e shadow-herbs encontrarão um traje à altura do seu passatempo diário. Mostre ao mundo sua afinidade com as ervas e impressione seus amigos com seu conhecimento de medicina e poções."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2703,8 +2703,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Herder Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herder is one with nature, being outside all day, watching carefully over his flock. If you like to spend time on picturesque meadows and are always looking for greener pastures, then this outfit is for you.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Herder é um só com a natureza, passando o dia inteiro ao ar livre, vigiando cuidadosamente o seu rebanho. Se você gosta de passar o tempo em prados pitorescos e está sempre em busca de pastos mais verdes, então este traje é para você."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2729,8 +2729,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Jouster Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Jouster is all geared up for a tournament, ready to partake in festive activities involving friendly competition to prove their chivalry. However, being well-armoured, they are also a force to be reckoned with on the battlefield, especially with a trusty steed at their service.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO Jouster está totalmente equipado para um torneio, pronto para participar de atividades festivas de competição amigável para provar sua cavalaria. No entanto, por estar bem armado, ele também é uma força a ser temida no campo de batalha, especialmente com um corcel de confiança a seu serviço."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2755,8 +2755,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Lupine Warden Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the adrenaline rushing through your veins when the sun goes down and a full moon lightens the night? Do you have the urge to hunt down your target no matter what? Unleash the beast inside of you and lead your friends to battle with the Lupine Warden outfit!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sente a adrenalina correndo nas veias quando o sol se põe e a lua cheia ilumina a noite? Você tem o impulso de caçar seu alvo custe o que custar? Liberte a fera dentro de você e leve seus amigos para a batalha com o traje Lupine Warden!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2781,8 +2781,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Mercenary Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Mercenary carries a powerful, razor-sharp axe on his shoulders that effortlessly cuts through any armour and bone. You should better tell your friends to keep a safe distance, since heads will roll over the blood-soaked battleground after a powerful swing of yours.\nConsidering the sheer size of this axe, it might even be possible to chop onions without shedding a tear.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Mercenary carrega nos ombros um machado poderoso e afiadíssimo que corta sem esforço qualquer armadura e osso. É melhor avisar seus amigos para manterem uma distância segura, pois cabeças vão rolar pelo campo de batalha encharcado de sangue depois de um golpe poderoso seu.\nConsiderando o tamanho descomunal deste machado, talvez seja até possível picar cebolas sem derramar uma lágrima."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2807,8 +2807,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Merry Garb Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you ready for the festive season? Or feeling festive regardless of the time of year? Then the Merry Garb is perfect for you. Donning the outfit not only puts you in a mirthful mood, but spreads blitheness on your travels throughout the lands.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê está pronto para a época das festas? Ou se sente festivo independentemente da época do ano? Então o Merry Garb é perfeito para você. Vestir este traje não só coloca você num clima alegre, como espalha contentamento por suas viagens por todas as terras."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2833,8 +2833,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Moth Cape Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you are fascinated by this particular group of insects and want to show your deep appreciation of these critters, the Moth Cape is for you. The wing-shaped coat and the antennae provide you with the feeling of being a moth without experiencing the downside of inevitably being drawn to light.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você é fascinado por esse grupo particular de insetos e quer mostrar sua profunda apreciação por essas criaturinhas, o Moth Cape é para você. O manto em forma de asas e as antenas dão a você a sensação de ser uma mariposa sem sofrer a desvantagem de ser inevitavelmente atraído pela luz."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2859,8 +2859,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Nordic Chieftain Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWhere others not dare to tread due to the biting cold and freezing winds, the Nordic Chieftain feels right at home. Braving the harsh conditions is possible due to a protective layer of warm clothing, as well as suitable armament to fend off any hostile wildlife. The helmet's massive horns are a tad heavy and unwieldy, but show the chieftain's status.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOnde outros não ousam pisar por causa do frio cortante e dos ventos gelados, o Nordic Chieftain se sente em casa. Enfrentar as condições severas é possível graças a uma camada protetora de roupas quentes, além de um armamento adequado para afastar qualquer fauna hostil. Os enormes chifres do elmo são um tanto pesados e desajeitados, mas mostram o status do chefe."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2885,8 +2885,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Owl Keeper Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nOwl Keepers are often referred to as spirits walking through the forest at night, mere shadows during the day. They are also said to be shamans, protecting the flora and fauna of the Tibian lands. You often see them wearing a stag's antlers on their head and in the company of an owl, for they are as wise and mysterious as these intriguing creatures.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Owl Keepers são frequentemente descritos como espíritos que caminham pela floresta à noite, meras sombras durante o dia. Diz-se também que são xamãs que protegem a flora e a fauna das terras de Tibia. É comum vê-los usando chifres de cervo na cabeça e na companhia de uma coruja, pois são tão sábios e misteriosos quanto essas criaturas intrigantes."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2911,8 +2911,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Pharaoh Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou know how to read hieroglyphs? You admire the exceptional architectural abilities and the unsolved mysteries of an ancient high culture? Next time you pay a visit to your friends, tell them to prepare a bathtub full of milk and honey for you because a Pharaoh is now walking through the streets of Ankrahmun!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sabe ler hieróglifos? Você admira as habilidades arquitetônicas excepcionais e os mistérios não resolvidos de uma antiga alta cultura? Da próxima vez que visitar seus amigos, peça que preparem uma banheira cheia de leite e mel para você, porque um Pharaoh agora caminha pelas ruas de Ankrahmun!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2937,8 +2937,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Philosopher Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the urge to tell people what is really going on in the world? Do you know all answers to the important questions of life? Are you a true philosopher? Then dress like one to showcase the latest fashion for all wise theorists.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sente vontade de contar às pessoas o que realmente está acontecendo no mundo? Você conhece todas as respostas para as grandes perguntas da vida? Você é um verdadeiro filósofo? Então vista-se como um para exibir a última moda para todos os sábios teóricos."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2963,8 +2963,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Pumpkin Mummy Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you cannot decide whether to wrap yourself up as a mummy or flaunt an enormous pumpkin head for your next hunting party, why not combine both? The Pumpkin Mummy outfit is the perfect costume for scary nights and spooky days.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você não consegue decidir entre se enrolar como uma múmia ou ostentar uma enorme cabeça de abóbora na sua próxima caçada, por que não combinar os dois? O traje Pumpkin Mummy é a fantasia perfeita para noites assustadoras e dias sinistros."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -2989,8 +2989,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Puppeteer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you a fan of puppetry? You like to travel the world together with one or two little acting fellows? Or are you simply the one who likes to pull the strings? Then the Puppeteer outfit is the right choice for you.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê é fã de teatro de marionetes? Gosta de viajar pelo mundo junto com um ou dois pequenos companheiros de atuação? Ou é simplesmente aquele que gosta de puxar as cordinhas? Então o traje Puppeteer é a escolha certa para você."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3015,8 +3015,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Ranger Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nMost of the day, the Ranger is looking over his forest. He is taking care of all animals and plants and tries to keep everything in balance. Intruders are greeted by a warning shot from his deadly longbow. It is the perfect outfit for Paladins who live in close touch with nature.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDurante a maior parte do dia, o Ranger vigia sua floresta. Ele cuida de todos os animais e plantas e tenta manter tudo em equilíbrio. Intrusos são recebidos com um tiro de advertência de seu longbow mortal. É o traje perfeito para Paladins que vivem em contato próximo com a natureza."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3041,8 +3041,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Royal Pumpkin Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe mutated pumpkin is too weak for your mighty weapons? Time to show that evil vegetable how to scare the living daylight out of people! Put on a scary looking pumpkin on your head and spread terror and fear amongst the Tibian population.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nA abóbora mutante é fraca demais para suas armas poderosas? Hora de mostrar a esse vegetal maligno como se apavora as pessoas de verdade! Coloque uma abóbora assustadora na cabeça e espalhe terror e medo entre a população de Tibia."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3067,8 +3067,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Rune Master Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Rune Master has dedicated their whole life to the study and mastery of runes. They are intrigued by the ancient symbols, shrouded in mystery, and how their magic works. Rune Masters have a deep understanding of the awesome power they are wielding and can make use of the full potential of runes.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Rune Master dedicou toda a sua vida ao estudo e ao domínio das runas. Eles são intrigados pelos símbolos antigos, envoltos em mistério, e pelo modo como sua magia funciona. Os Rune Masters têm um profundo entendimento do poder incrível que empunham e conseguem aproveitar todo o potencial das runas."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3093,8 +3093,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Sea Dog Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAhoy mateys! Flaunt the swashbuckling Sea Dog outfit and strike a pose with your hook to impress both landlubbers and fellow pirates. Board your next ship in style!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nAhoy, marujos! Ostente o traje aventureiro Sea Dog e faça pose com seu gancho para impressionar tanto os marinheiros de água doce quanto os colegas piratas. Embarque no seu próximo navio com estilo!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3119,8 +3119,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Seaweaver Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Seaweaver outfit is the perfect choice if you want to show the world that you are indeed a son or a daughter of the submarine kingdom. You can almost feel the salty taste and the rough wind of the sea when wearing it.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO traje Seaweaver é a escolha perfeita se você quer mostrar ao mundo que é de fato um filho ou uma filha do reino submarino. Você quase consegue sentir o gosto salgado e o vento áspero do mar ao usá-lo."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3145,8 +3145,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Shadowlotus Disciple Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe path of the Shadowlotus Disciple is a lonesome and threatening one. Only those who forget their name will learn to sneak within shadows. And only those who will overcome their greatest fear can become a true master of assassination.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO caminho do Shadowlotus Disciple é solitário e ameaçador. Somente aqueles que esquecem o próprio nome aprenderão a se esgueirar entre as sombras. E somente aqueles que superarem seu maior medo poderão se tornar verdadeiros mestres do assassinato."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3171,8 +3171,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Siege Master Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nNeither thick stone walls nor heavily armoured gates can stop the Siege Master, who brings down hostile fortifications in the blink of an eye. Whenever he tenses his muscular arms to lift the powerful battering ram, his enemies' knees begin to buckle. It is the perfect outfit for those who also stand for brute strength and immense destruction.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nNem grossas muralhas de pedra nem portões fortemente blindados conseguem deter o Siege Master, que derruba fortificações inimigas num piscar de olhos. Sempre que ele tensiona seus braços musculosos para erguer o poderoso aríete, os joelhos de seus inimigos começam a fraquejar. É o traje perfeito para quem também representa força bruta e destruição imensa."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3197,8 +3197,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Sinister Archer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFrom an early age, the Sinister Archer has been fascinated by people's dark machinations and perversions. Sinister Archers claim that they advocate the good and that they only use their arrows to pierce the hearts of those who have committed many crimes and misdeeds. However, they are still viewed by the public with much suspicion due to their dubious appearance. To keep their identity secret, they often hide themselves behind a skull-like face guard that can easily withstand even axe and club blows.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDesde muito jovem, o Sinister Archer é fascinado pelas maquinações sombrias e perversões das pessoas. Os Sinister Archers afirmam que defendem o bem e que só usam suas flechas para perfurar o coração daqueles que cometeram muitos crimes e malfeitos. Ainda assim, o público os vê com muita desconfiança por causa de sua aparência duvidosa. Para manter sua identidade em segredo, eles costumam se esconder atrás de uma máscara em forma de caveira que resiste facilmente até a golpes de machado e clava."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3223,8 +3223,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Spirit Caller Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou are in love with the deep soul of Mother Earth and prefer to walk in the shadows of her wooden children? Choose the Spirit Caller outfit to live in harmony with nature.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê é apaixonado pela alma profunda da Mãe Terra e prefere caminhar à sombra de seus filhos de madeira? Escolha o traje Spirit Caller para viver em harmonia com a natureza."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3249,8 +3249,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Sun Priest Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you worship warm temperatures and are opposed to the thought of long and dark winter nights? Do you refuse to spend countless evenings in front of your chimney while ice-cold wind whistles through the cracks and niches of your house? It is time to stop freezing and to become an honourable Sun Priest! With this stylish outfit, you can finally show the world your unconditional dedication and commitment to the sun!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê venera temperaturas quentes e é contra a ideia de noites de inverno longas e escuras? Você se recusa a passar incontáveis noites em frente à lareira enquanto o vento gelado assobia pelas frestas e cantos da sua casa? É hora de parar de congelar e se tornar um honrado Sun Priest! Com este traje estiloso, você pode finalmente mostrar ao mundo sua dedicação e seu compromisso incondicionais com o sol!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3275,8 +3275,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Trailblazer Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Trailblazer is on a mission of enlightenment and carries the flame of wisdom near and far. The everlasting shine brightens the hearts and minds of all creatures its rays touch, bringing light even to the darkest corners of the world as a beacon of insight and knowledge.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO Trailblazer está em uma missão de iluminação e carrega a chama da sabedoria por toda parte. Seu brilho eterno ilumina os corações e as mentes de todas as criaturas que seus raios tocam, levando luz até aos cantos mais escuros do mundo como um farol de percepção e conhecimento."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3301,8 +3301,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Trophy Hunter Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou spend hours in the woods in search of wild and rare animals? Countless stuffed skulls of deer, wolves and other creatures are decorating your walls? Now you have the chance to present your trophies in public. Become a Trophy Hunter and cover your shoulders with the finest bear skulls!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê passa horas na mata em busca de animais selvagens e raros? Incontáveis crânios empalhados de cervos, lobos e outras criaturas decoram suas paredes? Agora você tem a chance de exibir seus troféus em público. Torne-se um Trophy Hunter e cubra seus ombros com os mais finos crânios de urso!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3327,8 +3327,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Veteran Paladin Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Veteran Paladin has mastered the art of distance fighting. No matter how far away his prey may be, a marksman like the Veteran Paladin will always hit with extraordinary precision. No one can escape his keen hawk-eyed vision and even small stones become deadly weapons in his hands.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Veteran Paladin dominou a arte da luta à distância. Não importa quão longe esteja sua presa, um atirador como o Veteran Paladin sempre acertará com precisão extraordinária. Ninguém escapa de sua visão aguçada de falcão, e até pequenas pedras se tornam armas mortais em suas mãos."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3353,8 +3353,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Void Master Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAccording to ancient rumours, the pulsating orb that the Void Master balances skilfully on the tip of his staff consists of powerful cosmic spheres. If you gaze too long into the infinite emptiness inside the orb, its powers will absorb your mind.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSegundo antigos rumores, o orbe pulsante que o Void Master equilibra habilmente na ponta de seu cajado é feito de poderosas esferas cósmicas. Se você contemplar por tempo demais o vazio infinito dentro do orbe, seus poderes absorverão sua mente."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3379,8 +3379,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Winter Warden Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe warm and cosy cloak of the Winter Warden outfit will keep you warm in every situation. Best thing, it is not only comfortable but fashionable as well. You will be the envy of any snow queen or king, guaranteed!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO manto quente e aconchegante do traje Winter Warden vai manter você aquecido em qualquer situação. O melhor de tudo: ele não é apenas confortável, mas também elegante. Você será a inveja de qualquer rainha ou rei da neve, garantido!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3405,8 +3405,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Full Winged Druid Outfit",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWinged Druids are figures of both grace and menace. Wings that cut through the air like blades and an aura of unshakable determination make them a true force to be reckoned with. Harness the raw fury of nature and unleash its vengeance upon those who threaten it!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Winged Druids são figuras de graça e de ameaça ao mesmo tempo. Asas que cortam o ar como lâminas e uma aura de determinação inabalável fazem deles uma verdadeira força a ser temida. Domine a fúria bruta da natureza e libere sua vingança sobre aqueles que a ameaçam!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3431,8 +3431,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Citizen",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDo you still remember your first stroll through the streets of Thais? For old times' sake, walk the paths of Nostalgia as a Retro Citizen!",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVocê ainda se lembra do seu primeiro passeio pelas ruas de Thais? Pelos velhos tempos, percorra os caminhos da Nostalgia como um Retro Citizen!"
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3457,8 +3457,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Hunter",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhenever you pick up your bow and spears, you walk down memory lane and think of your early days? Treat yourself with the fashionable Retro Hunter outfit and hunt some good old monsters from your childhood.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nSempre que você pega seu arco e suas lanças, viaja pelas lembranças e pensa nos seus primeiros dias? Presenteie-se com o elegante traje Retro Hunter e cace alguns bons e velhos monstros da sua infância."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3483,8 +3483,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Knight",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWho needs a fancy looking sword with bling-bling and ornaments? Back in the days, we survived without such unnecessary accessories! Time to show those younkers what a Retro Knight is made of.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nQuem precisa de uma espada chique cheia de brilhos e ornamentos? Antigamente, nós sobrevivíamos sem esses acessórios desnecessários! Hora de mostrar a esses novatos do que um Retro Knight é feito."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3509,8 +3509,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Mage",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDress up as a Retro Mage and you will always cut a fine figure on the battleground while eliminating your enemies with your magical powers the old-fashioned way.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVista-se como um Retro Mage e você sempre fará bonito no campo de batalha enquanto elimina seus inimigos com seus poderes mágicos à moda antiga."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3535,8 +3535,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Noble(wo)man",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nKing Tibianus has invited you to a summer ball and you have nothing to wear for this special event? Do not worry, the Retro Noble(wo)man outfit makes you a real eye catcher on every festive occasion.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO King Tibianus convidou você para um baile de verão e você não tem nada para vestir nesse evento especial? Não se preocupe, o traje Retro Noble(wo)man faz de você o centro das atenções em qualquer ocasião festiva."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3561,8 +3561,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Summoner",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhile the Retro Mage usually throws runes and mighty spells directly at the enemies, the Retro Summoner outfit might be the better choice for Tibians that prefer to send mighty summons to the battlefield to keep their enemies at distance.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nEnquanto o Retro Mage costuma lançar runas e magias poderosas diretamente nos inimigos, o traje Retro Summoner pode ser a melhor escolha para os Tibians que preferem enviar poderosas invocações ao campo de batalha para manter seus inimigos à distância."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3587,8 +3587,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Retro Warrior",
         "kind": "outfit",
         "description": {
-          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nYou are fearless and strong as a behemoth but have problems finding the right outfit for your adventures? The Retro Warrior outfit is a must-have for all fashion-conscious old-school Tibians out there.",
-          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVocê é destemido e forte como um behemoth, mas tem dificuldade em encontrar o traje certo para suas aventuras? O traje Retro Warrior é indispensável para todos os Tibians da velha guarda antenados na moda."
+          "en": "",
+          "pt-BR": ""
         },
         "icon": {
           "kind": "outfit",
@@ -3627,8 +3627,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Armoured War Horse",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Armoured War Horse is a dangerous black beauty! When you see its threatening, blood-red eyes coming towards you, you'll know trouble is on its way. Protected by its heavy armour plates, the warhorse is the perfect partner for dangerous hunting sessions and excessive enemy slaughtering.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Armoured War Horse é uma beleza negra perigosa! Quando você vir seus olhos ameaçadores, vermelhos como sangue, vindo na sua direção, saberá que problemas estão a caminho. Protegido por suas pesadas placas de armadura, o cavalo de guerra é o parceiro perfeito para caçadas perigosas e matanças excessivas de inimigos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3650,8 +3650,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Artic Unicorn",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Arctic Unicorn lives in a deep rivalry with its cousin the Blazing Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Tangerine vs.crystal blue! The choice is yours!",
-          "pt-BR": "{character}\n{speedboost}\n\nO Arctic Unicorn vive em profunda rivalidade com seu primo, o Blazing Unicorn. Embora tenham nascido em regiões completamente diferentes, de alguma forma eles compartilham a mesma linhagem. A eterna batalha entre fogo e gelo continua. Quem vencerá? Tangerina vs. azul-cristal! A escolha é sua!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3673,8 +3673,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Batcat",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Batcat to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem os rumores que, muitos anos atrás, bruxas anciãs se reuniram para celebrar um banquete mágico no alto das montanhas. Elas cruzaram o Batcat para conquistar com facilidade desfiladeiros rochosos e vales profundos. Ninguém sabe o que aconteceu na subida, mas desde então apenas a montaria foi vista."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3696,8 +3696,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Battle Badger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3719,8 +3719,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Black Stag",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Black Stag will carry you through the deepest snow.",
-          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e chifres impressionantes: o nobre Black Stag vai carregar você através da neve mais profunda."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3742,8 +3742,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Blackpelt",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Blackpelt is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Blackpelt está em busca do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem com sua comida favorita de vez em quando e ele se tornará um parceiro leal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3765,8 +3765,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Blazing Unicorn",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Blazing Unicorn lives in a deep rivalry with its cousin the Arctic Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Crystal blue vs. tangerine! The choice is yours!",
-          "pt-BR": "{character}\n{speedboost}\n\nO Blazing Unicorn vive em profunda rivalidade com seu primo, o Arctic Unicorn. Embora tenham nascido em regiões completamente diferentes, de alguma forma eles compartilham a mesma linhagem. A eterna batalha entre fogo e gelo continua. Quem vencerá? Azul-cristal vs. tangerina! A escolha é sua!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3788,8 +3788,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Bloodcurl",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Bloodcurl will carry you through the Tibian wilderness with ease.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas em combate ou apenas para viajar? O Bloodcurl vai carregar você pelas terras selvagens de Tibia com facilidade."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3811,8 +3811,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Bogwurm",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3834,8 +3834,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Boreal Owl",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3857,8 +3857,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Brass Speckled Koi",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3880,8 +3880,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Bunny Dray",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Bunny Dray comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
-          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo da sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Bunny Dray vem com duas lebres de alto desempenho que nunca se cansam graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo ficará bem!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3903,8 +3903,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Caped Snowman",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Caped Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites vão ficando mais longas e o vento gelado traz nevascas para as terras, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Caped Snowman. Agasalhe-se bem e suba no lombo do seu novo companheiro gelado."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3926,8 +3926,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cave Tarantula",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that the Cave Tarantula was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Cave Tarantula nasceu muito antes de Banor caminhar pela terra de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, ela está totalmente crescida e sedenta por vingança."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3949,8 +3949,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cinderhoof",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Cinderhoof to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais um diabinho do que um anjo, talvez prefira sair cavalgando um Cinderhoof para assustar os outros Tibians em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3972,8 +3972,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cinnamon Ibex",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
-          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -3995,8 +3995,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cony Cart",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Cony Cart comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
-          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo da sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Cony Cart vem com duas lebres de alto desempenho que nunca se cansam graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo ficará bem!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4018,8 +4018,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Copper Fly",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Copper Fly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, pode gostar de um passeio no Copper Fly, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4041,8 +4041,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Coral Rhea",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4064,8 +4064,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Coralripper",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf the Coralripper moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando o Coralripper move suas nadadeiras, ele gera pressão de ar suficiente para até flutuar sobre a terra. Seus inúmeros olhos permitem que ele detecte perigos rapidamente mesmo em situações confusas e os elimine com uma única mordida poderosa. Se você cuidar dos seus dedos, vocês serão bons amigos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4087,8 +4087,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cranium Spider",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that the Cranium Spider was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Cranium Spider nasceu muito antes de Banor caminhar pela terra de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, ela está totalmente crescida e sedenta por vingança."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4110,8 +4110,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Crimson Ray",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nHave you ever dreamed of gliding through the air on the back of a winged creature? With its deep red wings, the majestic Crimson Ray is a worthy mount for courageous heroes. Feel like a king on its back as you ride into your next adventure.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê já sonhou em planar pelo ar no lombo de uma criatura alada? Com suas asas de um vermelho profundo, o majestoso Crimson Ray é uma montaria digna de heróis corajosos. Sinta-se como um rei em seu lombo enquanto cavalga rumo à sua próxima aventura."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4133,8 +4133,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Cunning Hyaena",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
-          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4156,8 +4156,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Dandelion",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4179,8 +4179,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Darkfire Devourer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
-          "pt-BR": "{character}\n{speedboost}\n\nUma criatura selvagem e ancestral, que ficou escondida nas profundezas das sombras por muito tempo, foi avistada novamente em Tibia! O todo-poderoso Shadow Draptor retornou, e somente os Tibians mais corajosos conseguem controlar uma fera dessas!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4202,8 +4202,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Dawn Strayer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4225,8 +4225,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Death Crawler",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Death Crawler is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Death Crawler é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido do que os escorpiões comuns, ele é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4248,8 +4248,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Desert King",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Desert King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
-          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido atravessa até a medula dos ossos e pode ser ouvido a mais de dez milhas de distância. O Desert King é o soberano incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove que você é digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4271,8 +4271,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Doombringer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Doombringer is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
-          "pt-BR": "{character}\n{speedboost}\n\nCapturado e mantido em cativeiro por um caçador louco, o Doombringer é o resultado de experimentos doentios. Alimentado apenas com pó de demônio e sangue demoníaco concentrado, teve de suportar uma transformação terrível. O sangue demoníaco que agora corre em suas veias, porém, lhe confere força e resistência incríveis."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4294,8 +4294,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Dreadhare",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Dreadhare consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê gosta de coelhinhos fofos, mas acha que eles são pequenos demais? Admira a majestade dos cervos e de suas galhadas, mas tem medo de sua natureza selvagem e indomável? Não se preocupe: a criatura mística Dreadhare reúne as melhores qualidades dos dois animais. Suba em seu lombo e aproveite o passeio."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4317,8 +4317,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Dusk Pryer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4340,8 +4340,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ebony Tiger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Ebony Tiger has developed its extraordinary colouring over several generations.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Ebony Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4363,8 +4363,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ember Saurian",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Ember Saurian has been spotted in a sea of flames and fire deep down in the depths of Kazordoon.",
-          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Ember Saurian foi avistado em um mar de chamas e fogo nas profundezas de Kazordoon."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4386,8 +4386,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Emerald Raven",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4409,8 +4409,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Emerald Sphinx",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRide an Emerald Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
-          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Emerald Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4432,8 +4432,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Emerald Waccoon",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Emerald Waccoon and scratch it behind its ears to make it happy.",
-          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Emerald Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4455,8 +4455,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Emperor Deer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Emperor Deer will carry you through the deepest snow.",
-          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e galhada impressionante: o nobre Emperor Deer vai levar você através da neve mais profunda."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4478,8 +4478,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ether Badger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4501,8 +4501,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Eventide Nandu",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4524,8 +4524,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Feral Tiger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Feral Tiger has developed its extraordinary colouring over several generations.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Feral Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4547,8 +4547,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Festive Mammoth",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4570,8 +4570,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Festive Snowman",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Festive Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites ficam mais longas e o vento gélido traz nevascas para a terra, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Festive Snowman. Agasalhe-se bem e pule nas costas de seu novo companheiro gelado."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4593,8 +4593,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Flamesteed",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Flamesteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
-          "pt-BR": "{character}\n{speedboost}\n\nOutrora um cavalo de guerra majestoso e orgulhoso, o Flamesteed tombou em uma batalha terrível muitos anos atrás. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4616,8 +4616,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Flitterkatzen",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Flitterkatzen to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que, muitos anos atrás, bruxas anciãs se reuniram para realizar um banquete mágico no alto das montanhas. Elas cruzaram Flitterkatzen para vencer com facilidade cânions rochosos e vales profundos. Ninguém sabe o que aconteceu no caminho até lá, mas desde então apenas a montaria foi vista."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4639,8 +4639,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Floating Augur",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4662,8 +4662,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Floating Kashmir",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Floating Kashmir is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Floating Kashmir é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4685,8 +4685,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Floating Sage",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4708,8 +4708,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Floating Scholar",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4731,8 +4731,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Flying Divan",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Flying Divan is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Flying Divan é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4754,8 +4754,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Frostbringer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4777,8 +4777,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Frostflare",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Frostflare to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais diabinho do que anjo, talvez prefira sair cavalgando em um Frostflare para assustar outros Tibianos em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4800,8 +4800,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Glacier Vagabond",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Glacier Vagabond will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
-          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo espesso e desgrenhado, o Glacier Vagabond vai manter você aquecido até mesmo no clima gelado das Ice Islands. Devido à sua natureza calma e pacífica, ele não se irrita com facilidade."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4823,8 +4823,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Gloom Widow",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that the Gloom Widow was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Gloom Widow nasceu muito antes de Banor caminhar pelas terras de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, está totalmente crescida e tem sede de vingança."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4846,8 +4846,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Gloomwurm",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4869,8 +4869,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Gold Sphinx",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRide a Gold Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
-          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Gold Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4892,8 +4892,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Golden Dragonfly",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Golden Dragonfly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, talvez goste de um passeio na Golden Dragonfly, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4915,8 +4915,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Gorongra",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Gorongra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
-          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Gorongra é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4938,8 +4938,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Hailstorm Fury",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Hailstorm Fury is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
-          "pt-BR": "{character}\n{speedboost}\n\nCapturado e mantido em cativeiro por um caçador louco, o Hailstorm Fury é o resultado de experimentos doentios. Alimentado apenas com pó de demônio e sangue demoníaco concentrado, teve de suportar uma transformação terrível. O sangue demoníaco que agora corre em suas veias, porém, lhe confere força e resistência incríveis."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4961,8 +4961,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Highland Yak",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Highland Yak will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
-          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo espesso e desgrenhado, o Highland Yak vai manter você aquecido até mesmo no clima gelado das Ice Islands. Devido à sua natureza calma e pacífica, ele não se irrita com facilidade."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -4984,8 +4984,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Holiday Mammoth",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5007,8 +5007,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Hyacinth",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5030,8 +5030,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Icebreacher",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5053,8 +5053,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ink Spotted Koi",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5076,8 +5076,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ivory Fang",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Ivory Fang, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
-          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Ivory Fang, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5099,8 +5099,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jackalope",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Jackalope consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê gosta de coelhinhos fofos, mas acha que eles são pequenos demais? Admira a majestade dos cervos e de suas galhadas, mas tem medo de sua natureza selvagem e indomável? Não se preocupe: a criatura mística Jackalope reúne as melhores qualidades dos dois animais. Suba em seu lombo e aproveite o passeio."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5122,8 +5122,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jade Lion",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Jade Lion is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
-          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido atravessa até a medula dos ossos e pode ser ouvido a mais de dez milhas de distância. O Jade Lion é o soberano incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove que você é digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5145,8 +5145,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jade Pincer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Jade Pincer is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Jade Pincer é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido do que os escorpiões comuns, ele é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5168,8 +5168,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jade Shrine",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5191,8 +5191,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jousting Horse",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5214,8 +5214,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jungle Saurian",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Jungle Saurian likes to hide in dense wood and overturned trees.",
-          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Jungle Saurian gosta de se esconder em matas densas e entre árvores caídas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5237,8 +5237,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Jungle Tiger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Jungle Tiger has developed its extraordinary colouring over several generations.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Jungle Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5260,8 +5260,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Lagoon Saurian",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Lagoon Saurian feels most comfortable in torrential rivers and behind dangerous waterfalls.",
-          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Lagoon Saurian se sente mais à vontade em rios torrenciais e atrás de cachoeiras perigosas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5283,8 +5283,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Leafscuttler",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Leafscuttler will carry you through the Tibian wilderness with ease.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas durante o combate ou apenas para viajar? O Leafscuttler vai levar você pela natureza selvagem de Tibia com facilidade."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5306,8 +5306,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Magic Carpet",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Magic Carpet is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Magic Carpet é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5329,8 +5329,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Marsh Toad",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Marsh Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
-          "pt-BR": "{character}\n{speedboost}\n\nPor séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Marsh Toad uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5352,8 +5352,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Merry Mammoth",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5375,8 +5375,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Mint Ibex",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
-          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5398,8 +5398,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Mould Shell",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Mould Shell might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Mould Shell pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5421,8 +5421,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Mouldpincer",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Mouldpincer will carry you through the Tibian wilderness with ease.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas durante o combate ou apenas para viajar? O Mouldpincer vai levar você pela natureza selvagem de Tibia com facilidade."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5444,8 +5444,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Muffled Snowman",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Muffled Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites ficam mais longas e o vento gélido traz nevascas para a terra, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Muffled Snowman. Agasalhe-se bem e pule nas costas de seu novo companheiro gelado."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5467,8 +5467,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Mystic Raven",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5490,8 +5490,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Nethersteed",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Nethersteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
-          "pt-BR": "{character}\n{speedboost}\n\nOutrora um cavalo de guerra majestoso e orgulhoso, o Nethersteed tombou em uma batalha terrível muitos anos atrás. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5513,8 +5513,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Night Waccoon",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Night Waccoon and scratch it behind its ears to make it happy.",
-          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Night Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5536,8 +5536,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Nightdweller",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Nightdweller to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais diabinho do que anjo, talvez prefira sair cavalgando em um Nightdweller para assustar outros Tibianos em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5559,8 +5559,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Nightmarish Crocovile",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
-          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5582,8 +5582,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Nightstinger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Nightstinger has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Nightstinger tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5605,8 +5605,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Noctungra",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Noctungra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
-          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Noctungra é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5628,8 +5628,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Obsidian Shrine",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5651,8 +5651,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Parade Horse",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5674,8 +5674,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Peony",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5697,8 +5697,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Plumfish",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf the Plumfish moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando o Plumfish move suas nadadeiras, gera pressão de ar suficiente para até mesmo flutuar sobre a terra. Seus numerosos olhos permitem que ele detecte perigos rapidamente, mesmo em situações confusas, e os elimine com uma única mordida poderosa. Se você cuidar bem dos seus dedos, vocês serão bons amigos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5720,8 +5720,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Poisonbane",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Poisonbane is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Poisonbane está à procura do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem, com sua comida favorita de vez em quando, e ele se tornará um parceiro leal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5743,8 +5743,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Poppy Ibex",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
-          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5766,8 +5766,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Prismatic Unicorn",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nLegend has it that a mare and a stallion once reached the end of a rainbow and decided to stay there. Influenced by the mystical power of the rainbow, the mare gave birth to an exceptional foal: Not only the big, strong horn on its forehead but the unusual colouring of its hair makes the Prismatic Unicorn a unique mount in every respect.",
-          "pt-BR": "{character}\n{speedboost}\n\nDiz a lenda que uma égua e um garanhão certa vez chegaram ao fim de um arco-íris e decidiram ficar por lá. Influenciada pelo poder místico do arco-íris, a égua deu à luz um potro excepcional: não apenas o grande e forte chifre em sua testa, mas também a coloração incomum de sua crina fazem do Prismatic Unicorn uma montaria única em todos os aspectos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5789,8 +5789,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Rabbit Rickshaw",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Rabbit Rickshaw comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
-          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo de sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Rabbit Rickshaw vem com duas lebres de alto desempenho que nunca se cansam, graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo vai dar certo!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5812,8 +5812,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Radiant Raven",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5835,8 +5835,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Razorcreep",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Razorcreep has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Razorcreep tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5858,8 +5858,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Reed Lurker",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Reed Lurker might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Reed Lurker pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5881,8 +5881,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Rift Watcher",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rift Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você está procurando um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Rift Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estiveram observando você das sombras!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5904,8 +5904,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Ringtail Waccoon",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Ringtail Waccoon and scratch it behind its ears to make it happy.",
-          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Ringtail Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5927,8 +5927,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "River Crocovile",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
-          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5950,8 +5950,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Rune Watcher",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rune Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você está procurando um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Rune Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estiveram observando você das sombras!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5973,8 +5973,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Rustwurm",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -5996,8 +5996,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Sanguine Frog",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Sanguine Frog a faithful mount for your adventures even beyond the bounds of the swamp.",
-          "pt-BR": "{character}\n{speedboost}\n\nPor séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Sanguine Frog uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6019,8 +6019,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Savanna Ostrich",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
-          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6042,8 +6042,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Scruffy Hyaena",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
-          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6065,8 +6065,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Sea Devil",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf the Sea Devil moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
-          "pt-BR": "{character}\n{speedboost}\n\nQuando o Sea Devil move suas nadadeiras, gera pressão de ar suficiente para até mesmo flutuar sobre a terra. Seus numerosos olhos permitem que ele detecte perigos rapidamente, mesmo em situações confusas, e os elimine com uma única mordida poderosa. Se você cuidar bem dos seus dedos, vocês serão bons amigos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6088,8 +6088,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Shadow Claw",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Shadow Claw, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
-          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Shadow Claw, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6111,8 +6111,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Shadow Draptor",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
-          "pt-BR": "{character}\n{speedboost}\n\nUma criatura selvagem e ancestral, que ficou escondida nas profundezas das sombras por muito tempo, foi avistada novamente em Tibia! O todo-poderoso Shadow Draptor retornou, e somente os Tibians mais corajosos conseguem controlar uma fera dessas!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6134,8 +6134,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Shadow Hart",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Shadow Hart will carry you through the deepest snow.",
-          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e galhada impressionante: o nobre Shadow Hart vai levar você através da neve mais profunda."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6157,8 +6157,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Shadow Sphinx",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRide a Shadow Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
-          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Shadow Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6180,8 +6180,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Siegebreaker",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Siegebreaker is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Siegebreaker está à procura do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem, com sua comida favorita de vez em quando, e ele se tornará um parceiro leal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6203,8 +6203,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Silverneck",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Silverneck is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
-          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Silverneck é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6226,8 +6226,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Slagsnare",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Slagsnare has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Slagsnare tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6249,8 +6249,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Snow Pelt",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Snow Pelt, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
-          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Snow Pelt, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6272,8 +6272,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Snow Strider",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6295,8 +6295,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Snowy Owl",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6318,8 +6318,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Steel Bee",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Steel Bee, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, talvez goste de um passeio na Steel Bee, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6341,8 +6341,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Steelbeak",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nForged by only the highest skilled blacksmiths in the depths of Kazordoon's furnaces, a wild animal made out of the finest steel arose from glowing embers and blazing heat. Protected by its impenetrable armour, the Steelbeak is ready to accompany its master on every battleground.",
-          "pt-BR": "{character}\n{speedboost}\n\nForjado apenas pelos ferreiros mais habilidosos nas profundezas das fornalhas de Kazordoon, um animal selvagem feito do mais fino aço surgiu de brasas incandescentes e calor abrasador. Protegido por sua armadura impenetrável, o Steelbeak está pronto para acompanhar seu mestre em qualquer campo de batalha."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6364,8 +6364,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Swamp Crocovile",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
-          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6387,8 +6387,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Swamp Snapper",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Swamp Snapper might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
-          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Swamp Snapper pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6410,8 +6410,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tangerine Speckled Koi",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6433,8 +6433,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tawny Owl",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
-          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6456,8 +6456,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tempest",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Tempest has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
-          "pt-BR": "{character}\n{speedboost}\n\nOutrora um majestoso e orgulhoso cavalo de guerra, o Tempest caiu em uma batalha terrível há muitos anos. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6479,8 +6479,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tombstinger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Tombstinger is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
-          "pt-BR": "{character}\n{speedboost}\n\nO Tombstinger é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido que os escorpiões comuns, é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6502,8 +6502,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Topaz Shrine",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6525,8 +6525,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tourney Horse",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
-          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6548,8 +6548,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Toxic Toad",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Toxic Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
-          "pt-BR": "{character}\n{speedboost}\n\nDurante séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Toxic Toad uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6571,8 +6571,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Tundra Rambler",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Tundra Rambler will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
-          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo grosso e desgrenhado, o Tundra Rambler vai manter você aquecido até mesmo no clima gélido das Ice Islands. Devido à sua natureza calma e pacífica, ele não se deixa irritar facilmente."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6594,8 +6594,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Venompaw",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Venompaw to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
-          "pt-BR": "{character}\n{speedboost}\n\nDizem os boatos que, muitos anos atrás, bruxas anciãs se reuniram para celebrar um banquete mágico no alto das montanhas. Elas cruzaram o Venompaw para conquistar com facilidade desfiladeiros rochosos e vales profundos. Ninguém sabe o que aconteceu no caminho até o topo, mas desde então apenas a montaria foi vista."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6617,8 +6617,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Void Watcher",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Void Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
-          "pt-BR": "{character}\n{speedboost}\n\nSe você procura um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Void Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estão observando você das sombras!"
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6640,8 +6640,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Voracious Hyaena",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
-          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6663,8 +6663,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Winter King",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Winter King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
-          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido penetra até os ossos e a medula e pode ser ouvido a mais de dez milhas de distância. O Winter King é o governante incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove-se digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6686,8 +6686,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Winterstride",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
-          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6709,8 +6709,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Wolpertinger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
-          "pt-BR": "{character}\n{speedboost}\n\nOutrora capturado e mantido em cativeiro por um caçador louco, o Woodland Prince é o resultado de experimentos doentios. Alimentado apenas com demon dust e sangue demoníaco concentrado, ele teve de suportar uma transformação terrível. No entanto, o sangue demoníaco que agora corre em suas veias lhe confere força e resistência incríveis."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6732,8 +6732,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Woodland Prince",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
-          "pt-BR": "{character}\n{speedboost}\n\nOutrora capturado e mantido em cativeiro por um caçador louco, o Woodland Prince é o resultado de experimentos doentios. Alimentado apenas com demon dust e sangue demoníaco concentrado, ele teve de suportar uma transformação terrível. No entanto, o sangue demoníaco que agora corre em suas veias lhe confere força e resistência incríveis."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6755,8 +6755,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Zaoan Badger",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
-          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6778,8 +6778,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Night Locust",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6801,8 +6801,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Leaf Locust",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
@@ -6824,8 +6824,8 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "name": "Pearl Locust",
         "kind": "mount",
         "description": {
-          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
-          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+          "en": "Grants +10 speed while mounted.",
+          "pt-BR": "Concede +10 de velocidade enquanto montado."
         },
         "icon": {
           "kind": "mount",
