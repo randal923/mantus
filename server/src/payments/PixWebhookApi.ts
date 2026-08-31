@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { logPix } from "./logPix";
 import type { PixOrderService } from "./PixOrderService";
 import { verifyMercadoPagoSignature } from "./verifyMercadoPagoSignature";
 
@@ -7,19 +8,33 @@ const MAX_BODY_BYTES = 16_384;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_PER_IP = 60;
 const RATE_MAX_GLOBAL = 600;
+/** Mirrors the signature timestamp tolerance: a digest is remembered as long as it could verify. */
+const REPLAY_TTL_MS = 24 * 60 * 60 * 1000;
+const REPLAY_MAX_ENTRIES = 10_000;
 
 export class PixWebhookApi {
   private readonly hitsByIp = new Map<string, number>();
   private globalHits = 0;
   private windowStartMs = 0;
+  /**
+   * Digests of notifications already accepted, so a captured request cannot
+   * be replayed for the whole signature tolerance window. A provider retry
+   * carries a fresh timestamp and therefore a fresh digest.
+   */
+  private readonly seenDigests = new Map<string, number>();
 
   constructor(
     private readonly options: {
-      readonly secret: string;
+      /** Current secret first; older ones stay valid while rotating. */
+      readonly secrets: readonly string[];
       readonly service: PixOrderService;
       readonly trustProxyHeader: boolean;
     },
-  ) {}
+  ) {
+    if (options.secrets.length === 0) {
+      throw new Error("PixWebhookApi needs at least one secret");
+    }
+  }
 
   matches(pathname: string): boolean {
     return pathname.startsWith("/api/payments/");
@@ -30,6 +45,7 @@ export class PixWebhookApi {
     response: ServerResponse,
   ): Promise<void> {
     if (request.url === undefined || request.url.length > 2_048) {
+      request.resume();
       this.sendJson(response, 404, { error: "not-found" });
       return;
     }
@@ -45,38 +61,107 @@ export class PixWebhookApi {
       this.sendJson(response, 405, { error: "method-not-allowed" });
       return;
     }
-    if (!this.admit(this.ipOf(request))) {
+    const ip = this.ipOf(request);
+    const requestId = headerOf(request, "x-request-id")?.slice(0, 128);
+    if (!this.admit(ip)) {
       request.resume();
+      logPix("warn", "webhook-rate-limited", { ip, requestId });
       this.sendJson(response, 429, { error: "rate-limited" });
+      return;
+    }
+    // The signature covers only the query id, request id and timestamp, so
+    // it is checked before a single body byte is buffered: unsigned callers
+    // never get to spend parse time or memory.
+    const queryDataId = url.searchParams.get("data.id") ?? undefined;
+    const xSignature = headerOf(request, "x-signature");
+    const signatureOk = this.options.secrets.some((secret) =>
+      verifyMercadoPagoSignature({
+        secret,
+        xSignature,
+        xRequestId: headerOf(request, "x-request-id"),
+        dataId: queryDataId,
+      }),
+    );
+    if (!signatureOk) {
+      request.resume();
+      logPix("warn", "webhook-rejected", {
+        ip,
+        requestId,
+        reason: "invalid-signature",
+        dataId: queryDataId?.slice(0, 64),
+      });
+      this.sendJson(response, 401, { error: "invalid-signature" });
+      return;
+    }
+    if (this.replayed(xSignature)) {
+      request.resume();
+      logPix("warn", "webhook-replayed", {
+        ip,
+        requestId,
+        dataId: queryDataId?.slice(0, 64),
+      });
+      this.sendJson(response, 200, { ok: true });
       return;
     }
     let body: unknown;
     try {
       body = JSON.parse(await this.readBody(request));
-    } catch {
+    } catch (cause) {
+      logPix("warn", "webhook-rejected", {
+        ip,
+        requestId,
+        reason: cause instanceof Error ? cause.message : "invalid-body",
+      });
       this.sendJson(response, 400, { error: "invalid-body" });
-      return;
-    }
-    const record = asRecord(body);
-    const data = asRecord(record.data);
-    const queryDataId = url.searchParams.get("data.id") ?? undefined;
-    const signatureOk = verifyMercadoPagoSignature({
-      secret: this.options.secret,
-      xSignature: headerOf(request, "x-signature"),
-      xRequestId: headerOf(request, "x-request-id"),
-      dataId: queryDataId,
-    });
-    if (!signatureOk) {
-      this.sendJson(response, 401, { error: "invalid-signature" });
       return;
     }
     this.sendJson(response, 200, { ok: true });
 
+    const record = asRecord(body);
+    const data = asRecord(record.data);
     const topic = record.type ?? url.searchParams.get("type");
-    if (topic !== "payment" && topic !== undefined && topic !== null) return;
     const paymentId = paymentIdOf(queryDataId ?? data.id);
-    if (paymentId === null) return;
+    if (topic !== "payment" && topic !== undefined && topic !== null) {
+      logPix("info", "webhook-ignored", {
+        ip,
+        requestId,
+        reason: "topic",
+        topic: typeof topic === "string" ? topic.slice(0, 64) : "non-string",
+      });
+      return;
+    }
+    if (paymentId === null) {
+      logPix("warn", "webhook-ignored", {
+        ip,
+        requestId,
+        reason: "payment-id",
+      });
+      return;
+    }
+    logPix("info", "webhook-accepted", { ip, requestId, paymentId });
     this.options.service.notify(paymentId);
+  }
+
+  private replayed(xSignature: string | undefined): boolean {
+    const digest = /(?:^|,)\s*v1\s*=\s*([0-9a-f]{64})/i.exec(
+      xSignature ?? "",
+    )?.[1];
+    if (!digest) return false;
+    const key = digest.toLowerCase();
+    const now = Date.now();
+    const seenUntil = this.seenDigests.get(key);
+    if (seenUntil !== undefined && seenUntil > now) return true;
+    if (this.seenDigests.size >= REPLAY_MAX_ENTRIES) {
+      for (const [entry, until] of this.seenDigests) {
+        if (until <= now) this.seenDigests.delete(entry);
+      }
+      if (this.seenDigests.size >= REPLAY_MAX_ENTRIES) {
+        const oldest = this.seenDigests.keys().next().value;
+        if (oldest !== undefined) this.seenDigests.delete(oldest);
+      }
+    }
+    this.seenDigests.set(key, now + REPLAY_TTL_MS);
+    return false;
   }
 
   private admit(ip: string): boolean {
@@ -92,11 +177,15 @@ export class PixWebhookApi {
     return hits <= RATE_MAX_PER_IP && this.globalHits <= RATE_MAX_GLOBAL;
   }
 
+  /**
+   * Same source as the WebSocket layer: Fly's proxy sets `fly-client-ip`
+   * itself, whereas `x-forwarded-for` keeps whatever the client prepended —
+   * reading that would let a flood pick its own rate-limit bucket.
+   */
   private ipOf(request: IncomingMessage): string {
     if (this.options.trustProxyHeader) {
-      const forwarded = headerOf(request, "x-forwarded-for");
-      const first = forwarded?.split(",")[0]?.trim();
-      if (first) return first.slice(0, 64);
+      const ip = headerOf(request, "fly-client-ip")?.trim();
+      if (ip) return ip.slice(0, 64);
     }
     return request.socket.remoteAddress ?? "unknown";
   }

@@ -5839,3 +5839,155 @@ reaches players once main is pushed and the Fly deploy runs.
   `PIX ALERT` — no operator UI; refunds are claw-back only (no MED dispute
   flow); the payer-email fallback is a placeholder domain; production still
   needs Fly secrets, the MP webhook registration, and migration 081 applied.
+
+## 2026-08-30 — Pix payments: defensive test sweep, forensic logging, refused-order state
+
+- **Problem:** the Pix coin-purchase flow shipped the same day with 33 unit
+  tests and a 13-case DB suite that had never executed (no Postgres in this
+  WSL distro); several transitions were unlogged (order created, charge
+  attached, cancel, expiry, credit success, webhook accept/reject); an
+  approved payment reporting no amount would have been credited; the
+  provider's `external_reference` and `currency_id` were never cross-checked
+  against the order; an amount mismatch left the order `pending`, re-alerted
+  every sweep for an hour, then vanished with no audit row; a webhook burst
+  for one payment fanned out into N provider fetches + N serializable
+  transactions; an order cancelled while its charge was being created left a
+  payable orphan at the provider; an expiry whose provider-cancel was refused
+  (paid at the deadline) was dropped from every future sweep; and the webhook
+  buffered up to 16 KB of unauthenticated body before checking the signature.
+- **What changed:** `logPix` (`server/src/payments/logPix.ts`) emits one
+  grep-able `pix.<event> k=v` line per transition — order-created/resumed,
+  charge-attached, charge-orphaned, order-cancelled, cancel-refused-by-
+  provider, payment-fetched, credited, settle-refused (error), credit-parked
+  (error), settle-replayed, refunded, refund-refused, cancelled-by-provider,
+  order-expired, expire-cancel-refused, reconcile-sweep, webhook-accepted/
+  rejected/ignored/rate-limited, intent-rate-limited/unauthenticated,
+  operation-failed — never a brcode, e-mail, signature, body or token.
+  `settleApproved` now takes amount+currency+externalReference and refuses
+  (`refused` result with reason amount-mismatch | amount-unknown |
+  currency-mismatch | reference-mismatch) into a new terminal `refused` order
+  status with ONE `pix-settle-refused` audit row (migration 082 also adds
+  `pix-credit-parked`, written once when a credit parks at the balance cap);
+  `markRefunded` refuses a reference mismatch; every credit/refund audit row
+  now carries previousStatus + balanceBefore/After. `PixOrderService`
+  coalesces concurrent `notify` calls per payment id, cancels the provider
+  charge when `attachCharge` finds the order no longer pending, re-checks a
+  payment when the expiry cancel is refused, and sweeps its per-account
+  throttle maps past 10k entries. `PixWebhookApi` verifies the signature
+  before reading the body and logs every outcome with ip + request id.
+  `MercadoPagoProvider.getPayment` returns `currency`. index.ts logs the pix
+  config state at boot.
+- **Files:** `server/db/migrations/082_pix_refused_orders.sql` (new),
+  `server/src/payments/{logPix,PixOrderService,PgPixOrderStore,PixOrderStore,
+  PixProvider,MercadoPagoProvider,PixWebhookApi}.ts`, `server/src/index.ts`;
+  tests: `PixOrderService.test.ts` (65), `PgPixOrderStore.integration.test.ts`
+  (52), `PixWebhookApi.test.ts` (25), `verifyMercadoPagoSignature.test.ts`
+  (18), `MercadoPagoProvider.test.ts` (20, new, stubbed fetch),
+  `coinOrderSchemas.test.ts` (9, new), `logPix.test.ts` (3, new).
+- **Verified:** 192 payment tests green; the DB suite ran for the first time
+  on an embedded Postgres 18 stood up from the `embedded-postgres` npm
+  package in the session scratchpad (no docker needed:
+  `TEST_DATABASE_URL=postgres://tibia:tibia_dev_only@127.0.0.1:54329/tibia`).
+  DB cases now cover: create race (one pending order), one payment → two
+  orders refused by the unique index, attach after cancel refused + settle
+  finds nothing, cross-account cancel/open refused, duplicate-webhook race
+  credits once, cancel-vs-settle and expiry-vs-settle races credit exactly
+  once with one ledger row, two orders of one account cannot double-credit,
+  six accounts settling concurrently stay isolated, pre-existing ledger
+  request key blocks a re-grant, under/over/unknown amount + foreign currency
+  + foreign reference all refused with zero ledger rows, refused order still
+  credits after a corrected report, refund race clamps at balance with
+  shortfall audited, approved replay after refund never re-credits, refund
+  of never-credited/parked order touches no balance, refund-vs-credit race
+  ends consistent, clawback vs concurrent spend never goes negative, expiry
+  sweeps race-safe, reconciliation listing excludes every terminal state and
+  bounds its batch. Full server unit suite 4151 passed; full
+  `test:integration` 305 passed with the 8 pre-existing main failures (guild
+  ledger ×3, conjuring audit, highscores ×3, item sweep — unrelated,
+  recorded 2026-08-09). Server typecheck clean.
+- **Residual risk:** see the TODO.md "Accepted gaps" Pix entry (no operator
+  resolution command, partial refunds undetected, open outside the action
+  cooldown, 24 h signature replay window that can only re-fetch). Migration
+  082 must land on prod before this server build.
+
+## 2026-08-30 — Pix payments: second hardening pass (every remaining gap from review)
+
+- **Problem:** the post-review list still had real holes. The webhook rate
+  limiter keyed on `x-forwarded-for` while prod (`server/fly.toml`
+  `TRUST_PROXY=1`) only makes `fly-client-ip` trustworthy — a flood could
+  pick its own bucket and burn the global ceiling so real MP notifications got
+  429. The reconciliation sweep listed 50 orders by `created_at` with no
+  check stamp, so ≥50 abandoned pending orders starved newer lost-webhook
+  payments for an hour. One account could mint a provider charge per second
+  forever (create→cancel loop). A payment approved for an order whose
+  `attachCharge` never committed (restart, or a payer faster than the commit)
+  matched nothing and stayed money-without-coins. Partial refunds (MP keeps
+  `status=approved`, moves `transaction_amount_refunded`) were invisible.
+  Refused/parked orders had no operator surface. A single webhook secret
+  could not be rotated without downtime, and a captured notification could
+  be replayed for the whole 24 h tolerance. A brcode longer than the wire cap
+  (1024 vs the 2048 DB cap) would have been a payable QR the client silently
+  dropped.
+- **What changed:** migration `083_pix_hardening.sql` (`last_checked_at`,
+  `refunded_centavos`, reconcile index, four audit event types).
+  `PixWebhookApi`: `fly-client-ip` buckets (same source as the WS layer),
+  `secrets: string[]` (env is comma-separated, new first), in-process replay
+  cache of accepted `v1` digests (ack 200, no dispatch, `pix.webhook-replayed`).
+  `PgPixOrderStore`: `createOrder` locks the account row and refuses past
+  `maxPerHour` (`too-many-orders` → client `rate-limited`;
+  `MAX_ORDERS_PER_ACCOUNT_PER_HOUR = 10`); `claimForReconciliation` claims
+  with `FOR UPDATE SKIP LOCKED` ordered never-checked-first then
+  least-recently-checked and stamps the claim (also multi-instance safe);
+  `adoptPayment` pins an unmatched payment onto the stranded
+  pending/expired/cancelled order its `external_reference` names (never onto
+  an order that already has a charge; unique index still forbids sharing a
+  payment) and the ordinary settle — with every cross-check — then decides;
+  `attachCharge` is idempotent for the same payment id whatever the status so
+  the late create flow reports "no open order" instead of cancelling a paid
+  charge; `markRefunded` takes the cumulative `refundedCentavos`, claws back
+  `ceil(coins·refunded/amount)` minus what earlier levels already took,
+  keyed `pix-refund:<order>:<level>`, flips to `refunded` only when complete;
+  `operatorCredit` (refused orders only, same `pix-credit:<order>` ledger key,
+  cap-respecting, `pix-operator-credit` audit), `orderById`,
+  `recentOrdersForAccount`, `accountIdByCharacterName`,
+  `recordOperatorInspect`; money paths retry serialization aborts with an
+  outer jittered loop (4×5 attempts). `PixOrderService`: hourly-cap answer,
+  oversized-brcode close, late-attach answer, adopt-then-settle fallback,
+  partial-refund application after settle, and the operator API
+  (`inspect`/`credit`/`refund` — refund calls the new
+  `PixProvider.refundPayment` under `pix-operator-refund:<order>` idempotency
+  then claws back with `operatorCharacterId` audited as
+  `pix-operator-refund`). `AccountRole`: `payments.inspect` (gamemaster,
+  admin) and `payments.operate` (admin). `AdminCommandHandler`: `/pixorders
+  <name>`, `/pixorder <id>`, `/pixcredit <id>`, `/pixrefund <id>` — invisible
+  to anyone without the capability, audited (`pix-operator-inspect`).
+  `COIN_ORDER_LIMITS.maxBrcodeLength` 1024→2048 to match the DB.
+- **Files:** `server/db/migrations/083_pix_hardening.sql`,
+  `protocol/src/coinOrders.ts`, `server/src/payments/{PixOrderStore,
+  PgPixOrderStore,PixOrderService,PixProvider,MercadoPagoProvider,
+  PixWebhookApi}.ts`, `server/src/auth/AccountRole.ts`,
+  `server/src/admin/AdminCommandHandler.ts`, `server/src/GameServer.ts`,
+  `server/.env.example`; tests in `server/src/payments/*.test.ts`,
+  `server/src/admin/AdminCommandHandler.test.ts`.
+- **Verified:** 256 tests across payments/admin/auth green, the DB suite (73)
+  four times in a row on the embedded Postgres (a first version of the burst
+  test asserted how losers were refused rather than the row invariant and
+  was corrected; a 12-way settle race exhausted the shared helper's 5 retries
+  once — hence the local outer retry). Covered: XFF spoofing cannot split
+  buckets; replayed digest acked but dispatched once and a fresh-timestamp
+  retry still dispatches; rotated secrets; hourly cap incl. cancelled orders,
+  a burst never exceeds the cap, expiry of the window; adoption onto
+  pending/expired/cancelled stranded orders, refused for charged/settled/
+  foreign ids, adoption-vs-attach-vs-settle race converges on one credit;
+  claim rotation order and two concurrent sweeps never share an order;
+  partial refund 300→505→full claws 30/21/49 once each, replays and lower
+  levels are no-ops, race applies once; operator credit only on refused,
+  idempotent under race, cap-respecting, audited; operator refund refuses
+  when the provider refuses. Full server unit suite and full
+  `test:integration` results are in the session recap.
+- **Residual risk:** see TODO.md Pix entry (open outside cooldown, 24 h
+  tolerance with an in-process replay cache, placeholder payer e-mail, no
+  dispute workflow, whole-payment operator refunds). Migrations 082+083
+  applied to prod 2026-08-31 03:28 UTC via `fly proxy` + `yarn db:migrate`;
+  the server build still needs deploying.
+

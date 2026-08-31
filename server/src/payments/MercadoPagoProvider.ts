@@ -32,7 +32,11 @@ export class MercadoPagoProvider implements PixProvider {
     const interaction = asRecord(payment.point_of_interaction);
     const transactionData = asRecord(interaction.transaction_data);
     const brcode = transactionData.qr_code;
-    if (!providerPaymentId || typeof brcode !== "string" || brcode.length === 0) {
+    if (
+      !providerPaymentId ||
+      typeof brcode !== "string" ||
+      brcode.length === 0
+    ) {
       throw new Error("mercadopago charge response missing id or qr_code");
     }
     return { providerPaymentId, brcode };
@@ -44,6 +48,8 @@ export class MercadoPagoProvider implements PixProvider {
       await this.request("GET", `/v1/payments/${providerPaymentId}`),
     );
     const amount = payment.transaction_amount;
+    const refunded = payment.transaction_amount_refunded;
+    const currency = payment.currency_id;
     const reference = payment.external_reference;
     return {
       status: normalizeStatus(payment.status),
@@ -51,6 +57,11 @@ export class MercadoPagoProvider implements PixProvider {
         typeof amount === "number" && Number.isFinite(amount)
           ? Math.round(amount * 100)
           : null,
+      refundedCentavos:
+        typeof refunded === "number" && Number.isFinite(refunded)
+          ? Math.round(refunded * 100)
+          : null,
+      currency: typeof currency === "string" ? currency : null,
       externalReference: typeof reference === "string" ? reference : null,
       snapshot: snapshotOf(payment),
     };
@@ -65,6 +76,29 @@ export class MercadoPagoProvider implements PixProvider {
         }),
       );
       return payment.status === "cancelled";
+    } catch {
+      return false;
+    }
+  }
+
+  async refundPayment(
+    providerPaymentId: string,
+    idempotencyKey: string,
+  ): Promise<boolean> {
+    assertPaymentId(providerPaymentId);
+    if (!/^[\w:-]{1,128}$/.test(idempotencyKey)) {
+      throw new Error("invalid refund idempotency key");
+    }
+    try {
+      const refund = asRecord(
+        await this.request(
+          "POST",
+          `/v1/payments/${providerPaymentId}/refunds`,
+          {},
+          idempotencyKey,
+        ),
+      );
+      return refund.status === "approved" || refund.status === "in_process";
     } catch {
       return false;
     }

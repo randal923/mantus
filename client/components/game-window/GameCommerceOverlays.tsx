@@ -147,6 +147,14 @@ export function GameCommerceOverlays() {
                 : current,
             );
           }}
+          onCheckCoinOrder={() => {
+            const sent = runtime.clientRef.current?.openCoinOrders() ?? false;
+            setCoinOrderSession((current) =>
+              current
+                ? { ...current, pending: sent, error: sent ? null : "failed" }
+                : current,
+            );
+          }}
         />
       )}
       {bankSession && inventory && (

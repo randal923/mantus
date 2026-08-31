@@ -28,6 +28,7 @@ interface StoreModalProps {
   onCloseCoinOrders: () => void;
   onBuyCoins: (packageId: string) => void;
   onCancelCoinOrder: (orderId: string) => void;
+  onCheckCoinOrder: () => void;
 }
 
 /**
@@ -53,6 +54,7 @@ export function StoreModal({
   onCloseCoinOrders,
   onBuyCoins,
   onCancelCoinOrder,
+  onCheckCoinOrder,
 }: StoreModalProps) {
   const { t } = useAppTranslation();
   const language = useLanguageStore((state) => state.language);
@@ -237,6 +239,7 @@ export function StoreModal({
           onClose={onCloseCoinOrders}
           onBuy={onBuyCoins}
           onCancelOrder={onCancelCoinOrder}
+          onCheck={onCheckCoinOrder}
         />
       )}
 

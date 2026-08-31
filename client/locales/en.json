@@ -684,7 +684,12 @@
     "pixErrors": {
       "unavailable": "Pix payments are unavailable right now. Please try again in a moment.",
       "failed": "The Pix order could not be created. Please try again."
-    }
+    },
+    "pixCreating": "Creating your Pix order…",
+    "pixChecking": "Checking your payment with Mercado Pago…",
+    "pixStatusAwaiting": "Awaiting payment",
+    "pixAutoCheck": "We check automatically; coins are credited as soon as the payment is confirmed.",
+    "pixCheckNow": "I've paid — check now"
   },
   "connection": {
     "connecting": "Connecting",

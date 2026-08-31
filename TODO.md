@@ -1465,15 +1465,21 @@ limitations accepted during a session are recorded in the owning feature file
   re-anchor when `Date.now()` and the monotonic clock diverge past a
   threshold, keeping in-tick monotonicity. Owner: server time.
 
-- 2026-08-30: Pix payments ship with three accepted stopgaps. (1) An
-  `amount-mismatch` or balance-cap-parked (`paid`) order only logs a
-  `PIX ALERT` line — there is no operator command to resolve or refund it;
-  resolution is manual SQL plus the audit trail. (2) Refund handling is
-  claw-back only (min(balance, coins), shortfall audited as `pix-refund`);
-  there is no MED dispute flow and no account flag/lock when the shortfall
-  is non-zero. (3) `PIX_PAYER_EMAIL_FALLBACK` defaults to a placeholder
-  domain when an account has no e-mail. Also: the
-  `PgPixOrderStore.integration.test.ts` fraud/concurrency suite is wired
-  into test:integration but has not run yet in the WSL session (docker
-  Postgres unavailable) — run it before the first production deploy.
-  Owner: payments.
+- 2026-08-30: Pix payments — remaining accepted gaps after the same-day
+  hardening pass (everything else found in review was closed; see
+  `todo/done.md` 2026-08-30 entries). (1) `coin-order-open` is deliberately
+  outside the 1 s action cooldown: one indexed point-read per message,
+  bounded only by the 30 msg/s socket limit; the provider re-check behind it
+  is throttled to one per 10 s per account. (2) The webhook signature
+  tolerance stays at MP's 24 h; replays inside it are now absorbed by a
+  digest cache (10k entries, in-process — a restart forgets them, after
+  which a replay can only trigger an idempotent re-fetch, never a credit).
+  (3) `PIX_PAYER_EMAIL_FALLBACK` defaults to a placeholder domain when an
+  account has no e-mail. (4) A `charged_back`/`in_mediation` dispute is
+  treated as a refund (clawback) / logged as unknown respectively; there is
+  no MED dispute workflow and no automatic account lock when a clawback
+  shortfall is non-zero — operators see it in `pix-refund.shortfall` and act
+  by hand (`/pixorders`, moderation commands). (5) The `/pixrefund` operator
+  command refunds the whole payment only. Migrations 082 and 083 were applied
+  to prod on 2026-08-31 03:28 UTC (ahead of the server build, as required —
+  the old build keeps working on the widened schema). Owner: payments.

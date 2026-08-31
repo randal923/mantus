@@ -109,6 +109,7 @@ const meta = {
     onCloseCoinOrders: fn(),
     onBuyCoins: fn(),
     onCancelCoinOrder: fn(),
+    onCheckCoinOrder: fn(),
   },
 } satisfies Meta<typeof StoreModal>;
 

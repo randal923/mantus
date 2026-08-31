@@ -684,7 +684,12 @@
     "pixErrors": {
       "unavailable": "Pagamentos via Pix estão indisponíveis no momento. Tente novamente em instantes.",
       "failed": "Não foi possível criar o pedido Pix. Tente novamente."
-    }
+    },
+    "pixCreating": "Criando seu pedido Pix…",
+    "pixChecking": "Verificando seu pagamento no Mercado Pago…",
+    "pixStatusAwaiting": "Aguardando pagamento",
+    "pixAutoCheck": "Verificamos automaticamente; as coins são creditadas assim que o pagamento for confirmado.",
+    "pixCheckNow": "Já paguei — verificar agora"
   },
   "connection": {
     "connecting": "Conectando",

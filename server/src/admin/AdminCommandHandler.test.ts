@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AccountRole } from "../auth/AccountRole";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import { MemoryModerationStore } from "../moderation/MemoryModerationStore";
+import type { PixOrderService } from "../payments/PixOrderService";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -18,7 +19,18 @@ interface FakePlayer {
   position: { x: number; y: number; z: number };
 }
 
-function makeHarness(role: AccountRole) {
+function makePixService() {
+  return {
+    inspect: vi.fn(),
+    credit: vi.fn(),
+    refund: vi.fn(),
+  };
+}
+
+function makeHarness(
+  role: AccountRole,
+  pix: ReturnType<typeof makePixService> | null = null,
+) {
   const operator: FakePlayer = {
     id: "operator",
     name: "Operator",
@@ -67,7 +79,10 @@ function makeHarness(role: AccountRole) {
     // is exercised by returning null from a dedicated test below.
     findUnoccupiedPosition: (preferred: { x: number; y: number; z: number }) =>
       preferred,
-    relocateCreature: (creature: FakePlayer, position: FakePlayer["position"]) => {
+    relocateCreature: (
+      creature: FakePlayer,
+      position: FakePlayer["position"],
+    ) => {
       const from = { ...creature.position };
       creature.position = { ...position };
       return from;
@@ -98,6 +113,7 @@ function makeHarness(role: AccountRole) {
       persistence,
       registry,
       store,
+      pix as unknown as PixOrderService | null,
     ),
   };
 }
@@ -236,5 +252,173 @@ describe("AdminCommandHandler (Feature 96)", () => {
     await flush();
     expect(harness.store.actions).toEqual([]);
     expect(harness.operator.position).toEqual({ x: 10, y: 10, z: 7 });
+  });
+});
+
+describe("AdminCommandHandler: Pix operator commands", () => {
+  const ORDER_ID = "00000000-0000-4000-8000-00000000000a";
+
+  it("is invisible to players and tutors", async () => {
+    for (const role of ["player", "tutor"] as const) {
+      const pix = makePixService();
+      const harness = makeHarness(role, pix);
+      for (const line of [
+        "/pixorders Bob",
+        `/pixorder ${ORDER_ID}`,
+        `/pixcredit ${ORDER_ID}`,
+        `/pixrefund ${ORDER_ID}`,
+      ]) {
+        expect(
+          harness.handler.tryHandle(
+            harness.operatorSession,
+            harness.operator,
+            line,
+            0,
+          ),
+        ).toBe(false);
+      }
+      await flush();
+      expect(harness.sent).toEqual([]);
+      expect(pix.inspect).not.toHaveBeenCalled();
+      expect(pix.credit).not.toHaveBeenCalled();
+      expect(pix.refund).not.toHaveBeenCalled();
+    }
+  });
+
+  it("lets a gamemaster inspect but never credit or refund", async () => {
+    const pix = makePixService();
+    const harness = makeHarness("gamemaster", pix);
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        "/pixorders Bob",
+        0,
+      ),
+    ).toBe(true);
+    expect(pix.inspect).toHaveBeenCalledWith(
+      harness.operatorSession,
+      "operator",
+      "Bob",
+      expect.any(Function),
+    );
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        `/pixcredit ${ORDER_ID}`,
+        0,
+      ),
+    ).toBe(false);
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        `/pixrefund ${ORDER_ID}`,
+        0,
+      ),
+    ).toBe(false);
+    expect(pix.credit).not.toHaveBeenCalled();
+    expect(pix.refund).not.toHaveBeenCalled();
+  });
+
+  it("routes an admin's credit and refund to the service with the operator's own character", async () => {
+    const pix = makePixService();
+    const harness = makeHarness("admin", pix);
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        `/pixcredit ${ORDER_ID}`,
+        0,
+      ),
+    ).toBe(true);
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        `/pixrefund ${ORDER_ID}`,
+        0,
+      ),
+    ).toBe(true);
+    expect(
+      harness.handler.tryHandle(
+        harness.operatorSession,
+        harness.operator,
+        `/pixorder ${ORDER_ID}`,
+        0,
+      ),
+    ).toBe(true);
+    expect(pix.credit).toHaveBeenCalledWith(
+      harness.operatorSession,
+      "operator",
+      ORDER_ID,
+      expect.any(Function),
+    );
+    expect(pix.refund).toHaveBeenCalledWith(
+      harness.operatorSession,
+      "operator",
+      ORDER_ID,
+      expect.any(Function),
+    );
+    expect(pix.inspect).toHaveBeenCalledWith(
+      harness.operatorSession,
+      "operator",
+      ORDER_ID,
+      expect.any(Function),
+    );
+    const reply = pix.credit.mock.calls[0]![3] as (
+      s: Session,
+      ok: boolean,
+      text: string,
+    ) => void;
+    reply(harness.operatorSession, true, "done");
+    expect(harness.sent).toContainEqual({
+      type: "gm-response",
+      ok: true,
+      text: "done",
+    });
+  });
+
+  it("answers usage for an empty or oversized subject without calling the service", async () => {
+    const pix = makePixService();
+    const harness = makeHarness("admin", pix);
+    harness.handler.tryHandle(
+      harness.operatorSession,
+      harness.operator,
+      "/pixorders",
+      0,
+    );
+    harness.handler.tryHandle(
+      harness.operatorSession,
+      harness.operator,
+      `/pixorders ${"x".repeat(80)}`,
+      0,
+    );
+    expect(pix.inspect).not.toHaveBeenCalled();
+    expect(harness.sent.map((line) => line.text)).toEqual([
+      "Usage: /pixorders <name>",
+      "Usage: /pixorders <name>",
+    ]);
+  });
+
+  it("reports the feature as disabled when no payment service is wired", async () => {
+    const harness = makeHarness("admin", null);
+    harness.handler.tryHandle(
+      harness.operatorSession,
+      harness.operator,
+      "/pixorders Bob",
+      0,
+    );
+    harness.handler.tryHandle(
+      harness.operatorSession,
+      harness.operator,
+      `/pixcredit ${ORDER_ID}`,
+      0,
+    );
+    expect(harness.sent.map((line) => line.text)).toEqual([
+      "Pix payments are not enabled.",
+      "Pix payments are not enabled.",
+    ]);
   });
 });

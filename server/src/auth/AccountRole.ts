@@ -7,7 +7,12 @@
  * session's own authenticated account — never from a client message body
  * (charter rule 9).
  */
-export const ACCOUNT_ROLES = ["player", "tutor", "gamemaster", "admin"] as const;
+export const ACCOUNT_ROLES = [
+  "player",
+  "tutor",
+  "gamemaster",
+  "admin",
+] as const;
 
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
 
@@ -27,7 +32,11 @@ export type AdminCapability =
   /** Read privileged state about a character or position. */
   | "world.inspect"
   /** Skip the login queue when the world is full. */
-  | "login.bypass";
+  | "login.bypass"
+  /** Read a player's real-money coin orders. */
+  | "payments.inspect"
+  /** Resolve a refused coin order (force-credit) or refund a payment. */
+  | "payments.operate";
 
 const CAPABILITIES_BY_ROLE: Readonly<
   Record<AccountRole, readonly AdminCapability[]>
@@ -45,6 +54,7 @@ const CAPABILITIES_BY_ROLE: Readonly<
     "world.teleport",
     "world.inspect",
     "login.bypass",
+    "payments.inspect",
   ],
   admin: [
     "moderate.mute",
@@ -55,6 +65,8 @@ const CAPABILITIES_BY_ROLE: Readonly<
     "world.teleport",
     "world.inspect",
     "login.bypass",
+    "payments.inspect",
+    "payments.operate",
   ],
 };
 
@@ -82,8 +94,6 @@ export function hasCapability(
   return CAPABILITY_SETS.get(role)?.has(capability) ?? false;
 }
 
-export function capabilitiesFor(
-  role: AccountRole,
-): readonly AdminCapability[] {
+export function capabilitiesFor(role: AccountRole): readonly AdminCapability[] {
   return CAPABILITIES_BY_ROLE[role] ?? [];
 }

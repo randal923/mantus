@@ -151,4 +151,127 @@ describe("verifyMercadoPagoSignature", () => {
       }),
     ).toBe(false);
   });
+
+  it("accepts an upper-case hex digest", () => {
+    const header = headerFor("123");
+    const upper = header.replace(
+      /v1=([0-9a-f]+)/,
+      (_, hex: string) => `v1=${hex.toUpperCase()}`,
+    );
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: upper,
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a digest of the wrong length even if it is a prefix of the right one", () => {
+    const header = headerFor("123");
+    const truncated = header.replace(
+      /v1=([0-9a-f]+)/,
+      (_, hex: string) => `v1=${hex.slice(0, 62)}`,
+    );
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: truncated,
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a timestamp too far in the future", () => {
+    const future = String(Number(TS) + 2 * 24 * 60 * 60);
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: headerFor("123", future),
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(false);
+  });
+
+  it("honours a tighter tolerance", () => {
+    const stale = String(Number(TS) - 120);
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: headerFor("123", stale),
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+        toleranceMs: 60_000,
+      }),
+    ).toBe(false);
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: headerFor("123", stale),
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+        toleranceMs: 180_000,
+      }),
+    ).toBe(true);
+  });
+
+  it("ignores unknown header parts and tolerates whitespace", () => {
+    const header = headerFor("123");
+    const padded =
+      header.replace("ts=", "  ts = ").replace(",v1=", " , v1 = ") + ",foo=bar";
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: padded,
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a signature for a request id when the request id is then dropped", () => {
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: headerFor("123"),
+        xRequestId: undefined,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects an over-long header outright", () => {
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: `${headerFor("123")},${"x".repeat(600)}`,
+        xRequestId: REQUEST_ID,
+        dataId: "123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a signature over the raw id when the id is alphanumeric (must be lowercased)", () => {
+    const manifest = `id:ABC123;request-id:${REQUEST_ID};ts:${TS};`;
+    expect(
+      verifyMercadoPagoSignature({
+        secret: SECRET,
+        xSignature: `ts=${TS},v1=${sign(manifest)}`,
+        xRequestId: REQUEST_ID,
+        dataId: "ABC123",
+        nowMs: NOW_MS,
+      }),
+    ).toBe(false);
+  });
 });

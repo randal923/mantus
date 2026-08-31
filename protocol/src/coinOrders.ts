@@ -3,7 +3,8 @@ import { STORE_LIMITS } from "./store";
 
 export const COIN_ORDER_LIMITS = {
   maxPackages: 8,
-  maxBrcodeLength: 1_024,
+  /** Matches the `pix_orders.brcode` column cap; EMV BR Codes are ~300 chars. */
+  maxBrcodeLength: 2_048,
   actionCooldownMs: 1_000,
   maxCoinsPerPackage: 1_000_000,
   maxAmountCentavos: 10_000_000,

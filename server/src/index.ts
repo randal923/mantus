@@ -173,6 +173,7 @@ if (pixProvider && !pixWebhookSecret) {
       "disabled; payments settle via the reconciliation sweep only.",
   );
 }
+
 const chests = new PgChestStore(pool, itemCatalog);
 const rewards = new PgRewardStore(pool, itemCatalog);
 const daily = new PgDailyRewardStore(pool, itemCatalog);

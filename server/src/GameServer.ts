@@ -236,6 +236,7 @@ export interface GameServerDeps {
   worldEvents?: WorldEventStore;
   pixOrders?: PixOrderStore;
   pixProvider?: PixProvider;
+  /** Comma-separated: the current secret first, older ones while rotating. */
   pixWebhookSecret?: string;
   pixPayerEmailFallback?: string;
   /** Read-only money-supply sweep; absent in tests and memory-only runs. */
@@ -475,7 +476,10 @@ export class GameServer {
     this.pixWebhook =
       this.pixOrders && deps.pixWebhookSecret
         ? new PixWebhookApi({
-            secret: deps.pixWebhookSecret,
+            secrets: deps.pixWebhookSecret
+              .split(",")
+              .map((secret) => secret.trim())
+              .filter((secret) => secret.length > 0),
             service: this.pixOrders,
             trustProxyHeader: config.trustProxyHeader,
           })
@@ -1392,6 +1396,7 @@ export class GameServer {
         this.persistence,
         this.registry,
         deps.moderation ?? null,
+        this.pixOrders,
       ),
       this.moderation,
       (session, text, now) =>

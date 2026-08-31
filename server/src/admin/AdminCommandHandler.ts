@@ -2,6 +2,7 @@ import type { GmResponseMessage } from "@tibia/protocol";
 import { hasCapability, type AdminCapability } from "../auth/AccountRole";
 import type { CharacterPersistence } from "../character/CharacterPersistence";
 import type { ModerationStore } from "../moderation/ModerationStore";
+import type { PixOrderService } from "../payments/PixOrderService";
 import type { Player } from "../Player";
 import type { Session } from "../Session";
 import type { SessionRegistry } from "../SessionRegistry";
@@ -18,6 +19,10 @@ const REQUIRED_CAPABILITY: Readonly<Record<string, AdminCapability>> = {
   goto: "world.teleport",
   bring: "world.teleport",
   inspect: "world.inspect",
+  pixorders: "payments.inspect",
+  pixorder: "payments.inspect",
+  pixcredit: "payments.operate",
+  pixrefund: "payments.operate",
 };
 
 /**
@@ -40,6 +45,7 @@ export class AdminCommandHandler {
     private readonly persistence: CharacterPersistence,
     private readonly registry: SessionRegistry,
     private readonly store: ModerationStore | null,
+    private readonly pixOrders: PixOrderService | null = null,
   ) {}
 
   /** Returns true when the text was an admin command and was consumed. */
@@ -65,9 +71,75 @@ export class AdminCommandHandler {
         return this.bring(session, player, args, now);
       case "inspect":
         return this.inspect(session, player, args);
+      case "pixorders":
+      case "pixorder":
+        return this.pixInspect(session, player, args, command);
+      case "pixcredit":
+        return this.pixCredit(session, player, args);
+      case "pixrefund":
+        return this.pixRefund(session, player, args);
       default:
         return false;
     }
+  }
+
+  /**
+   * `/pixorders <name>` (last five orders of that character's account) or
+   * `/pixorder <orderId>`. Read-only, and audited into `audit_log` as
+   * `pix-operator-inspect` because it reveals a player's real-money history.
+   */
+  private pixInspect(
+    session: Session,
+    player: Player,
+    args: string[],
+    command: string,
+  ): boolean {
+    const subject = args.join(" ").trim();
+    if (subject.length === 0 || subject.length > 64) {
+      this.reply(
+        session,
+        false,
+        command === "pixorder"
+          ? "Usage: /pixorder <orderId>"
+          : "Usage: /pixorders <name>",
+      );
+      return true;
+    }
+    const pix = this.pixOrders;
+    if (!pix) {
+      this.reply(session, false, "Pix payments are not enabled.");
+      return true;
+    }
+    pix.inspect(session, player.id, subject, (target, ok, text) =>
+      this.reply(target, ok, text),
+    );
+    return true;
+  }
+
+  /** `/pixcredit <orderId>` — resolves a refused order by crediting it. */
+  private pixCredit(session: Session, player: Player, args: string[]): boolean {
+    const pix = this.pixOrders;
+    if (!pix) {
+      this.reply(session, false, "Pix payments are not enabled.");
+      return true;
+    }
+    pix.credit(session, player.id, args[0] ?? "", (target, ok, text) =>
+      this.reply(target, ok, text),
+    );
+    return true;
+  }
+
+  /** `/pixrefund <orderId>` — refunds the payer and claws the coins back. */
+  private pixRefund(session: Session, player: Player, args: string[]): boolean {
+    const pix = this.pixOrders;
+    if (!pix) {
+      this.reply(session, false, "Pix payments are not enabled.");
+      return true;
+    }
+    pix.refund(session, player.id, args[0] ?? "", (target, ok, text) =>
+      this.reply(target, ok, text),
+    );
+    return true;
   }
 
   /** `/goto <x> <y> [z]` or `/goto <name>` — moves the operator. */
