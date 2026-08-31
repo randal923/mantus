@@ -559,6 +559,8 @@ function toGrant(offer, context) {
       kind: "premium",
       name: "Premium Time",
       id: `premium-${days}`,
+      // Shown on the price button as "30 days", the way a potion shows "100x".
+      count: days,
       grant: { kind: "premium", days },
     };
   }

@@ -43,3 +43,4 @@ worktree is created, merged, or removed.
 | `agents/store-row-summary`       | done        |
 | `agents/store-pt-br`             | done        |
 | `agents/store-premium-copy`      | done        |
+| `agents/store-row-description`   | done        |

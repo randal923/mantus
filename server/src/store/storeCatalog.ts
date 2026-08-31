@@ -11,7 +11,6 @@ import { ITEM_POUCH_TYPE_ID } from "../item/itemPouchTypeId";
 import { EXERCISE_WEAPON_CATEGORY } from "./EXERCISE_WEAPON_CATEGORY";
 import { PORTABLE_SELLER_PRODUCT } from "./PORTABLE_SELLER_PRODUCT";
 import { STORE_CATALOG_CATEGORIES } from "./storeCatalogData";
-import { storeProductSummary } from "./storeProductSummary";
 
 /**
  * The catalog's own icon, which names an item *type*; the projection below
@@ -235,13 +234,12 @@ export function toStoreProduct(
   itemIconOf: (itemTypeId: number) => StoreItemIconIds,
   language: Language,
 ): StoreProduct {
-  const summary = storeProductSummary(product.description[language]);
   return {
     id: product.id,
     name: product.name,
     kind: product.kind,
     icon: toStoreIcon(product.icon, itemIconOf),
-    ...(summary.length === 0 ? {} : { summary }),
+    description: product.description[language],
     subOffers: product.subOffers.map((offer) => {
       const adjustment = adjustments.get(offer.id);
       return {

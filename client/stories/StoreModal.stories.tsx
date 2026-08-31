@@ -35,13 +35,14 @@ const PREMIUM: StoreProduct = {
   name: "Premium Time",
   kind: "premium",
 
-  summary: "Enhance your gaming experience by gaining additional abilities and advantages.",
+  description:
+    "A VIP account grants every character on the account a set of standing bonuses.\n\n• EXP Bonus: Every monster defeated grants a 10% experience bonus.\n• Login Priority: When the world is full, VIP players wait ahead of all free accounts.\n\n{usablebyall}\n{activated}",
   icon: { kind: "symbol", symbol: "premium" },
   subOffers: [
-    { id: "premium-30", price: 250 },
-    { id: "premium-90", price: 750 },
-    { id: "premium-180", price: 1_500 },
-    { id: "premium-360", price: 3_000 },
+    { id: "premium-30", price: 250, count: 30 },
+    { id: "premium-90", price: 750, count: 90 },
+    { id: "premium-180", price: 1_500, count: 180 },
+    { id: "premium-360", price: 3_000, count: 360 },
   ],
 };
 
@@ -49,6 +50,8 @@ const POTIONS: StoreProduct = {
   id: "potions-great-health-potion",
   name: "Great Health Potion",
   kind: "stackable",
+  description:
+    "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}",
   icon: { kind: "item", spriteId: 7145, clientId: 2874 },
   subOffers: [
     { id: "item-239-100", price: 18, count: 100 },
@@ -61,7 +64,7 @@ const OWNED_MOUNT: StoreProduct = {
   name: "Armoured War Horse",
   kind: "mount",
 
-  summary: "A dangerous black beauty.",
+  description: "Grants +10 speed while mounted.",
   icon: MOUNT_ICON,
   subOffers: [
     {
@@ -78,7 +81,7 @@ const NAME_CHANGE: StoreProduct = {
   name: "Character Name Change",
   kind: "name-change",
 
-  summary: "Tired of your current character name? Purchase a new one!",
+  description: "Tired of your current character name? Purchase a new one!\n\n{usablebyall}",
   icon: { kind: "symbol", symbol: "name-change" },
   subOffers: [{ id: "name-change", price: 250 }],
 };
@@ -197,6 +200,7 @@ const MOUNT_PAGE: StoreProduct[] = [
   "Draptor",
 ].map((name, index) => ({
   id: `mounts-${index}`,
+  description: "Grants +10 speed while mounted.",
   name,
   kind: "mount" as const,
   icon: MOUNT_ICON,

@@ -91,6 +91,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
           {
             "id": "premium-30",
             "price": 250,
+            "count": 30,
             "grant": {
               "kind": "premium",
               "days": 30
@@ -99,6 +100,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
           {
             "id": "premium-90",
             "price": 750,
+            "count": 90,
             "grant": {
               "kind": "premium",
               "days": 90
@@ -107,6 +109,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
           {
             "id": "premium-180",
             "price": 1500,
+            "count": 180,
             "grant": {
               "kind": "premium",
               "days": 180
@@ -115,6 +118,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
           {
             "id": "premium-360",
             "price": 3000,
+            "count": 360,
             "grant": {
               "kind": "premium",
               "days": 360

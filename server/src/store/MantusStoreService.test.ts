@@ -403,7 +403,7 @@ describe("MantusStoreService", () => {
     expect(owned?.disabledReason).toBe("mount-owned");
   });
 
-  it("serves a product description only when asked", () => {
+  it("lists products with their description and serves it on request too", () => {
     const { world } = makeWorld();
     const sent: ServerMessage[] = [];
     const session = makeSession(sent);
@@ -422,8 +422,9 @@ describe("MantusStoreService", () => {
     );
     const offers = sent.at(-1);
     if (offers?.type !== "store-offers") throw new Error("expected store-offers");
-    // Descriptions are absent from list pages; 140 of them would not fit.
-    expect(offers.products[0]).not.toHaveProperty("description");
+    // The shelf shows the full text; every page is measured against the
+    // message cap at boot (assertStoreCatalog).
+    expect(offers.products[0]?.description).toContain("VIP");
 
     service.handle(
       session,

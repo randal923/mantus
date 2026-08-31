@@ -1,4 +1,9 @@
-import { LANGUAGES, STORE_LIMITS } from "@tibia/protocol";
+import {
+  LANGUAGES,
+  PROTOCOL_LIMITS,
+  STORE_LIMITS,
+  type StoreOffersMessage,
+} from "@tibia/protocol";
 import { DECORATION_KIT_ITEM_ID } from "../item/decorationKitItemId";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { MOUNTS, OUTFITS } from "../outfit/outfitCatalog";
@@ -7,8 +12,18 @@ import {
   STORE_HOME_PRODUCT_IDS,
   STORE_OFFERS_BY_ID,
   STORE_PRODUCTS_BY_ID,
+  toStoreProduct,
   type StoreGrant,
+  type StoreOfferAdjustment,
 } from "./storeCatalog";
+
+/** The widest an item icon can serialise to; real ids are never larger. */
+const WIDEST_ICON = { spriteId: 999_999, clientId: 65_535 } as const;
+/** The longest reason key, so the budget holds when every offer is greyed. */
+const WIDEST_ADJUSTMENT: StoreOfferAdjustment = {
+  price: STORE_LIMITS.maxBalance,
+  disabledReason: "hunting-slots-owned",
+};
 
 /**
  * Boot-time gate on the pinned store catalog. Until this existed a bad offer
@@ -55,6 +70,7 @@ export function assertStoreCatalog(catalog: ItemCatalog): void {
           `${STORE_LIMITS.maxPages} the protocol allows`,
       );
     }
+    assertPagesFit(category.id, category.products, pages);
 
     for (const product of category.products) {
       if (seenProducts.has(product.id)) {
@@ -116,6 +132,50 @@ export function assertStoreCatalog(catalog: ItemCatalog): void {
   }
   if (STORE_OFFERS_BY_ID.size !== seenOffers.size) {
     throw new Error("store offer index disagrees with the catalog");
+  }
+}
+
+/**
+ * Every page of a category, projected exactly as the server sends it with
+ * the widest possible per-offer fields, must fit one protocol message. The
+ * list carries full descriptions, so this is the check that keeps a wordy
+ * catalog edit from silently breaking a shelf (charter rule 10).
+ */
+function assertPagesFit(
+  categoryId: string,
+  products: ReadonlyArray<Parameters<typeof toStoreProduct>[0]>,
+  pages: number,
+): void {
+  for (const language of LANGUAGES) {
+    for (let page = 0; page < pages; page++) {
+      const start = page * STORE_LIMITS.productsPerPage;
+      const message: StoreOffersMessage = {
+        type: "store-offers",
+        categoryId,
+        page,
+        pageCount: pages,
+        products: products
+          .slice(start, start + STORE_LIMITS.productsPerPage)
+          .map((product) =>
+            toStoreProduct(
+              product,
+              new Map(
+                product.subOffers.map((offer) => [offer.id, WIDEST_ADJUSTMENT]),
+              ),
+              () => WIDEST_ICON,
+              language,
+            ),
+          ),
+      };
+      const bytes = Buffer.byteLength(JSON.stringify(message));
+      if (bytes > PROTOCOL_LIMITS.maxMessageBytes) {
+        throw new Error(
+          `store category ${categoryId} page ${page} (${language}) serialises ` +
+            `to ${bytes} bytes, over the ${PROTOCOL_LIMITS.maxMessageBytes} ` +
+            "message cap; shorten descriptions or lower productsPerPage",
+        );
+      }
+    }
   }
 }
 

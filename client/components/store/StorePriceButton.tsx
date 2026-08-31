@@ -1,12 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { PREY_RULES, type StoreSubOffer } from "@tibia/protocol";
+import {
+  PREY_RULES,
+  type StoreProductKind,
+  type StoreSubOffer,
+} from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 
 interface StorePriceButtonProps {
   offer: StoreSubOffer;
+  /** Premium offers count days rather than units. */
+  kind: StoreProductKind;
   balance: number;
   busy: boolean;
   onSelect: () => void;
@@ -21,6 +27,7 @@ interface StorePriceButtonProps {
  */
 export function StorePriceButton({
   offer,
+  kind,
   balance,
   busy,
   onSelect,
@@ -30,10 +37,13 @@ export function StorePriceButton({
   const affordable = balance >= offer.price;
   const price = offer.price.toLocaleString(language);
   // The visible label is a bare number; the accessible name says what it buys.
+  const days = kind === "premium";
   const label =
     offer.count === undefined
       ? t("store.priceLabel", { price })
-      : t("store.priceLabelWithCount", { count: offer.count, price });
+      : days
+        ? t("store.priceLabelWithDays", { count: offer.count, price })
+        : t("store.priceLabelWithCount", { count: offer.count, price });
 
   return (
     <button
@@ -52,7 +62,9 @@ export function StorePriceButton({
     >
       {offer.count !== undefined && (
         <span className="font-display text-xs text-ui-text-bright tabular-nums">
-          {offer.count.toLocaleString(language)}x
+          {days
+            ? t("store.days", { count: offer.count })
+            : `${offer.count.toLocaleString(language)}x`}
         </span>
       )}
       <span className="flex items-center gap-1">

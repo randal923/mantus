@@ -6130,3 +6130,27 @@ reaches players once main is pushed and the Fly deploy runs.
 - **Residual risk:** the premium text is regenerated only by
   `yarn store:catalog` — editing `vipAccount` copy or `PREMIUM_BENEFITS`
   needs a regen to reach the store.
+
+## 2026-08-31 — Store rows show the full description; premium prices say their days (`agents/store-row-description`)
+
+- **Problem:** the shelf showed only a one-line summary, so Premium Time's
+  benefit list (the reason it was rewritten) was never visible without
+  opening the purchase dialog; premium price buttons read "250 / 750 / 1.500
+  / 3.000" with no hint of what each buys.
+- **What changed:** `storeProductSchema` carries `description` (the
+  one-line `summary` and `storeProductSummary` are gone); `StoreProductRow`
+  renders it with `StoreDescription` (tag icons + localised captions).
+  `assertStoreCatalog` now projects every category page in every language
+  with the widest possible per-offer fields and refuses to boot if one
+  exceeds `PROTOCOL_LIMITS.maxMessageBytes` (real worst ≈ 8 KB of 16 KB).
+  Premium sub-offers carry `count = days`; `StorePriceButton` takes the
+  product `kind` and renders "30 dias" / "30 days" (`store.days`,
+  `store.priceLabelWithDays`) instead of "30x". `store-description-state`
+  stays for the purchase dialog.
+- **Files:** `protocol/src/store.ts`, `server/src/store/{storeCatalog,
+  assertStoreCatalog, MantusStoreService.test}.ts`,
+  `tools/importCanaryStoreCatalog.mjs`, `server/src/store/storeCatalogData.ts`
+  (generated), `client/components/store/{StoreProductRow,StorePriceButton}.tsx`,
+  `client/locales/{en,pt-BR}.json`, `client/stories/StoreModal.stories.tsx`.
+- **Verified:** typecheck; server store suite (25); client store suites (40);
+  eslint; boot assertion incl. the new page-budget check.
