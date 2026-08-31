@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { parseStoreDescription } from "../../lib/store/parseStoreDescription";
 
 interface StoreDescriptionProps {
@@ -13,7 +14,10 @@ interface StoreDescriptionProps {
  * 13x13 icon plus its caption, everything else as plain text.
  */
 export function StoreDescription({ description }: StoreDescriptionProps) {
-  const lines = parseStoreDescription(description);
+  const { t } = useAppTranslation();
+  const lines = parseStoreDescription(description, (key, params) =>
+    t(`store.tags.${key}`, params),
+  );
 
   return (
     <div className="space-y-1.5">

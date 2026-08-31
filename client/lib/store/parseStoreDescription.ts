@@ -9,15 +9,23 @@ export interface StoreDescriptionLine {
 const LIMIT_TAG = /^\{limit\|(\d+)\}/;
 const TAG = /^\{([a-z]+)\}/i;
 
+/** Resolves a `store.tags.<key>` caption in the player's language. */
+export type StoreCaptionOf = (
+  key: string,
+  params?: Readonly<Record<string, number>>,
+) => string;
+
 /**
  * Splits an offer description into the icon-and-text lines the official
  * client renders. A leading `{tag}` becomes that tag's icon plus its caption
  * (or the line's own text, when it has some); anything else is a plain line.
+ * Captions come from `captionOf`, so the same markup renders in any language.
  *
  * `{limit|N}` is Canary's parameterised tag for per-character caps.
  */
 export function parseStoreDescription(
   description: string,
+  captionOf: StoreCaptionOf,
 ): StoreDescriptionLine[] {
   return description.split("\n").flatMap((raw): StoreDescriptionLine[] => {
     const line = raw.trim();
@@ -32,7 +40,7 @@ export function parseStoreDescription(
           text:
             rest.length > 0
               ? rest
-              : `maximum amount that can be owned by character: ${limit[1]}`,
+              : captionOf("limit", { count: Number(limit[1]) }),
         },
       ];
     }
@@ -44,9 +52,12 @@ export function parseStoreDescription(
     const rest = line.slice(tag[0].length).trim();
     // An unknown tag is markup we do not render; keep the text, drop the tag.
     if (!known) return rest.length > 0 ? [{ icon: null, text: rest }] : [];
-    const text = rest.length > 0 ? rest : known.caption;
-    return text.length > 0 || known.caption.length > 0
-      ? [{ icon: known.icon, text }]
-      : [];
+    const text =
+      rest.length > 0
+        ? rest
+        : known.caption === null
+          ? ""
+          : captionOf(known.caption);
+    return text.length > 0 ? [{ icon: known.icon, text }] : [];
   });
 }

@@ -48,7 +48,8 @@ describe("EXERCISE_WEAPON_CATEGORY", () => {
       const type = catalog.require(offer.grant.itemTypeId);
       expect(type.charges).toBe(offer.grant.charges);
       expect(product.name.toLowerCase()).toBe(type.name);
-      expect(product.description).toContain(`usable ${type.charges} times`);
+      expect(product.description.en).toContain(`usable ${type.charges} times`);
+      expect(product.description["pt-BR"]).toContain(`${type.charges} vezes`);
       expect(
         getExerciseWeaponDefinition(offer.grant.itemTypeId)?.speedMultiplier,
       ).toBe(5);

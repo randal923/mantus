@@ -68,7 +68,7 @@ const OWNED_MOUNT: StoreProduct = {
       id: "mount-23",
       price: 870,
       disabled: true,
-      disabledReason: "You already own this mount.",
+      disabledReason: "mount-owned",
     },
   ],
 };
@@ -206,7 +206,7 @@ const MOUNT_PAGE: StoreProduct[] = [
           id: "mount-23",
           price: 870,
           disabled: true,
-          disabledReason: "You already own this mount.",
+          disabledReason: "mount-owned",
         }
       : { id: `mount-${index}`, price: 750 + index * 30 },
   ],

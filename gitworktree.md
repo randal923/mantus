@@ -41,3 +41,4 @@ worktree is created, merged, or removed.
 | `agents/landing-redesign`        | done        |
 | `agents/store-catalog-polish`    | done        |
 | `agents/store-row-summary`       | done        |
+| `agents/store-pt-br`             | done        |

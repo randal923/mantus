@@ -1,4 +1,8 @@
-import { MAX_PREMIUM_DAYS, PREY_RULES } from "@tibia/protocol";
+import {
+  MAX_PREMIUM_DAYS,
+  PREY_RULES,
+  type StoreDisabledReason,
+} from "@tibia/protocol";
 import type {
   StoreCatalogProduct,
   StoreCatalogSubOffer,
@@ -21,12 +25,12 @@ export function storeOfferAvailability(
   product: StoreCatalogProduct,
   offer: StoreCatalogSubOffer,
   snapshot: StorePlayerSnapshot,
-): string | undefined {
+): StoreDisabledReason | undefined {
   const grant = offer.grant;
 
   if (grant.kind === "premium") {
     return snapshot.premiumDaysRemaining + grant.days > MAX_PREMIUM_DAYS
-      ? "You cannot store that much Premium Time."
+      ? "premium-limit"
       : undefined;
   }
 
@@ -34,50 +38,50 @@ export function storeOfferAvailability(
     const lookType = snapshot.sex === "male" ? grant.male : grant.female;
     const owned = snapshot.outfitAddonsByLookType.get(lookType);
     if (grant.kind === "outfit-addon" && owned === undefined) {
-      return "You must own the outfit before you can buy its addon.";
+      return "outfit-required";
     }
     if (owned === undefined) return undefined;
     return (grant.addons & ~owned) === 0
       ? grant.kind === "outfit-addon"
-        ? "You already own this addon."
-        : "You already own this outfit."
+        ? "addon-owned"
+        : "outfit-owned"
       : undefined;
   }
 
   if (grant.kind === "mount") {
     return snapshot.mountIds.has(grant.mountId)
-      ? "You already own this mount."
+      ? "mount-owned"
       : undefined;
   }
 
   if (grant.kind === "item" || grant.kind === "stackable") {
     return grant.unique && snapshot.uniqueItemTypeIds.has(grant.itemTypeId)
-      ? `You already have a ${product.name}.`
+      ? "item-owned"
       : undefined;
   }
 
   if (grant.kind === "prey-wildcard") {
     return snapshot.wildcards >= PREY_RULES.maxWildcards
-      ? `You cannot own more than ${PREY_RULES.maxWildcards} prey wildcards.`
+      ? "wildcard-limit"
       : undefined;
   }
 
   if (grant.kind === "prey-slot") {
     return snapshot.preySlotsUnlocked
-      ? "You already have every prey slot unlocked."
+      ? "prey-slots-owned"
       : undefined;
   }
 
   if (grant.kind === "hunting-slot") {
     return snapshot.huntingSlotsUnlocked
-      ? "You already have every hunting task slot unlocked."
+      ? "hunting-slots-owned"
       : undefined;
   }
 
   if (grant.kind === "exp-boost") {
-    if (snapshot.xpBoostActive) return "You already have an active XP boost.";
+    if (snapshot.xpBoostActive) return "xp-boost-active";
     return snapshot.xpBoostPurchasesToday >= XP_BOOST_DAILY_LIMIT
-      ? "You cannot buy another XP Boost today."
+      ? "xp-boost-daily-limit"
       : undefined;
   }
 

@@ -608,6 +608,36 @@
     "mantusCoins": "Mantus Coins"
   },
   "store": {
+    "tags": {
+      "character": "só pode ser usado pelo personagem que comprou",
+      "usablebyall": "pode ser usado por todos os personagens da conta",
+      "box": "vem em uma caixa que só pode ser aberta pelo personagem que comprou",
+      "storeinbox": "será enviado para a caixa de entrada da Loja e só pode ficar lá ou na caixa do depot",
+      "house": "só pode ser desembrulhado em uma casa do personagem que comprou",
+      "once": "só pode ser comprado uma vez",
+      "backtoinbox": "será embrulhado de volta e enviado para a caixa de entrada se o personagem que comprou deixar de ser o dono da casa",
+      "vocationlevelcheck": "só pode ser comprado se a vocação e o nível do personagem que compra forem adequados",
+      "speedboost": "dá ao personagem um aumento de velocidade",
+      "activated": "ativado na compra",
+      "battlesign": "não pode ser comprado por personagens com bloqueio de zona de proteção ou marca de batalha",
+      "capacity": "não pode ser comprado se a capacidade for excedida",
+      "use": "pode ser usado",
+      "transferableprice": "pode ser comprado com Mantus Coins transferíveis",
+      "limit": "quantidade máxima que o personagem pode ter: {{count}}"
+    },
+    "offerDisabled": {
+      "premium-limit": "Você não pode acumular tanto Tempo Premium.",
+      "outfit-required": "Você precisa ter o traje antes de comprar o adicional.",
+      "addon-owned": "Você já tem este adicional.",
+      "outfit-owned": "Você já tem este traje.",
+      "mount-owned": "Você já tem esta montaria.",
+      "item-owned": "Você já tem um destes.",
+      "wildcard-limit": "Você não pode ter mais de {{count}} curingas de presa.",
+      "prey-slots-owned": "Você já desbloqueou todos os espaços de presa.",
+      "hunting-slots-owned": "Você já desbloqueou todos os espaços de tarefa de caça.",
+      "xp-boost-active": "Você já tem um Impulso de XP ativo.",
+      "xp-boost-daily-limit": "Você não pode comprar outro Impulso de XP hoje."
+    },
     "title": "Loja Mantus",
     "description": "Mantus Coins compram tempo premium, trajes, montarias, impulsos e suprimentos para todos os personagens da sua conta. As compras são entregues no seu contêiner de Itens Vinculados, e as moedas são adicionadas à sua conta, nunca a um único personagem.",
     "open": "Abrir Loja Mantus",

@@ -608,6 +608,36 @@
     "mantusCoins": "Mantus Coins"
   },
   "store": {
+    "tags": {
+      "character": "only usable by purchasing character",
+      "usablebyall": "can be used by all characters on the account",
+      "box": "comes in a box which can only be unwrapped by purchasing character",
+      "storeinbox": "will be sent to your Store inbox and can only be stored there and in depot box",
+      "house": "can only be unwrapped in a house owned by the purchasing character",
+      "once": "can only be purchased once",
+      "backtoinbox": "will be wrapped back and sent to inbox if the purchasing character is no longer the house owner",
+      "vocationlevelcheck": "only buyable if fitting vocation and level of purchasing character",
+      "speedboost": "provides character with a speed boost",
+      "activated": "activated at purchase",
+      "battlesign": "cannot be purchased by characters with protection zone block or battle sign",
+      "capacity": "cannot be purchased if capacity is exceeded",
+      "use": "can be used",
+      "transferableprice": "can be purchased with transferable Mantus Coins",
+      "limit": "maximum amount that can be owned by character: {{count}}"
+    },
+    "offerDisabled": {
+      "premium-limit": "You cannot store that much Premium Time.",
+      "outfit-required": "You must own the outfit before you can buy its addon.",
+      "addon-owned": "You already own this addon.",
+      "outfit-owned": "You already own this outfit.",
+      "mount-owned": "You already own this mount.",
+      "item-owned": "You already own one of these.",
+      "wildcard-limit": "You cannot own more than {{count}} prey wildcards.",
+      "prey-slots-owned": "You already have every prey slot unlocked.",
+      "hunting-slots-owned": "You already have every hunting task slot unlocked.",
+      "xp-boost-active": "You already have an active XP boost.",
+      "xp-boost-daily-limit": "You cannot buy another XP Boost today."
+    },
     "title": "Mantus Store",
     "description": "Mantus Coins buy premium time, outfits, mounts, boosts and supplies for every character on your account. Purchases are delivered to your Bound Items container, and coins are added to your account, never to a single character.",
     "open": "Open Mantus Store",

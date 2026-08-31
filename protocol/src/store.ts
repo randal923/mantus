@@ -124,6 +124,25 @@ export const storeIconSchema = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 
+/**
+ * Why an offer is greyed out for this character. Keys rather than sentences
+ * so the client renders them in the player's language; the server still
+ * refuses the purchase itself at execution time (charter rule 8).
+ */
+export const storeDisabledReasonSchema = z.enum([
+  "premium-limit",
+  "outfit-required",
+  "addon-owned",
+  "outfit-owned",
+  "mount-owned",
+  "item-owned",
+  "wildcard-limit",
+  "prey-slots-owned",
+  "hunting-slots-owned",
+  "xp-boost-active",
+  "xp-boost-daily-limit",
+]);
+
 /** One priced variant of a product — the thing a purchase actually names. */
 export const storeSubOfferSchema = z
   .object({
@@ -133,7 +152,7 @@ export const storeSubOfferSchema = z
     count: z.number().int().min(1).max(10_000).optional(),
     /** Server's own answer to "can this character buy it right now". */
     disabled: z.boolean().optional(),
-    disabledReason: z.string().max(160).optional(),
+    disabledReason: storeDisabledReasonSchema.optional(),
   })
   .strict();
 
@@ -312,6 +331,7 @@ export const storeActionFailedMessageSchema = z
   .strict();
 
 export type StoreProductKind = z.infer<typeof storeProductKindSchema>;
+export type StoreDisabledReason = z.infer<typeof storeDisabledReasonSchema>;
 export type StoreIcon = z.infer<typeof storeIconSchema>;
 export type StoreSubOffer = z.infer<typeof storeSubOfferSchema>;
 export type StoreProduct = z.infer<typeof storeProductSchema>;

@@ -143,7 +143,7 @@ export class MantusStoreService {
       session.send({
         type: "store-description-state",
         productId: product.id,
-        description: product.description,
+        description: product.description[account.language],
       });
       return;
     }
@@ -170,11 +170,18 @@ export class MantusStoreService {
     session.send({
       type: "store-state",
       balance: account.mantusCoins,
-      categories: storeCategoryTree(this.itemIconOf),
+      categories: storeCategoryTree(this.itemIconOf, account.language),
       home: STORE_HOME_PRODUCT_IDS.flatMap((productId) => {
         const product = STORE_PRODUCTS_BY_ID.get(productId);
         return product
-          ? [toStoreProduct(product, adjustments, this.itemIconOf)]
+          ? [
+              toStoreProduct(
+                product,
+                adjustments,
+                this.itemIconOf,
+                account.language,
+              ),
+            ]
           : [];
       }),
     });
@@ -245,7 +252,14 @@ export class MantusStoreService {
       pageCount,
       products: category.products
         .slice(start, start + STORE_LIMITS.productsPerPage)
-        .map((product) => toStoreProduct(product, adjustments, this.itemIconOf)),
+        .map((product) =>
+          toStoreProduct(
+            product,
+            adjustments,
+            this.itemIconOf,
+            account.language,
+          ),
+        ),
     });
   }
 

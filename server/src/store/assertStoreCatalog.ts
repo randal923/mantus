@@ -1,4 +1,4 @@
-import { STORE_LIMITS } from "@tibia/protocol";
+import { LANGUAGES, STORE_LIMITS } from "@tibia/protocol";
 import { DECORATION_KIT_ITEM_ID } from "../item/decorationKitItemId";
 import type { ItemCatalog } from "../item/ItemCatalog";
 import { MOUNTS, OUTFITS } from "../outfit/outfitCatalog";
@@ -61,8 +61,19 @@ export function assertStoreCatalog(catalog: ItemCatalog): void {
         throw new Error(`duplicate store product id ${product.id}`);
       }
       seenProducts.add(product.id);
-      if (product.description.length > STORE_LIMITS.maxDescriptionLength) {
-        throw new Error(`store product ${product.id} has an oversized description`);
+      for (const language of LANGUAGES) {
+        const description = product.description[language];
+        if (
+          typeof description !== "string" ||
+          description.length > STORE_LIMITS.maxDescriptionLength
+        ) {
+          throw new Error(
+            `store product ${product.id} has a missing or oversized ${language} description`,
+          );
+        }
+        if (typeof category.name[language] !== "string") {
+          throw new Error(`store category ${category.id} has no ${language} name`);
+        }
       }
       if (
         product.subOffers.length < 1 ||

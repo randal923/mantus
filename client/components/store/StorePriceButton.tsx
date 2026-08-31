@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { StoreSubOffer } from "@tibia/protocol";
+import { PREY_RULES, type StoreSubOffer } from "@tibia/protocol";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import { useLanguageStore } from "../../stores/useLanguageStore";
 
@@ -40,7 +40,13 @@ export function StorePriceButton({
       type="button"
       aria-label={label}
       disabled={offer.disabled === true || busy}
-      title={offer.disabledReason}
+      title={
+        offer.disabledReason === undefined
+          ? undefined
+          : t(`store.offerDisabled.${offer.disabledReason}`, {
+              count: PREY_RULES.maxWildcards,
+            })
+      }
       onClick={onSelect}
       className="flex h-10 min-w-24 items-center justify-center gap-2 border border-ui-gold/25 bg-black/55 px-3 text-left shadow-inner shadow-black/50 transition-[border-color,background-color] not-disabled:hover:border-ui-gold/60 not-disabled:hover:bg-ui-panel-light/80 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-ui-gold/60 focus-visible:outline-none"
     >

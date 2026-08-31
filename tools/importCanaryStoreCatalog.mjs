@@ -30,6 +30,7 @@ const catalogRoot = join(
   "data/modules/scripts/gamestore/catalog",
 );
 const itemCatalogPath = join(here, "../server/data/item-catalog.json");
+const translationsPath = join(here, "storeTranslations.pt-BR.json");
 const outfitDataPath = join(here, "../server/src/outfit/outfitCatalogData.ts");
 const outPath = join(here, "../server/src/store/storeCatalogData.ts");
 
@@ -49,6 +50,57 @@ const MODULES = [
   { module: "extras_extras_services", id: "extra-services" },
   { module: "extras_usefull_things", id: "useful-things" },
 ];
+
+/**
+ * Category names in every language the client ships; product, item, outfit
+ * and mount names stay English as they do everywhere else in the game.
+ */
+const CATEGORY_NAMES_PT_BR = {
+  "Premium Time": "Tempo Premium",
+  Boosts: "Impulsos",
+  Consumables: "Consumíveis",
+  Potions: "Poções",
+  Runes: "Runas",
+  Kegs: "Barris",
+  "Exercise Weapons": "Armas de Treino",
+  Cosmetics: "Cosméticos",
+  Outfits: "Trajes",
+  Mounts: "Montarias",
+  Houses: "Casas",
+  Upgrades: "Melhorias",
+  Furniture: "Móveis",
+  Decorations: "Decorações",
+  Extras: "Extras",
+  "Extra Services": "Serviços Extras",
+  "Useful Things": "Itens Úteis",
+};
+
+/**
+ * Hand-translated descriptions, keyed by the exact English text the import
+ * produces (tools/storeTranslations.pt-BR.json). Every non-templated
+ * description must have an entry; the run fails and lists the gaps
+ * otherwise, so a Canary update can never ship half-translated copy.
+ */
+const TRANSLATIONS_PT_BR = new Map(
+  JSON.parse(readFileSync(translationsPath, "utf8")).map((entry) => [
+    entry.en,
+    entry["pt-BR"],
+  ]),
+);
+const missingTranslations = new Set();
+
+function translatePtBr(english) {
+  const translated = TRANSLATIONS_PT_BR.get(english);
+  if (translated !== undefined) return translated;
+  missingTranslations.add(english);
+  return english;
+}
+
+function localizedName(english) {
+  const ptBr = CATEGORY_NAMES_PT_BR[english];
+  if (!ptBr) throw new Error(`no Portuguese name for category "${english}"`);
+  return { en: english, "pt-BR": ptBr };
+}
 
 /** Parent categories, keyed by the `parent` name the child modules declare. */
 const PARENTS = [
@@ -194,22 +246,42 @@ function cleanDescription(value) {
 const TAG_ONLY_LINE = /^\{[a-z0-9|]+\}$/i;
 
 /**
- * Canary ships most house items with tag lines only ("{house}\n{box}…") and
- * not one sentence of their own. When the pinned item catalog carries the
- * item's in-game description ("It depicts the two suns of Tibia…"), that
- * becomes the product's opening line; a house item without even that gets a
- * templated line from its kind (see `houseItemProse`). Either way the detail
- * pane reads like the rest of the store instead of a bare column of icons.
+ * The product's description in every language. Canary ships most house items
+ * with tag lines only ("{house}\n{box}…") and not one sentence of their own.
+ * When the pinned item catalog carries the item's in-game description ("It
+ * depicts the two suns of Tibia…"), that becomes the opening line; a house
+ * item without even that gets a templated line from its kind (see
+ * `houseItemProse`). Prose is translated through the hand-written table;
+ * templated lines are written in both languages here; tag-only text is
+ * language-neutral markup and passes through unchanged.
  */
-function withItemProse(description, itemType, { name, kind }) {
+function localizedDescription(description, itemType, { name, kind }, override) {
+  if (override?.description) {
+    return {
+      en: override.description,
+      "pt-BR": translatePtBr(override.description),
+    };
+  }
   const hasProse = description
     .split("\n")
     .some((line) => line.length > 0 && !TAG_ONLY_LINE.test(line));
-  if (hasProse) return description;
-  const prose =
-    itemType?.description?.trim() ||
-    (kind === "house-item" && itemType ? houseItemProse(name, itemType) : "");
-  if (!prose) return description;
+  if (hasProse) return { en: description, "pt-BR": translatePtBr(description) };
+  const inGame = itemType?.description?.trim();
+  if (inGame) {
+    const en = withSentence(inGame, description);
+    return { en, "pt-BR": translatePtBr(en) };
+  }
+  if (kind === "house-item" && itemType) {
+    const prose = houseItemProse(name, itemType);
+    return {
+      en: withSentence(prose.en, description),
+      "pt-BR": withSentence(prose["pt-BR"], description),
+    };
+  }
+  return { en: description, "pt-BR": description };
+}
+
+function withSentence(prose, description) {
   const sentence = /[.!?]$/.test(prose) ? prose : `${prose}.`;
   return description.length > 0 ? `${sentence}\n\n${description}` : sentence;
 }
@@ -218,29 +290,35 @@ const HOUSE_ITEM_KINDS = [
   {
     test: /\b(chair|stool|bench|hassock|couch|cushion)$/i,
     line: (subject) => `${subject} — take a seat and make yourself at home.`,
+    ptBr: "Sente-se e fique à vontade na sua casa.",
   },
   {
     test: /\b(table|workbench)$/i,
     line: (subject) => `${subject}, with room for whatever you set on it.`,
+    ptBr: "Com espaço para tudo o que você quiser colocar em cima.",
   },
   {
     test: /\b(carpet|rug|mat|parquet|floor|tiles|planks|intarsia|grass)(?: \d+)?$/i,
     primaryType: "floor decorations",
     line: (subject) => `${subject} to lay over the floor of your house.`,
+    ptBr: "Cobre o chão da sua casa.",
   },
   {
     test: /\b(lamps?|candelabra|candle holder|chandelier|fire bowl|torch|light)(?: of change)?$/i,
     primaryType: "light sources",
     line: (subject) => `${subject} to light up a room of your house.`,
+    ptBr: "Ilumina um cômodo da sua casa.",
   },
   {
     test: /\b(painting|portrait|drawing|tapestry|flag|panel|panel base)$|^painting of\b/i,
     line: (subject) => `${subject} to adorn a wall of your house.`,
+    ptBr: "Enfeita uma parede da sua casa.",
   },
   {
     test: /\b(cabinet|cupboard|wallcupboard|chest|trunk|shelf|bookcase|book case|bookstand|item stand|spice rack|rack|display|shield|clock|mirror|basin|bulb|sphere)$/i,
     primaryType: "furniture",
     line: (subject) => `${subject} to furnish your house.`,
+    ptBr: "Mobília para a sua casa.",
   },
 ];
 
@@ -265,40 +343,55 @@ const PROPER_NOUNS = new Set([
 /** Store names that read as more than one thing, or as a mass noun. */
 const NO_ARTICLE_HEADS = /(?:[^s]s|fungi|grass)$/i;
 
+const PART_PT_BR = { left: "esquerda", middle: "central", right: "direita" };
+
 /**
- * One templated sentence for a house item Canary describes with tags alone,
+ * One templated sentence, in both languages, for a house item Canary describes
+ * with tags alone,
  * in the voice of the store's other blurbs: the offer's own name lowered into
  * a sentence (so the furniture set reads naturally — "a ferocious cabinet"),
  * then what it is for. The store name is used rather than the item's catalog
  * name because Canary's house offers point at kit variants ("rolled-up azure
  * carpet") and painting titles ("the streets of Tibia"). Multi-part pieces
  * name their part, and anything that opens says how many slots it holds —
- * read from the pinned catalog rather than guessed.
+ * read from the pinned catalog rather than guessed. The Portuguese line does
+ * not repeat the (English) product name shown right above it.
  */
 function houseItemProse(storeName, itemType) {
   const part = /^(.*?)\s+(large\s+)?(left|middle|right)$/i.exec(storeName);
   if (part) {
+    const side = part[3].toLowerCase();
     const piece = withArticle(
       `${part[2] ? "large " : ""}${lowerName(part[1])}`,
     );
-    return (
-      `The ${part[3].toLowerCase()} part of ${piece}. ` +
-      "Place the parts side by side for the full piece."
-    );
+    return {
+      en:
+        `The ${side} part of ${piece}. ` +
+        "Place the parts side by side for the full piece.",
+      "pt-BR":
+        `A parte ${PART_PT_BR[side]} de um móvel em partes. ` +
+        "Coloque as partes lado a lado para montar a peça completa.",
+    };
   }
   const subject = capitalize(withArticle(lowerName(storeName)));
   if (itemType.containerCapacity > 0) {
-    return (
-      `${subject}. It opens as a container with ${itemType.containerCapacity} ` +
-      "slots, so it stores your belongings as well as it looks."
-    );
+    return {
+      en:
+        `${subject}. It opens as a container with ${itemType.containerCapacity} ` +
+        "slots, so it stores your belongings as well as it looks.",
+      "pt-BR":
+        `Abre como um contêiner com ${itemType.containerCapacity} espaços, ` +
+        "guardando seus pertences tão bem quanto enfeita a casa.",
+    };
   }
   const primaryType = itemType.primaryType ?? "";
   const kind = HOUSE_ITEM_KINDS.find(
     (candidate) =>
       candidate.test.test(storeName) || candidate.primaryType === primaryType,
   );
-  return kind ? kind.line(subject) : `${subject} to decorate your house.`;
+  return kind
+    ? { en: kind.line(subject), "pt-BR": kind.ptBr }
+    : { en: `${subject} to decorate your house.`, "pt-BR": "Decoração para a sua casa." };
 }
 
 function lowerName(storeName) {
@@ -630,15 +723,14 @@ function importCatalog() {
             : `${entry.id}-${slug(name)}`,
         name: mapped.kind === "premium" ? "Premium Time" : name,
         kind: mapped.kind,
-        description:
-          override?.description ??
-          withItemProse(
-            cleanDescription(offer.description),
-            "itemTypeId" in mapped.grant
-              ? itemTypes.get(mapped.grant.itemTypeId)
-              : undefined,
-            { name, kind: mapped.kind },
-          ),
+        description: localizedDescription(
+          cleanDescription(offer.description),
+          "itemTypeId" in mapped.grant
+            ? itemTypes.get(mapped.grant.itemTypeId)
+            : undefined,
+          { name, kind: mapped.kind },
+          override,
+        ),
         icon: mapped.icon ?? {
           kind: "symbol",
           symbol: SYMBOL_BY_KIND[mapped.kind] ?? "premium",
@@ -654,7 +746,9 @@ function importCatalog() {
     const products_ = [...products.values()];
     categories.push({
       id: entry.id,
-      name: typeof parsed.name === "string" ? parsed.name : titleFrom(entry.id),
+      name: localizedName(
+        typeof parsed.name === "string" ? parsed.name : titleFrom(entry.id),
+      ),
       parentId: parent?.id ?? null,
       // A category wears the icon of its first product; OTClient's category
       // art is downloaded rather than bundled, so this is the real art we do
@@ -672,7 +766,7 @@ function importCatalog() {
       if (!firstChild) throw new Error(`parent ${parent.id} has no children`);
       return {
         id: parent.id,
-        name: parent.name,
+        name: localizedName(parent.name),
         parentId: null,
         icon: firstChild.icon,
       };
@@ -715,6 +809,19 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = ${J
   2,
 )};
 `;
+
+if (missingTranslations.size > 0) {
+  const gaps = [...missingTranslations];
+  writeFileSync(
+    join(here, "storeTranslations.missing.json"),
+    JSON.stringify(gaps, null, 2),
+  );
+  throw new Error(
+    `${gaps.length} description(s) have no pt-BR entry in ` +
+      "tools/storeTranslations.pt-BR.json; the English texts were written " +
+      "to tools/storeTranslations.missing.json",
+  );
+}
 
 writeFileSync(outPath, serialized);
 

@@ -1,5 +1,7 @@
 import type {
+  Language,
   StoreCategory,
+  StoreDisabledReason,
   StoreIcon,
   StoreProduct,
   StoreProductKind,
@@ -72,6 +74,13 @@ export type StoreGrant =
         | "temple-teleport";
     };
 
+/**
+ * Player-facing text in every language the client ships. The catalog is the
+ * one place store copy lives, and the server picks the account's language
+ * when it projects a product — the client never translates catalog text.
+ */
+export type LocalizedText = Readonly<Record<Language, string>>;
+
 export interface StoreCatalogSubOffer {
   readonly id: string;
   readonly price: number;
@@ -84,14 +93,15 @@ export interface StoreCatalogProduct {
   readonly id: string;
   readonly name: string;
   readonly kind: StoreProductKind;
-  readonly description: string;
+  /** Item, outfit and mount names stay English, as everywhere in the game. */
+  readonly description: LocalizedText;
   readonly icon: StoreCatalogIcon;
   readonly subOffers: ReadonlyArray<StoreCatalogSubOffer>;
 }
 
 export interface StoreCatalogCategory {
   readonly id: string;
-  readonly name: string;
+  readonly name: LocalizedText;
   readonly parentId: string | null;
   readonly icon: StoreCatalogIcon;
   readonly products: ReadonlyArray<StoreCatalogProduct>;
@@ -178,10 +188,11 @@ export const STORE_HOME_PRODUCT_IDS: ReadonlyArray<string> = [
 /** The category tree, as the client's left-hand list needs it. */
 export function storeCategoryTree(
   itemIconOf: (itemTypeId: number) => StoreItemIconIds,
+  language: Language,
 ): StoreCategory[] {
   return STORE_CATEGORIES.map((category) => ({
     id: category.id,
-    name: category.name,
+    name: category.name[language],
     parentId: category.parentId,
     icon: toStoreIcon(category.icon, itemIconOf),
   }));
@@ -210,7 +221,7 @@ function toStoreIcon(
  */
 export interface StoreOfferAdjustment {
   readonly price?: number;
-  readonly disabledReason?: string;
+  readonly disabledReason?: StoreDisabledReason;
 }
 
 /**
@@ -222,8 +233,9 @@ export function toStoreProduct(
   product: StoreCatalogProduct,
   adjustments: ReadonlyMap<string, StoreOfferAdjustment>,
   itemIconOf: (itemTypeId: number) => StoreItemIconIds,
+  language: Language,
 ): StoreProduct {
-  const summary = storeProductSummary(product.description);
+  const summary = storeProductSummary(product.description[language]);
   return {
     id: product.id,
     name: product.name,

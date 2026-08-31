@@ -400,7 +400,7 @@ describe("MantusStoreService", () => {
       .flatMap((product) => product.subOffers)
       .find((offer) => offer.id === "mount-23");
     expect(owned?.disabled).toBe(true);
-    expect(owned?.disabledReason).toMatch(/already own this mount/i);
+    expect(owned?.disabledReason).toBe("mount-owned");
   });
 
   it("serves a product description only when asked", () => {

@@ -12,7 +12,10 @@ import type { StoreCatalogCategory } from "./storeCatalog";
 export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   {
     "id": "consumables",
-    "name": "Consumables",
+    "name": {
+      "en": "Consumables",
+      "pt-BR": "Consumíveis"
+    },
     "parentId": null,
     "icon": {
       "kind": "item",
@@ -22,7 +25,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "cosmetics",
-    "name": "Cosmetics",
+    "name": {
+      "en": "Cosmetics",
+      "pt-BR": "Cosméticos"
+    },
     "parentId": null,
     "icon": {
       "kind": "outfit",
@@ -33,7 +39,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "houses",
-    "name": "Houses",
+    "name": {
+      "en": "Houses",
+      "pt-BR": "Casas"
+    },
     "parentId": null,
     "icon": {
       "kind": "item",
@@ -43,7 +52,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "extras",
-    "name": "Extras",
+    "name": {
+      "en": "Extras",
+      "pt-BR": "Extras"
+    },
     "parentId": null,
     "icon": {
       "kind": "symbol",
@@ -53,7 +65,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "premium-time",
-    "name": "Premium Time",
+    "name": {
+      "en": "Premium Time",
+      "pt-BR": "Tempo Premium"
+    },
     "parentId": null,
     "icon": {
       "kind": "symbol",
@@ -64,7 +79,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "premium-time",
         "name": "Premium Time",
         "kind": "premium",
-        "description": "Enhance your gaming experience by gaining additional abilities and advantages:\n\n• access to Premium areas\n• use Tibia's transport system (ships, carpet)\n• more spells\n• rent houses\n• found guilds\n• offline training\n• larger depots\n• and many more\n\n{usablebyallicon} valid for all characters on this account\n{activated}",
+        "description": {
+          "en": "Enhance your gaming experience by gaining additional abilities and advantages:\n\n• access to Premium areas\n• use Tibia's transport system (ships, carpet)\n• more spells\n• rent houses\n• found guilds\n• offline training\n• larger depots\n• and many more\n\n{usablebyallicon} valid for all characters on this account\n{activated}",
+          "pt-BR": "Melhore sua experiência de jogo obtendo habilidades e vantagens adicionais:\n\n• acesso a áreas Premium\n• uso do sistema de transporte de Tibia (navios, tapete)\n• mais magias\n• alugar casas\n• fundar guildas\n• treino offline\n• depots maiores\n• e muito mais\n\n{usablebyallicon} válido para todos os personagens desta conta\n{activated}"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "premium"
@@ -108,7 +126,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "boosts",
-    "name": "Boosts",
+    "name": {
+      "en": "Boosts",
+      "pt-BR": "Impulsos"
+    },
     "parentId": null,
     "icon": {
       "kind": "symbol",
@@ -119,7 +140,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "boosts-xp-boost",
         "name": "XP Boost",
         "kind": "exp-boost",
-        "description": "Purchase a boost that increases the experience points your character gains from hunting by 50%!\n\n{character}\n{info} lasts for 1 hour hunting time\n{info} paused if stamina falls under 14 hours\n{info} can be purchased up to 5 times between 2 server saves\n{info} price increases with every purchase\n{info} cannot be purchased if an XP boost is already active",
+        "description": {
+          "en": "Purchase a boost that increases the experience points your character gains from hunting by 50%!\n\n{character}\n{info} lasts for 1 hour hunting time\n{info} paused if stamina falls under 14 hours\n{info} can be purchased up to 5 times between 2 server saves\n{info} price increases with every purchase\n{info} cannot be purchased if an XP boost is already active",
+          "pt-BR": "Compre um impulso que aumenta em 50% os pontos de experiência que seu personagem ganha caçando!\n\n{character}\n{info} dura 1 hora de tempo de caça\n{info} pausado se a stamina cair abaixo de 14 horas\n{info} pode ser comprado até 5 vezes entre 2 server saves\n{info} o preço aumenta a cada compra\n{info} não pode ser comprado se um Impulso de XP já estiver ativo"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "exp-boost"
@@ -138,7 +162,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "potions",
-    "name": "Potions",
+    "name": {
+      "en": "Potions",
+      "pt-BR": "Poções"
+    },
     "parentId": "consumables",
     "icon": {
       "kind": "item",
@@ -149,7 +176,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-great-health-potion",
         "name": "Great Health Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 239
@@ -183,7 +213,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-great-mana-potion",
         "name": "Great Mana Potion",
         "kind": "stackable",
-        "description": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Recarrega a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 238
@@ -217,7 +250,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-great-spirit-potion",
         "name": "Great Spirit Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points and mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points and mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida e a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 7642
@@ -251,7 +287,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-health-potion",
         "name": "Health Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 266
@@ -285,7 +324,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-mana-potion",
         "name": "Mana Potion",
         "kind": "stackable",
-        "description": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Recarrega a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 268
@@ -319,7 +361,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-strong-health-potion",
         "name": "Strong Health Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 236
@@ -353,7 +398,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-strong-mana-potion",
         "name": "Strong Mana Potion",
         "kind": "stackable",
-        "description": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Recarrega a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 237
@@ -387,7 +435,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-supreme-health-potion",
         "name": "Supreme Health Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23375
@@ -421,7 +472,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-ultimate-health-potion",
         "name": "Ultimate Health Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 7643
@@ -455,7 +509,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-ultimate-mana-potion",
         "name": "Ultimate Mana Potion",
         "kind": "stackable",
-        "description": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Refills your character's mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Recarrega a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23373
@@ -489,7 +546,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "potions-ultimate-spirit-potion",
         "name": "Ultimate Spirit Potion",
         "kind": "stackable",
-        "description": "Restores your character's hit points and mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+        "description": {
+          "en": "Restores your character's hit points and mana.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}",
+          "pt-BR": "Restaura os pontos de vida e a mana do seu personagem.\n\n{character}\n{vocationlevelcheck}\n{storeinbox}\n{battlesign}\n{capacity}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23374
@@ -523,7 +583,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "runes",
-    "name": "Runes",
+    "name": {
+      "en": "Runes",
+      "pt-BR": "Runas"
+    },
     "parentId": "consumables",
     "icon": {
       "kind": "item",
@@ -534,7 +597,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-animate-dead-rune",
         "name": "Animate Dead Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck} only buyable if fitting vocation and level of purchasing character\n{battlesign}\n{capacity}\n\nAfter a long time of research, the magicians of Edron succeeded in storing some life energy in a rune. When this energy was unleashed onto a body it was found that an undead creature arose that could be mentally controlled by the user of the rune. This rune is useful to create allies in combat.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck} only buyable if fitting vocation and level of purchasing character\n{battlesign}\n{capacity}\n\nAfter a long time of research, the magicians of Edron succeeded in storing some life energy in a rune. When this energy was unleashed onto a body it was found that an undead creature arose that could be mentally controlled by the user of the rune. This rune is useful to create allies in combat.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck} só pode ser comprado se a vocação e o nível do personagem que comprou forem compatíveis\n{battlesign}\n{capacity}\n\nApós um longo período de pesquisa, os magos de Edron conseguiram armazenar um pouco de energia vital em uma runa. Quando essa energia foi liberada sobre um corpo, descobriu-se que surgia uma criatura morta-viva que podia ser controlada mentalmente pelo usuário da runa. Esta runa é útil para criar aliados em combate."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3203
@@ -557,7 +623,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-avalanche-rune",
         "name": "Avalanche Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe ice damage which arises from this rune is a useful weapon in every battle but it comes in particularly handy if you fight against a horde of creatures dominated by the element fire.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe ice damage which arises from this rune is a useful weapon in every battle but it comes in particularly handy if you fight against a horde of creatures dominated by the element fire.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nO dano de gelo que surge desta runa é uma arma útil em qualquer batalha, mas é especialmente prático quando você luta contra uma horda de criaturas dominadas pelo elemento fogo."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3161
@@ -580,7 +649,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-chameleon-rune",
         "name": "Chameleon Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe metamorphosis caused by this rune is only superficial, and while casters who are using the rune can take on the exterior form of nearly any inanimate object, they will always retain their original smell and mental abilities. So there is no real practical use for this rune, making this largely a fun rune.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe metamorphosis caused by this rune is only superficial, and while casters who are using the rune can take on the exterior form of nearly any inanimate object, they will always retain their original smell and mental abilities. So there is no real practical use for this rune, making this largely a fun rune.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nA metamorfose causada por esta runa é apenas superficial e, embora os conjuradores que usam a runa possam assumir a forma exterior de quase qualquer objeto inanimado, eles sempre manterão seu cheiro original e suas habilidades mentais. Portanto, não há nenhum uso prático real para esta runa, o que a torna, em grande parte, uma runa de diversão."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3178
@@ -603,7 +675,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-convince-creature-rune",
         "name": "Convince Creature Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsing this rune together with some mana, you can convince certain creatures. The needed amount of mana is determined by the power of the creature one wishes to convince, so the amount of mana to convince a rat is lower than that which is needed for an orc.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsing this rune together with some mana, you can convince certain creatures. The needed amount of mana is determined by the power of the creature one wishes to convince, so the amount of mana to convince a rat is lower than that which is needed for an orc.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsando esta runa junto com um pouco de mana, você pode convencer certas criaturas. A quantidade de mana necessária é determinada pelo poder da criatura que se deseja convencer, então a quantidade de mana para convencer um rat é menor do que a necessária para um orc."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3177
@@ -626,7 +701,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-cure-poison-rune",
         "name": "Cure Poison Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nIn the old days, many adventurers fell prey to poisonous creatures that were roaming the caves and forests. After many years of research druids finally succeeded in altering the cure poison spell so it could be bound to a rune. By using this rune it is possible to stop the effect of any known poison.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nIn the old days, many adventurers fell prey to poisonous creatures that were roaming the caves and forests. After many years of research druids finally succeeded in altering the cure poison spell so it could be bound to a rune. By using this rune it is possible to stop the effect of any known poison.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nAntigamente, muitos aventureiros caíam vítimas de criaturas venenosas que vagavam pelas cavernas e florestas. Após muitos anos de pesquisa, os druidas finalmente conseguiram alterar a magia de cura de veneno para que ela pudesse ser vinculada a uma runa. Usando esta runa, é possível interromper o efeito de qualquer veneno conhecido."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3153
@@ -649,7 +727,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-disintegrate-rune",
         "name": "Disintegrate Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nNothing is worse than being cornered when fleeing from an enemy you just cannot beat, especially if the obstacles in your way are items you could easily remove if only you had the time! However, there is one reliable remedy: The Disintegrate rune will instantly destroy up to 500 movable items that are in your way, making room for a quick escape.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nNothing is worse than being cornered when fleeing from an enemy you just cannot beat, especially if the obstacles in your way are items you could easily remove if only you had the time! However, there is one reliable remedy: The Disintegrate rune will instantly destroy up to 500 movable items that are in your way, making room for a quick escape.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nNada é pior do que ser encurralado ao fugir de um inimigo que você simplesmente não consegue vencer, especialmente se os obstáculos no seu caminho são itens que você poderia remover facilmente se ao menos tivesse tempo! No entanto, existe um remédio confiável: a runa Disintegrate destrói instantaneamente até 500 itens móveis que estejam no seu caminho, abrindo espaço para uma fuga rápida."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3197
@@ -672,7 +753,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-energy-bomb-rune",
         "name": "Energy Bomb Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsing the Energy Bomb rune will create a field of deadly energy that deals damage to all who carelessly step into it. Its area of effect is covering a full 9 square metres! Creatures that are caught in the middle of an Energy Bomb are frequently confused by the unexpected effect, and some may even stay in the field of deadly sparks for a while.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsing the Energy Bomb rune will create a field of deadly energy that deals damage to all who carelessly step into it. Its area of effect is covering a full 9 square metres! Creatures that are caught in the middle of an Energy Bomb are frequently confused by the unexpected effect, and some may even stay in the field of deadly sparks for a while.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUsar a runa Energy Bomb cria um campo de energia mortal que causa dano a todos que pisarem nele descuidadamente. Sua área de efeito cobre 9 metros quadrados inteiros! As criaturas pegas no meio de uma Energy Bomb frequentemente ficam confusas com o efeito inesperado, e algumas podem até permanecer no campo de faíscas mortais por um tempo."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3149
@@ -695,7 +779,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-energy-field-rune",
         "name": "Energy Field Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis spell creates a limited barrier made up of crackling energy that will cause electrical damage to all those passing through. Since there are few creatures that are immune to the harmful effects of energy this spell is not to be underestimated.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis spell creates a limited barrier made up of crackling energy that will cause electrical damage to all those passing through. Since there are few creatures that are immune to the harmful effects of energy this spell is not to be underestimated.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta magia cria uma barreira limitada feita de energia crepitante que causa dano elétrico a todos que passarem por ela. Como há poucas criaturas imunes aos efeitos nocivos da energia, esta magia não deve ser subestimada."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3164
@@ -718,7 +805,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-energy-wall-rune",
         "name": "Energy Wall Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nCasting this spell generates a solid wall made up of magical energy. Walls made this way surpass any other magically created obstacle in width, so it is always a good idea to have an Energy Wall rune or two in one's pocket when travelling through the wilderness.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nCasting this spell generates a solid wall made up of magical energy. Walls made this way surpass any other magically created obstacle in width, so it is always a good idea to have an Energy Wall rune or two in one's pocket when travelling through the wilderness.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nConjurar esta magia gera uma parede sólida feita de energia mágica. Paredes criadas dessa forma superam em largura qualquer outro obstáculo criado magicamente, então é sempre uma boa ideia ter uma ou duas runas Energy Wall no bolso ao viajar pelas terras selvagens."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3166
@@ -741,7 +831,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-explosion-rune",
         "name": "Explosion Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune must be aimed at areas rather than at specific creatures, so it is possible for explosions to be unleashed even if no targets are close at all. These explosions cause a considerable physical damage within a substantial blast radius.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune must be aimed at areas rather than at specific creatures, so it is possible for explosions to be unleashed even if no targets are close at all. These explosions cause a considerable physical damage within a substantial blast radius.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta runa deve ser mirada em áreas, e não em criaturas específicas, então é possível desencadear explosões mesmo que não haja nenhum alvo por perto. Essas explosões causam um dano físico considerável dentro de um raio de explosão substancial."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3200
@@ -764,7 +857,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-fireball-rune",
         "name": "Fireball Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a massive fiery ball is released which hits the aimed foe with immense power. It is especially effective against opponents of the element earth.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a massive fiery ball is released which hits the aimed foe with immense power. It is especially effective against opponents of the element earth.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nQuando esta runa é usada, uma enorme bola de fogo é liberada e atinge o inimigo mirado com um poder imenso. É especialmente eficaz contra oponentes do elemento terra."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3189
@@ -787,7 +883,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-fire-bomb-rune",
         "name": "Fire Bomb Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune is a deadly weapon in the hands of the skilled user. On releasing it an area of 9 square metres is covered by searing flames that will scorch all those that are unfortunate enough to be caught in them. Worse, many monsters are confused by the unexpected blaze, and with a bit of luck a caster will even manage to trap his opponents by using the spell.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune is a deadly weapon in the hands of the skilled user. On releasing it an area of 9 square metres is covered by searing flames that will scorch all those that are unfortunate enough to be caught in them. Worse, many monsters are confused by the unexpected blaze, and with a bit of luck a caster will even manage to trap his opponents by using the spell.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta runa é uma arma mortal nas mãos de um usuário habilidoso. Ao liberá-la, uma área de 9 metros quadrados é coberta por chamas escaldantes que queimarão todos aqueles que tiverem o azar de serem pegos nelas. Pior ainda, muitos monstros ficam confusos com o incêndio inesperado e, com um pouco de sorte, o conjurador conseguirá até prender seus oponentes usando a magia."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3192
@@ -810,7 +909,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-fire-field-rune",
         "name": "Fire Field Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a field of one square metre is covered by searing fire that will last for some minutes, gradually diminishing as the blaze wears down. As with all field spells, Fire Field is quite useful to block narrow passageways or to create large, connected barriers.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a field of one square metre is covered by searing fire that will last for some minutes, gradually diminishing as the blaze wears down. As with all field spells, Fire Field is quite useful to block narrow passageways or to create large, connected barriers.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nQuando esta runa é usada, um campo de um metro quadrado é coberto por fogo escaldante que dura alguns minutos, diminuindo gradualmente à medida que as chamas se apagam. Como todas as magias de campo, Fire Field é bastante útil para bloquear passagens estreitas ou criar barreiras grandes e conectadas."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3188
@@ -833,7 +935,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-fire-wall-rune",
         "name": "Fire Wall Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune offers reliable protection against all creatures that are afraid of fire. The exceptionally long duration of the spell as well as the possibility to form massive barriers or even protective circles out of fire walls make this a versatile, practical spell.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune offers reliable protection against all creatures that are afraid of fire. The exceptionally long duration of the spell as well as the possibility to form massive barriers or even protective circles out of fire walls make this a versatile, practical spell.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta runa oferece proteção confiável contra todas as criaturas que têm medo de fogo. A duração excepcionalmente longa da magia, bem como a possibilidade de formar barreiras enormes ou até círculos protetores com paredes de fogo, fazem desta uma magia versátil e prática."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3190
@@ -856,7 +961,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-great-fireball-rune",
         "name": "Great Fireball Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nA shot of this rune affects a huge area - up to 37 square metres! It stands to reason that the Great Fireball is a favourite of most Tibians, as it is well suited both to hit whole crowds of monsters and individual targets that are difficult to hit because they are fast or hard to spot.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nA shot of this rune affects a huge area - up to 37 square metres! It stands to reason that the Great Fireball is a favourite of most Tibians, as it is well suited both to hit whole crowds of monsters and individual targets that are difficult to hit because they are fast or hard to spot.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nUm disparo desta runa afeta uma área enorme: até 37 metros quadrados! Não é de se admirar que a Great Fireball seja uma das favoritas da maioria dos tibianos, já que é adequada tanto para atingir multidões inteiras de monstros quanto alvos individuais difíceis de acertar por serem rápidos ou difíceis de avistar."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3191
@@ -879,7 +987,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-icicle-rune",
         "name": "Icicle Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nParticularly creatures determined by the element fire are vulnerable against this ice-cold rune. Being hit by the magic stored in this rune, an ice arrow seems to pierce the heart of the struck victim. The damage done by this rune is quite impressive which makes this a quite popular rune among Tibian mages.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nParticularly creatures determined by the element fire are vulnerable against this ice-cold rune. Being hit by the magic stored in this rune, an ice arrow seems to pierce the heart of the struck victim. The damage done by this rune is quite impressive which makes this a quite popular rune among Tibian mages.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEspecialmente as criaturas definidas pelo elemento fogo são vulneráveis a esta runa gélida. Ao ser atingida pela magia armazenada nesta runa, uma flecha de gelo parece perfurar o coração da vítima. O dano causado por esta runa é bastante impressionante, o que a torna uma runa muito popular entre os magos tibianos."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3158
@@ -902,7 +1013,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-intense-healing-rune",
         "name": "Intense Healing Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune is commonly used by young adventurers who are not skilled enough to use the rune's stronger version. Also, since the rune's effectiveness is determined by the user's magic skill, it is still popular among experienced spell casters who use it to get effective healing magic at a cheap price.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune is commonly used by young adventurers who are not skilled enough to use the rune's stronger version. Also, since the rune's effectiveness is determined by the user's magic skill, it is still popular among experienced spell casters who use it to get effective healing magic at a cheap price.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta runa é comumente usada por jovens aventureiros que ainda não têm habilidade suficiente para usar a versão mais forte da runa. Além disso, como a eficácia da runa é determinada pela habilidade mágica do usuário, ela continua popular entre conjuradores experientes, que a usam para obter magia de cura eficaz a um preço baixo."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3152
@@ -925,7 +1039,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-magic-wall-rune",
         "name": "Magic Wall Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis spell causes all particles that are contained in the surrounding air to quickly gather and contract until a solid wall is formed that covers one full square metre. The wall that is formed that way is impenetrable to any missiles or to light and no creature or character can walk through it. However, the wall will only last for a couple of seconds.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis spell causes all particles that are contained in the surrounding air to quickly gather and contract until a solid wall is formed that covers one full square metre. The wall that is formed that way is impenetrable to any missiles or to light and no creature or character can walk through it. However, the wall will only last for a couple of seconds.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta magia faz com que todas as partículas contidas no ar ao redor se juntem e se contraiam rapidamente até formar uma parede sólida que cobre um metro quadrado inteiro. A parede formada dessa maneira é impenetrável a qualquer projétil ou à luz, e nenhuma criatura ou personagem consegue atravessá-la. No entanto, a parede dura apenas alguns segundos."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3180
@@ -948,7 +1065,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-poison-bomb-rune",
         "name": "Poison Bomb Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune causes an area of 9 square metres to be contaminated with toxic gas that will poison anybody who is caught within it. Conceivable applications include the blocking of areas or the combat against fast-moving or invisible targets. Keep in mind, however, that there are a number of creatures that are immune to poison.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThis rune causes an area of 9 square metres to be contaminated with toxic gas that will poison anybody who is caught within it. Conceivable applications include the blocking of areas or the combat against fast-moving or invisible targets. Keep in mind, however, that there are a number of creatures that are immune to poison.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEsta runa faz com que uma área de 9 metros quadrados seja contaminada com gás tóxico que envenenará qualquer um que for pego dentro dela. As aplicações possíveis incluem o bloqueio de áreas ou o combate contra alvos rápidos ou invisíveis. Lembre-se, porém, de que há várias criaturas imunes a veneno."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3173
@@ -971,7 +1091,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-poison-wall-rune",
         "name": "Poison Wall Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a wall of concentrated toxic fumes is created which inflicts a moderate poison on all those who are foolish enough to enter it. The effect is usually impressive enough to discourage monsters from doing so, although few of the stronger ones will hesitate if there is nothing but a poison wall between them and their dinner.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nWhen this rune is used a wall of concentrated toxic fumes is created which inflicts a moderate poison on all those who are foolish enough to enter it. The effect is usually impressive enough to discourage monsters from doing so, although few of the stronger ones will hesitate if there is nothing but a poison wall between them and their dinner.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nQuando esta runa é usada, cria-se uma parede de vapores tóxicos concentrados que inflige um envenenamento moderado a todos que forem tolos o bastante para entrar nela. O efeito costuma ser impressionante o suficiente para desencorajar os monstros a fazê-lo, embora poucos dos mais fortes hesitem se houver apenas uma parede de veneno entre eles e seu jantar."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3176
@@ -994,7 +1117,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-soulfire-rune",
         "name": "Soulfire Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nSoulfire is an immensely evil spell as it directly targets a creature's very life essence. When the rune is used on a victim, its soul is temporarily moved out of its body, casting it down into the blazing fires of hell itself! Note that the experience and the mental strength of the caster influence the damage that is caused.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nSoulfire is an immensely evil spell as it directly targets a creature's very life essence. When the rune is used on a victim, its soul is temporarily moved out of its body, casting it down into the blazing fires of hell itself! Note that the experience and the mental strength of the caster influence the damage that is caused.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nSoulfire é uma magia imensamente maligna, pois visa diretamente a própria essência vital de uma criatura. Quando a runa é usada em uma vítima, sua alma é temporariamente retirada do corpo e lançada nas chamas ardentes do próprio inferno! Note que a experiência e a força mental do conjurador influenciam o dano causado."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3195
@@ -1017,7 +1143,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-stone-shower-rune",
         "name": "Stone Shower Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nParticularly creatures with an affection to energy will suffer greatly from this rune filled with powerful earth damage. As the name already says, a shower of stones drums on the opponents of the rune user in an area up to 37 squares.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nParticularly creatures with an affection to energy will suffer greatly from this rune filled with powerful earth damage. As the name already says, a shower of stones drums on the opponents of the rune user in an area up to 37 squares.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nEspecialmente as criaturas com afinidade com energia sofrerão muito com esta runa carregada de poderoso dano de terra. Como o nome já diz, uma chuva de pedras cai sobre os oponentes do usuário da runa em uma área de até 37 quadrados."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3175
@@ -1040,7 +1169,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-sudden-death-rune",
         "name": "Sudden Death Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nNearly no other spell can compare to Sudden Death when it comes to sheer damage. For this reason it is immensely popular despite the fact that only a single target is affected. However, since the damage caused by the rune is of deadly nature, it is less useful against most undead creatures.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nNearly no other spell can compare to Sudden Death when it comes to sheer damage. For this reason it is immensely popular despite the fact that only a single target is affected. However, since the damage caused by the rune is of deadly nature, it is less useful against most undead creatures.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nQuase nenhuma outra magia se compara à Sudden Death quando o assunto é puro dano. Por essa razão, ela é imensamente popular, apesar de afetar apenas um único alvo. No entanto, como o dano causado pela runa é de natureza mortal, ela é menos útil contra a maioria das criaturas mortas-vivas."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3155
@@ -1063,7 +1195,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-thunderstorm-rune",
         "name": "Thunderstorm Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nFlashes filled with dangerous energy hit the rune user's opponent when this rune is being used. It is especially effective against ice dominated creatures. Covering up an area up to 37 squares, this rune is particularly useful when you meet a whole mob of opponents.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nFlashes filled with dangerous energy hit the rune user's opponent when this rune is being used. It is especially effective against ice dominated creatures. Covering up an area up to 37 squares, this rune is particularly useful when you meet a whole mob of opponents.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nRelâmpagos carregados de energia perigosa atingem o oponente do usuário quando esta runa é usada. É especialmente eficaz contra criaturas dominadas pelo gelo. Cobrindo uma área de até 37 quadrados, esta runa é particularmente útil quando você encontra um bando inteiro de oponentes."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3202
@@ -1086,7 +1221,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-ultimate-healing-rune",
         "name": "Ultimate Healing Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe coveted Ultimate Healing rune is an all-time favourite among all vocations. No other healing enchantments that are bound into runes can compare to its salutary effect.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nThe coveted Ultimate Healing rune is an all-time favourite among all vocations. No other healing enchantments that are bound into runes can compare to its salutary effect.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nA cobiçada runa Ultimate Healing é a favorita de todas as vocações desde sempre. Nenhum outro encantamento de cura vinculado a runas se compara ao seu efeito salutar."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3160
@@ -1109,7 +1247,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "runes-wild-growth-rune",
         "name": "Wild Growth Rune",
         "kind": "stackable",
-        "description": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nBy unleashing this spell, all seeds that are lying dormant in the surrounding quickly sprout and grow into full-sized plants, thus forming an impenetrable thicket. Unfortunately, plant life created this way is short-lived and will collapse within minutes, so the magically created obstacle will not last long.",
+        "description": {
+          "en": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nBy unleashing this spell, all seeds that are lying dormant in the surrounding quickly sprout and grow into full-sized plants, thus forming an impenetrable thicket. Unfortunately, plant life created this way is short-lived and will collapse within minutes, so the magically created obstacle will not last long.",
+          "pt-BR": "{character}\n{storeinbox}\n{vocationlevelcheck}\n{battlesign}\n{capacity}\n\nAo desencadear esta magia, todas as sementes que estão adormecidas nos arredores brotam rapidamente e crescem até se tornarem plantas de tamanho completo, formando assim um matagal impenetrável. Infelizmente, a vida vegetal criada dessa forma é efêmera e desabará em poucos minutos, então o obstáculo criado magicamente não durará muito."
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 3156
@@ -1132,7 +1273,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "kegs",
-    "name": "Kegs",
+    "name": {
+      "en": "Kegs",
+      "pt-BR": "Barris"
+    },
     "parentId": "consumables",
     "icon": {
       "kind": "item",
@@ -1143,7 +1287,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-great-health-keg",
         "name": "Great Health Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25905
@@ -1164,7 +1311,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-great-mana-keg",
         "name": "Great Mana Keg",
         "kind": "charges",
-        "description": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para recarregar sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25910
@@ -1185,7 +1335,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-great-spirit-keg",
         "name": "Great Spirit Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points and mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points and mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida e sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25913
@@ -1206,7 +1359,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-health-keg",
         "name": "Health Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25903
@@ -1227,7 +1383,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-mana-keg",
         "name": "Mana Keg",
         "kind": "charges",
-        "description": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para recarregar sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25908
@@ -1248,7 +1407,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-strong-health-keg",
         "name": "Strong Health Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25904
@@ -1269,7 +1431,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-strong-mana-keg",
         "name": "Strong Mana Keg",
         "kind": "charges",
-        "description": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to refill your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para recarregar sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25909
@@ -1290,7 +1455,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-supreme-health-keg",
         "name": "Supreme Health Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25907
@@ -1311,7 +1479,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-ultimate-health-keg",
         "name": "Ultimate Health Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25906
@@ -1332,7 +1503,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-ultimate-mana-keg",
         "name": "Ultimate Mana Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25911
@@ -1353,7 +1527,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-ultimate-spirit-keg",
         "name": "Ultimate Spirit Keg",
         "kind": "charges",
-        "description": "Fill up potions to restore your hit points and mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+        "description": {
+          "en": "Fill up potions to restore your hit points and mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+          "pt-BR": "Encha poções para restaurar seus pontos de vida e sua mana onde quer que você esteja!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} as poções criadas a partir deste barril serão enviadas para a sua caixa de entrada da Loja e só podem ser guardadas lá e na caixa do depot\n{info} utilizável 500 vezes por unidade\n{info} economiza capacidade porque seu peso constante equivale a apenas 250 poções"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25914
@@ -1374,7 +1551,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "exercise-weapons",
-    "name": "Exercise Weapons",
+    "name": {
+      "en": "Exercise Weapons",
+      "pt-BR": "Armas de Treino"
+    },
     "parentId": "consumables",
     "icon": {
       "kind": "item",
@@ -1385,7 +1565,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-axe",
         "name": "Durable Exercise Axe",
         "kind": "charges",
-        "description": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com machado em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com machado\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35280
@@ -1406,7 +1589,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-bow",
         "name": "Durable Exercise Bow",
         "kind": "charges",
-        "description": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta à distância em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta à distância\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35282
@@ -1427,7 +1613,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-club",
         "name": "Durable Exercise Club",
         "kind": "charges",
-        "description": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com clava em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com clava\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35281
@@ -1448,7 +1637,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-rod",
         "name": "Durable Exercise Rod",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35283
@@ -1469,7 +1661,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-sword",
         "name": "Durable Exercise Sword",
         "kind": "charges",
-        "description": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com espada em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com espada\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35279
@@ -1490,7 +1685,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-wand",
         "name": "Durable Exercise Wand",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35284
@@ -1511,7 +1709,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-shield",
         "name": "Durable Exercise Shield",
         "kind": "charges",
-        "description": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de defesa com escudo em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de defesa com escudo\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 44066
@@ -1532,7 +1733,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-durable-exercise-wraps",
         "name": "Durable Exercise Wraps",
         "kind": "charges",
-        "description": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 1800 times a piece",
+        "description": {
+          "en": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 1800 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com punhos em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com punhos\n{info} utilizável 1800 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 50294
@@ -1553,7 +1757,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-axe",
         "name": "Exercise Axe",
         "kind": "charges",
-        "description": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com machado em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com machado\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28553
@@ -1574,7 +1781,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-bow",
         "name": "Exercise Bow",
         "kind": "charges",
-        "description": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta à distância em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta à distância\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28555
@@ -1595,7 +1805,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-club",
         "name": "Exercise Club",
         "kind": "charges",
-        "description": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com clava em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com clava\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28554
@@ -1616,7 +1829,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-rod",
         "name": "Exercise Rod",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28556
@@ -1637,7 +1853,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-sword",
         "name": "Exercise Sword",
         "kind": "charges",
-        "description": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com espada em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com espada\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28552
@@ -1658,7 +1877,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-wand",
         "name": "Exercise Wand",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28557
@@ -1679,7 +1901,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-shield",
         "name": "Exercise Shield",
         "kind": "charges",
-        "description": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de defesa com escudo em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de defesa com escudo\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 44065
@@ -1700,7 +1925,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-exercise-wraps",
         "name": "Exercise Wraps",
         "kind": "charges",
-        "description": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 500 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com punhos em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com punhos\n{info} utilizável 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 50293
@@ -1721,7 +1949,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-axe",
         "name": "Lasting Exercise Axe",
         "kind": "charges",
-        "description": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your axe fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your axe fighting skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com machado em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com machado\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35286
@@ -1742,7 +1973,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-bow",
         "name": "Lasting Exercise Bow",
         "kind": "charges",
-        "description": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your distance fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your distance fighting skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta à distância em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta à distância\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35288
@@ -1763,7 +1997,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-club",
         "name": "Lasting Exercise Club",
         "kind": "charges",
-        "description": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your club fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your club fighting skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com clava em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com clava\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35287
@@ -1784,7 +2021,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-rod",
         "name": "Lasting Exercise Rod",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35289
@@ -1805,7 +2045,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-sword",
         "name": "Lasting Exercise Sword",
         "kind": "charges",
-        "description": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your sword fighting skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your sword fighting skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com espada em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com espada\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35285
@@ -1826,7 +2069,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-wand",
         "name": "Lasting Exercise Wand",
         "kind": "charges",
-        "description": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your magic level on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your magic level\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar seu magic level em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar seu magic level\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35290
@@ -1847,7 +2093,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-shield",
         "name": "Lasting Exercise Shield",
         "kind": "charges",
-        "description": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your shielding skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your shielding skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de defesa com escudo em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de defesa com escudo\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 44067
@@ -1868,7 +2117,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "exercise-weapons-lasting-exercise-wraps",
         "name": "Lasting Exercise Wraps",
         "kind": "charges",
-        "description": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 14400 times a piece",
+        "description": {
+          "en": "Use it to train your fist skill on an exercise dummy!\n\n{character}\n{storeinbox}\n{info} use it on an exercise dummy to train your fist skill\n{info} usable 14400 times a piece",
+          "pt-BR": "Use esta arma de treino para treinar sua habilidade de luta com punhos em um boneco de treino!\n\n{character}\n{storeinbox}\n{info} use esta arma em um boneco de treino para treinar sua habilidade de luta com punhos\n{info} utilizável 14400 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 50295
@@ -1889,7 +2141,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "outfits",
-    "name": "Outfits",
+    "name": {
+      "en": "Outfits",
+      "pt-BR": "Trajes"
+    },
     "parentId": "cosmetics",
     "icon": {
       "kind": "outfit",
@@ -1901,7 +2156,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-arbalester-outfit",
         "name": "Full Arbalester Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmed with a powerful crossbow, and gifted with steady hands as well as a sharp eye, the Arbalester is not one to be trifled with. Requiring both skill and strength to properly wield, the arbalest is a mighty tool in the hands of an able marksman, shooting deadly bolts across great distance.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmed with a powerful crossbow, and gifted with steady hands as well as a sharp eye, the Arbalester is not one to be trifled with. Requiring both skill and strength to properly wield, the arbalest is a mighty tool in the hands of an able marksman, shooting deadly bolts across great distance.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nArmado com uma poderosa besta, e dotado de mãos firmes e de um olhar aguçado, o Arbalester não é alguém com quem se deva brincar. Exigindo tanto habilidade quanto força para ser manejada adequadamente, a balestra é uma ferramenta poderosa nas mãos de um atirador competente, disparando virotes mortais a grandes distâncias."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1449,
@@ -1924,7 +2182,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-arena-champion-outfit",
         "name": "Full Arena Champion Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFight your bloody battles in the arena and become a darling of the crowd. Once you have made it to the top and everyone is cheering your name, the fashionable outfit of an Arena Champion will show the world what you are made of.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFight your bloody battles in the arena and become a darling of the crowd. Once you have made it to the top and everyone is cheering your name, the fashionable outfit of an Arena Champion will show the world what you are made of.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nTrave suas batalhas sangrentas na arena e torne-se o queridinho da multidão. Depois de chegar ao topo, com todos aclamando seu nome, o elegante traje de Arena Champion mostrará ao mundo do que você é feito."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 884,
@@ -1947,7 +2208,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-armoured-archer-outfit",
         "name": "Full Armoured Archer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmoured Archers are the epitome of invisible danger. Silently and nimbly, they advance in the background. For hours, they wait patiently, almost motionless, for the decisive moment. Just to be perfectly present in a deadly second.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nArmoured Archers are the epitome of invisible danger. Silently and nimbly, they advance in the background. For hours, they wait patiently, almost motionless, for the decisive moment. Just to be perfectly present in a deadly second.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Armoured Archers são o epítome do perigo invisível. Silenciosa e agilmente, eles avançam ao fundo. Por horas, esperam pacientemente, quase imóveis, pelo momento decisivo. Apenas para estarem perfeitamente presentes em um segundo mortal."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1618,
@@ -1970,7 +2234,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-beastmaster-outfit",
         "name": "Full Beastmaster Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you have enough authority to make wild animals subservient to you? Become a Beastmaster and surround yourself with fearsome companions. When your beasts bare their teeth, your enemies will turn tails and run.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you have enough authority to make wild animals subservient to you? Become a Beastmaster and surround yourself with fearsome companions. When your beasts bare their teeth, your enemies will turn tails and run.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê tem autoridade suficiente para fazer animais selvagens se submeterem a você? Torne-se um Beastmaster e cerque-se de companheiros temíveis. Quando suas feras mostrarem os dentes, seus inimigos darão meia-volta e fugirão."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 637,
@@ -1993,7 +2260,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-breezy-garb-outfit",
         "name": "Full Breezy Garb Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nEven the most eager adventurers and toughest warriors need some time to rest and recharge. Enjoy tranquility and peace as you picnic in good company at one of your favourite places in Tibia. Put on your Breezy Garb outfit, grab your walking stick, a basket filled with tasty snacks and then head out into nature!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nEven the most eager adventurers and toughest warriors need some time to rest and recharge. Enjoy tranquility and peace as you picnic in good company at one of your favourite places in Tibia. Put on your Breezy Garb outfit, grab your walking stick, a basket filled with tasty snacks and then head out into nature!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nAté os aventureiros mais ávidos e os guerreiros mais resistentes precisam de um tempo para descansar e recarregar as energias. Aproveite a tranquilidade e a paz enquanto faz um piquenique em boa companhia em um dos seus lugares favoritos de Tibia. Vista seu traje Breezy Garb, pegue sua bengala, uma cesta cheia de petiscos saborosos e parta rumo à natureza!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1245,
@@ -2016,7 +2286,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-ceremonial-garb-outfit",
         "name": "Full Ceremonial Garb Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you want to make a great entrance at a Tibian costume party, the Ceremonial Garb is certainly a good choice. With a drum over your shoulder and adorned with feathers you are perfectly dressed to lead a carnival parade through the streets of Thais.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you want to make a great entrance at a Tibian costume party, the Ceremonial Garb is certainly a good choice. With a drum over your shoulder and adorned with feathers you are perfectly dressed to lead a carnival parade through the streets of Thais.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você quer fazer uma grande entrada em uma festa à fantasia tibiana, o Ceremonial Garb é certamente uma boa escolha. Com um tambor no ombro e adornado com penas, você está perfeitamente vestido para liderar um desfile de carnaval pelas ruas de Thais."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 695,
@@ -2039,7 +2312,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-champion-outfit",
         "name": "Full Champion Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nProtect your body with heavy armour plates and spiky bones to teach your enemies the meaning of fear! The Champion outfit perfectly suits battle-hardened warriors who rely on their trusty sword and shield.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nProtect your body with heavy armour plates and spiky bones to teach your enemies the meaning of fear! The Champion outfit perfectly suits battle-hardened warriors who rely on their trusty sword and shield.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nProteja seu corpo com pesadas placas de armadura e ossos pontiagudos para ensinar aos seus inimigos o significado do medo! O traje Champion combina perfeitamente com guerreiros calejados que confiam em sua fiel espada e escudo."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 633,
@@ -2062,7 +2338,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-chaos-acolyte-outfit",
         "name": "Full Chaos Acolyte Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou have always felt like the cat among the pigeons and have a fable for dark magic? The Chaos Acolyte outfit is a perfect way to express your inner nature. Show your commitment for the higher cause and wreak havoc on your enemies in this unique outfit.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou have always felt like the cat among the pigeons and have a fable for dark magic? The Chaos Acolyte outfit is a perfect way to express your inner nature. Show your commitment for the higher cause and wreak havoc on your enemies in this unique outfit.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sempre se sentiu como uma raposa no galinheiro e tem uma queda por magia sombria? O traje Chaos Acolyte é a maneira perfeita de expressar sua natureza interior. Mostre seu comprometimento com a causa maior e semeie o caos entre seus inimigos com este traje único."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 665,
@@ -2085,7 +2364,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-conjurer-outfit",
         "name": "Full Conjurer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou recently graduated from the Magic Academy and want to bring your knowledge to good use? Congratulations, you are now an honourable disciple of magic! Open up a bottle of well-aged mana and treat yourself with the fashionable Conjurer outfit.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou recently graduated from the Magic Academy and want to bring your knowledge to good use? Congratulations, you are now an honourable disciple of magic! Open up a bottle of well-aged mana and treat yourself with the fashionable Conjurer outfit.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê se formou recentemente na Magic Academy e quer colocar seu conhecimento em bom uso? Parabéns, agora você é um honrado discípulo da magia! Abra uma garrafa de mana bem envelhecida e presenteie-se com o elegante traje Conjurer."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 634,
@@ -2108,7 +2390,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-death-herald-outfit",
         "name": "Full Death Herald Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDeath and decay are your ever-present companions? Your enemies are dropping like flies and your path is covered with their bodies? However, as decency demands, you want to at least give them a proper funeral? Then the Death Herald is just the right outfit for you.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDeath and decay are your ever-present companions? Your enemies are dropping like flies and your path is covered with their bodies? However, as decency demands, you want to at least give them a proper funeral? Then the Death Herald is just the right outfit for you.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nMorte e decadência são seus companheiros constantes? Seus inimigos caem como moscas e seu caminho está coberto de corpos? Mesmo assim, como manda a decência, você quer ao menos dar a eles um funeral digno? Então o Death Herald é o traje certo para você."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 667,
@@ -2131,7 +2416,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-dragon-knight-outfit",
         "name": "Full Dragon Knight Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Dragon Knight is ready for everything, channeling the primordial might of the winged, ancient beasts into weapons and armour. Their imposing demeanour and impressive appearance are often enough to quell any animosity towards them, and those who still dare oppose them are not long for this world.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Dragon Knight is ready for everything, channeling the primordial might of the winged, ancient beasts into weapons and armour. Their imposing demeanour and impressive appearance are often enough to quell any animosity towards them, and those who still dare oppose them are not long for this world.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Dragon Knight está pronto para tudo, canalizando o poder primordial das antigas feras aladas em armas e armaduras. Sua postura imponente e aparência impressionante costumam bastar para acabar com qualquer hostilidade contra eles, e aqueles que ainda ousam se opor a eles não têm muito tempo de vida."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1444,
@@ -2154,7 +2442,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-entrepreneur-outfit",
         "name": "Full Entrepreneur Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nSlaughter through hordes of monsters during your early morning hunt and kiss the hand of Queen Eloise later on at the evening reception in her historical residence. With the Entrepreneur outfit you will cut a fine figure on every occasion.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nSlaughter through hordes of monsters during your early morning hunt and kiss the hand of Queen Eloise later on at the evening reception in her historical residence. With the Entrepreneur outfit you will cut a fine figure on every occasion.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nMassacre hordas de monstros durante sua caçada matinal e beije a mão da Queen Eloise mais tarde, na recepção noturna em sua residência histórica. Com o traje Entrepreneur, você fará bonito em qualquer ocasião."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 472,
@@ -2177,7 +2468,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-evoker-outfit",
         "name": "Full Evoker Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDance around flickering fires in the Evoker outfit while singing unholy chants to praise witchcraft and wizardry. Your faithful bat will always be by your side.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDance around flickering fires in the Evoker outfit while singing unholy chants to praise witchcraft and wizardry. Your faithful bat will always be by your side.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDance ao redor de fogueiras bruxuleantes com o traje Evoker enquanto entoa cânticos profanos em louvor à bruxaria e à feitiçaria. Seu fiel morcego estará sempre ao seu lado."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 725,
@@ -2200,7 +2494,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-fencer-outfit",
         "name": "Full Fencer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThey are skilled, they are disciplined, they wield their weapon with deadly precision as a form of art. Fencers are true masters of the blade who can cut through anything and anyone in the blink of an eye. While being feared for their lethal attacks, they are also admired for their elegant and fierce style, their dashing looks. Do not be on the fence, be a fencer, or at least dress like one with this fashionable, cutting-edge outfit.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThey are skilled, they are disciplined, they wield their weapon with deadly precision as a form of art. Fencers are true masters of the blade who can cut through anything and anyone in the blink of an eye. While being feared for their lethal attacks, they are also admired for their elegant and fierce style, their dashing looks. Do not be on the fence, be a fencer, or at least dress like one with this fashionable, cutting-edge outfit.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nEles são habilidosos, são disciplinados, empunham sua arma com precisão mortal como uma forma de arte. Os Fencers são verdadeiros mestres da lâmina, capazes de cortar qualquer coisa e qualquer um num piscar de olhos. Embora sejam temidos por seus ataques letais, também são admirados por seu estilo elegante e feroz e por sua aparência arrojada. Não fique em cima do muro: seja um fencer, ou pelo menos vista-se como um com este traje elegante e de ponta."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1575,
@@ -2223,7 +2520,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-flamefury-mage-outfit",
         "name": "Full Flamefury Mage Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFlame fury mages not only embraced the fury to fire, they became it! Relishing in purging destruction they don't just want to see the world burn, but be an active part in it. They just love the smell of sulphur in the morning!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFlame fury mages not only embraced the fury to fire, they became it! Relishing in purging destruction they don't just want to see the world burn, but be an active part in it. They just love the smell of sulphur in the morning!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs magos Flame Fury não apenas abraçaram a fúria do fogo, eles se tornaram a própria fúria! Deleitando-se com a destruição purificadora, eles não querem apenas ver o mundo queimar, mas ser parte ativa disso. Eles simplesmente adoram o cheiro de enxofre pela manhã!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1680,
@@ -2246,7 +2546,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-forest-warden-outfit",
         "name": "Full Forest Warden Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Forest Warden watches over all living things in the woods, be they plants or beasts. They have a special connection to the earth they tread on, the air they breathe, and the wind which whispers around them. Naturally, the suit that they don is not made out of dead vegetation, but is a living being itself.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Forest Warden watches over all living things in the woods, be they plants or beasts. They have a special connection to the earth they tread on, the air they breathe, and the wind which whispers around them. Naturally, the suit that they don is not made out of dead vegetation, but is a living being itself.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Forest Warden vigia todos os seres vivos da floresta, sejam plantas ou animais. Eles têm uma conexão especial com a terra que pisam, o ar que respiram e o vento que sussurra ao seu redor. Naturalmente, a vestimenta que usam não é feita de vegetação morta, mas é um ser vivo por si só."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1415,
@@ -2269,7 +2572,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-frost-tracer-outfit",
         "name": "Full Frost Tracer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nTheir imposing appearance alone made many experienced warriors shudder. Frost Tracers are true giants that are used to survive even under the most inhospitable circumstances. Tough, strong and untamable, they follow their own path through roughness and obscurity. Nobody wants to mess with one of their kind.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nTheir imposing appearance alone made many experienced warriors shudder. Frost Tracers are true giants that are used to survive even under the most inhospitable circumstances. Tough, strong and untamable, they follow their own path through roughness and obscurity. Nobody wants to mess with one of their kind.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSó a sua aparência imponente já fez muitos guerreiros experientes estremecerem. Os Frost Tracers são verdadeiros gigantes acostumados a sobreviver até nas circunstâncias mais inóspitas. Resistentes, fortes e indomáveis, eles seguem seu próprio caminho por entre a aspereza e a obscuridade. Ninguém quer se meter com um deles."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1612,
@@ -2292,7 +2598,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-ghost-blade-outfit",
         "name": "Full Ghost Blade Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nBeing a Ghost Blade means having mastered the way of the warrior. No matter the circumstances, these fighters retain full control over their body and mind, with the sole focus of vanquishing their foe. So great is their ability that they not only control the weapons in their hands perfectly, but two floating blades following them as well.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nBeing a Ghost Blade means having mastered the way of the warrior. No matter the circumstances, these fighters retain full control over their body and mind, with the sole focus of vanquishing their foe. So great is their ability that they not only control the weapons in their hands perfectly, but two floating blades following them as well.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSer um Ghost Blade significa ter dominado o caminho do guerreiro. Não importam as circunstâncias, esses lutadores mantêm controle total sobre corpo e mente, com o único foco de derrotar seu inimigo. Tão grande é sua habilidade que eles controlam perfeitamente não só as armas em suas mãos, mas também duas lâminas flutuantes que os seguem."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1489,
@@ -2315,7 +2624,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-grove-keeper-outfit",
         "name": "Full Grove Keeper Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFeeling the springy grass under your feet and inhaling the spicy air of the forest is pure satisfaction for your soul? Every animal is your friend and you caringly look after trees and plants all the time? Then it is time to become one with nature: Become a Grove Keeper!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFeeling the springy grass under your feet and inhaling the spicy air of the forest is pure satisfaction for your soul? Every animal is your friend and you caringly look after trees and plants all the time? Then it is time to become one with nature: Become a Grove Keeper!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSentir a grama macia sob os pés e inalar o ar picante da floresta é pura satisfação para a sua alma? Todo animal é seu amigo e você cuida com carinho das árvores e plantas o tempo todo? Então é hora de se tornar um só com a natureza: torne-se um Grove Keeper!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 908,
@@ -2338,7 +2650,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-guidon-bearer-outfit",
         "name": "Full Guidon Bearer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nCarrying the guidon of a unit, always marching in front, is not only an honour but also comes with great responsibility. Guidon bearers wield great power, they lead where others follow and keep the spirits of the troops up as they wave their flag against the golden suns of Tibia.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nCarrying the guidon of a unit, always marching in front, is not only an honour but also comes with great responsibility. Guidon bearers wield great power, they lead where others follow and keep the spirits of the troops up as they wave their flag against the golden suns of Tibia.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nCarregar o estandarte de uma unidade, marchando sempre à frente, não é apenas uma honra, mas também traz uma grande responsabilidade. Os portadores de estandarte detêm um grande poder: eles lideram onde outros seguem e mantêm o moral das tropas elevado enquanto agitam sua bandeira contra os sóis dourados de Tibia."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1186,
@@ -2361,7 +2676,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-herbalist-outfit",
         "name": "Full Herbalist Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herbalist outfit is the perfect outfit for all herbs collectors. Those of you who are aware that you do not necessarily have to reach into the mouth of a hydra to get a hydra tongue and those who know exactly where to get blood- and shadow-herbs will find a matching outfit for their daily hobby. Show the world your affinity for herbs and impress your friends with your knowledge of medicine and potions.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herbalist outfit is the perfect outfit for all herbs collectors. Those of you who are aware that you do not necessarily have to reach into the mouth of a hydra to get a hydra tongue and those who know exactly where to get blood- and shadow-herbs will find a matching outfit for their daily hobby. Show the world your affinity for herbs and impress your friends with your knowledge of medicine and potions.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO traje Herbalist é o traje perfeito para todos os coletores de ervas. Aqueles entre vocês que sabem que não é necessariamente preciso enfiar a mão na boca de uma hydra para conseguir uma hydra tongue e aqueles que sabem exatamente onde encontrar blood-herbs e shadow-herbs encontrarão um traje à altura do seu passatempo diário. Mostre ao mundo sua afinidade com as ervas e impressione seus amigos com seu conhecimento de medicina e poções."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1021,
@@ -2384,7 +2702,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-herder-outfit",
         "name": "Full Herder Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herder is one with nature, being outside all day, watching carefully over his flock. If you like to spend time on picturesque meadows and are always looking for greener pastures, then this outfit is for you.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Herder is one with nature, being outside all day, watching carefully over his flock. If you like to spend time on picturesque meadows and are always looking for greener pastures, then this outfit is for you.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Herder é um só com a natureza, passando o dia inteiro ao ar livre, vigiando cuidadosamente o seu rebanho. Se você gosta de passar o tempo em prados pitorescos e está sempre em busca de pastos mais verdes, então este traje é para você."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1279,
@@ -2407,7 +2728,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-jouster-outfit",
         "name": "Full Jouster Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Jouster is all geared up for a tournament, ready to partake in festive activities involving friendly competition to prove their chivalry. However, being well-armoured, they are also a force to be reckoned with on the battlefield, especially with a trusty steed at their service.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Jouster is all geared up for a tournament, ready to partake in festive activities involving friendly competition to prove their chivalry. However, being well-armoured, they are also a force to be reckoned with on the battlefield, especially with a trusty steed at their service.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO Jouster está totalmente equipado para um torneio, pronto para participar de atividades festivas de competição amigável para provar sua cavalaria. No entanto, por estar bem armado, ele também é uma força a ser temida no campo de batalha, especialmente com um corcel de confiança a seu serviço."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1331,
@@ -2430,7 +2754,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-lupine-warden-outfit",
         "name": "Full Lupine Warden Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the adrenaline rushing through your veins when the sun goes down and a full moon lightens the night? Do you have the urge to hunt down your target no matter what? Unleash the beast inside of you and lead your friends to battle with the Lupine Warden outfit!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the adrenaline rushing through your veins when the sun goes down and a full moon lightens the night? Do you have the urge to hunt down your target no matter what? Unleash the beast inside of you and lead your friends to battle with the Lupine Warden outfit!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sente a adrenalina correndo nas veias quando o sol se põe e a lua cheia ilumina a noite? Você tem o impulso de caçar seu alvo custe o que custar? Liberte a fera dentro de você e leve seus amigos para a batalha com o traje Lupine Warden!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 899,
@@ -2453,7 +2780,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-mercenary-outfit",
         "name": "Full Mercenary Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Mercenary carries a powerful, razor-sharp axe on his shoulders that effortlessly cuts through any armour and bone. You should better tell your friends to keep a safe distance, since heads will roll over the blood-soaked battleground after a powerful swing of yours.\nConsidering the sheer size of this axe, it might even be possible to chop onions without shedding a tear.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Mercenary carries a powerful, razor-sharp axe on his shoulders that effortlessly cuts through any armour and bone. You should better tell your friends to keep a safe distance, since heads will roll over the blood-soaked battleground after a powerful swing of yours.\nConsidering the sheer size of this axe, it might even be possible to chop onions without shedding a tear.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO Mercenary carrega nos ombros um machado poderoso e afiadíssimo que corta sem esforço qualquer armadura e osso. É melhor avisar seus amigos para manterem uma distância segura, pois cabeças vão rolar pelo campo de batalha encharcado de sangue depois de um golpe poderoso seu.\nConsiderando o tamanho descomunal deste machado, talvez seja até possível picar cebolas sem derramar uma lágrima."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1056,
@@ -2476,7 +2806,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-merry-garb-outfit",
         "name": "Full Merry Garb Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you ready for the festive season? Or feeling festive regardless of the time of year? Then the Merry Garb is perfect for you. Donning the outfit not only puts you in a mirthful mood, but spreads blitheness on your travels throughout the lands.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you ready for the festive season? Or feeling festive regardless of the time of year? Then the Merry Garb is perfect for you. Donning the outfit not only puts you in a mirthful mood, but spreads blitheness on your travels throughout the lands.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê está pronto para a época das festas? Ou se sente festivo independentemente da época do ano? Então o Merry Garb é perfeito para você. Vestir este traje não só coloca você num clima alegre, como espalha contentamento por suas viagens por todas as terras."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1382,
@@ -2499,7 +2832,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-moth-cape-outfit",
         "name": "Full Moth Cape Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you are fascinated by this particular group of insects and want to show your deep appreciation of these critters, the Moth Cape is for you. The wing-shaped coat and the antennae provide you with the feeling of being a moth without experiencing the downside of inevitably being drawn to light.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you are fascinated by this particular group of insects and want to show your deep appreciation of these critters, the Moth Cape is for you. The wing-shaped coat and the antennae provide you with the feeling of being a moth without experiencing the downside of inevitably being drawn to light.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você é fascinado por esse grupo particular de insetos e quer mostrar sua profunda apreciação por essas criaturinhas, o Moth Cape é para você. O manto em forma de asas e as antenas dão a você a sensação de ser uma mariposa sem sofrer a desvantagem de ser inevitavelmente atraído pela luz."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1338,
@@ -2522,7 +2858,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-nordic-chieftain-outfit",
         "name": "Full Nordic Chieftain Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWhere others not dare to tread due to the biting cold and freezing winds, the Nordic Chieftain feels right at home. Braving the harsh conditions is possible due to a protective layer of warm clothing, as well as suitable armament to fend off any hostile wildlife. The helmet's massive horns are a tad heavy and unwieldy, but show the chieftain's status.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWhere others not dare to tread due to the biting cold and freezing winds, the Nordic Chieftain feels right at home. Braving the harsh conditions is possible due to a protective layer of warm clothing, as well as suitable armament to fend off any hostile wildlife. The helmet's massive horns are a tad heavy and unwieldy, but show the chieftain's status.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOnde outros não ousam pisar por causa do frio cortante e dos ventos gelados, o Nordic Chieftain se sente em casa. Enfrentar as condições severas é possível graças a uma camada protetora de roupas quentes, além de um armamento adequado para afastar qualquer fauna hostil. Os enormes chifres do elmo são um tanto pesados e desajeitados, mas mostram o status do chefe."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1500,
@@ -2545,7 +2884,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-owl-keeper-outfit",
         "name": "Full Owl Keeper Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nOwl Keepers are often referred to as spirits walking through the forest at night, mere shadows during the day. They are also said to be shamans, protecting the flora and fauna of the Tibian lands. You often see them wearing a stag's antlers on their head and in the company of an owl, for they are as wise and mysterious as these intriguing creatures.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nOwl Keepers are often referred to as spirits walking through the forest at night, mere shadows during the day. They are also said to be shamans, protecting the flora and fauna of the Tibian lands. You often see them wearing a stag's antlers on their head and in the company of an owl, for they are as wise and mysterious as these intriguing creatures.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Owl Keepers são frequentemente descritos como espíritos que caminham pela floresta à noite, meras sombras durante o dia. Diz-se também que são xamãs que protegem a flora e a fauna das terras de Tibia. É comum vê-los usando chifres de cervo na cabeça e na companhia de uma coruja, pois são tão sábios e misteriosos quanto essas criaturas intrigantes."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1173,
@@ -2568,7 +2910,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-pharaoh-outfit",
         "name": "Full Pharaoh Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou know how to read hieroglyphs? You admire the exceptional architectural abilities and the unsolved mysteries of an ancient high culture? Next time you pay a visit to your friends, tell them to prepare a bathtub full of milk and honey for you because a Pharaoh is now walking through the streets of Ankrahmun!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou know how to read hieroglyphs? You admire the exceptional architectural abilities and the unsolved mysteries of an ancient high culture? Next time you pay a visit to your friends, tell them to prepare a bathtub full of milk and honey for you because a Pharaoh is now walking through the streets of Ankrahmun!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sabe ler hieróglifos? Você admira as habilidades arquitetônicas excepcionais e os mistérios não resolvidos de uma antiga alta cultura? Da próxima vez que visitar seus amigos, peça que preparem uma banheira cheia de leite e mel para você, porque um Pharaoh agora caminha pelas ruas de Ankrahmun!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 955,
@@ -2591,7 +2936,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-philosopher-outfit",
         "name": "Full Philosopher Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the urge to tell people what is really going on in the world? Do you know all answers to the important questions of life? Are you a true philosopher? Then dress like one to showcase the latest fashion for all wise theorists.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you feel the urge to tell people what is really going on in the world? Do you know all answers to the important questions of life? Are you a true philosopher? Then dress like one to showcase the latest fashion for all wise theorists.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê sente vontade de contar às pessoas o que realmente está acontecendo no mundo? Você conhece todas as respostas para as grandes perguntas da vida? Você é um verdadeiro filósofo? Então vista-se como um para exibir a última moda para todos os sábios teóricos."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 873,
@@ -2614,7 +2962,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-pumpkin-mummy-outfit",
         "name": "Full Pumpkin Mummy Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you cannot decide whether to wrap yourself up as a mummy or flaunt an enormous pumpkin head for your next hunting party, why not combine both? The Pumpkin Mummy outfit is the perfect costume for scary nights and spooky days.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nIf you cannot decide whether to wrap yourself up as a mummy or flaunt an enormous pumpkin head for your next hunting party, why not combine both? The Pumpkin Mummy outfit is the perfect costume for scary nights and spooky days.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSe você não consegue decidir entre se enrolar como uma múmia ou ostentar uma enorme cabeça de abóbora na sua próxima caçada, por que não combinar os dois? O traje Pumpkin Mummy é a fantasia perfeita para noites assustadoras e dias sinistros."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1127,
@@ -2637,7 +2988,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-puppeteer-outfit",
         "name": "Full Puppeteer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you a fan of puppetry? You like to travel the world together with one or two little acting fellows? Or are you simply the one who likes to pull the strings? Then the Puppeteer outfit is the right choice for you.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAre you a fan of puppetry? You like to travel the world together with one or two little acting fellows? Or are you simply the one who likes to pull the strings? Then the Puppeteer outfit is the right choice for you.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê é fã de teatro de marionetes? Gosta de viajar pelo mundo junto com um ou dois pequenos companheiros de atuação? Ou é simplesmente aquele que gosta de puxar as cordinhas? Então o traje Puppeteer é a escolha certa para você."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 697,
@@ -2660,7 +3014,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-ranger-outfit",
         "name": "Full Ranger Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nMost of the day, the Ranger is looking over his forest. He is taking care of all animals and plants and tries to keep everything in balance. Intruders are greeted by a warning shot from his deadly longbow. It is the perfect outfit for Paladins who live in close touch with nature.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nMost of the day, the Ranger is looking over his forest. He is taking care of all animals and plants and tries to keep everything in balance. Intruders are greeted by a warning shot from his deadly longbow. It is the perfect outfit for Paladins who live in close touch with nature.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDurante a maior parte do dia, o Ranger vigia sua floresta. Ele cuida de todos os animais e plantas e tenta manter tudo em equilíbrio. Intrusos são recebidos com um tiro de advertência de seu longbow mortal. É o traje perfeito para Paladins que vivem em contato próximo com a natureza."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 684,
@@ -2683,7 +3040,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-royal-pumpkin-outfit",
         "name": "Full Royal Pumpkin Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe mutated pumpkin is too weak for your mighty weapons? Time to show that evil vegetable how to scare the living daylight out of people! Put on a scary looking pumpkin on your head and spread terror and fear amongst the Tibian population.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe mutated pumpkin is too weak for your mighty weapons? Time to show that evil vegetable how to scare the living daylight out of people! Put on a scary looking pumpkin on your head and spread terror and fear amongst the Tibian population.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nA abóbora mutante é fraca demais para suas armas poderosas? Hora de mostrar a esse vegetal maligno como se apavora as pessoas de verdade! Coloque uma abóbora assustadora na cabeça e espalhe terror e medo entre a população de Tibia."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 760,
@@ -2706,7 +3066,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-rune-master-outfit",
         "name": "Full Rune Master Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Rune Master has dedicated their whole life to the study and mastery of runes. They are intrigued by the ancient symbols, shrouded in mystery, and how their magic works. Rune Masters have a deep understanding of the awesome power they are wielding and can make use of the full potential of runes.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Rune Master has dedicated their whole life to the study and mastery of runes. They are intrigued by the ancient symbols, shrouded in mystery, and how their magic works. Rune Masters have a deep understanding of the awesome power they are wielding and can make use of the full potential of runes.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Rune Master dedicou toda a sua vida ao estudo e ao domínio das runas. Eles são intrigados pelos símbolos antigos, envoltos em mistério, e pelo modo como sua magia funciona. Os Rune Masters têm um profundo entendimento do poder incrível que empunham e conseguem aproveitar todo o potencial das runas."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1384,
@@ -2729,7 +3092,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-sea-dog-outfit",
         "name": "Full Sea Dog Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAhoy mateys! Flaunt the swashbuckling Sea Dog outfit and strike a pose with your hook to impress both landlubbers and fellow pirates. Board your next ship in style!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAhoy mateys! Flaunt the swashbuckling Sea Dog outfit and strike a pose with your hook to impress both landlubbers and fellow pirates. Board your next ship in style!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nAhoy, marujos! Ostente o traje aventureiro Sea Dog e faça pose com seu gancho para impressionar tanto os marinheiros de água doce quanto os colegas piratas. Embarque no seu próximo navio com estilo!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 750,
@@ -2752,7 +3118,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-seaweaver-outfit",
         "name": "Full Seaweaver Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Seaweaver outfit is the perfect choice if you want to show the world that you are indeed a son or a daughter of the submarine kingdom. You can almost feel the salty taste and the rough wind of the sea when wearing it.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe Seaweaver outfit is the perfect choice if you want to show the world that you are indeed a son or a daughter of the submarine kingdom. You can almost feel the salty taste and the rough wind of the sea when wearing it.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO traje Seaweaver é a escolha perfeita se você quer mostrar ao mundo que é de fato um filho ou uma filha do reino submarino. Você quase consegue sentir o gosto salgado e o vento áspero do mar ao usá-lo."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 733,
@@ -2775,7 +3144,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-shadowlotus-disciple-outfit",
         "name": "Full Shadowlotus Disciple Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe path of the Shadowlotus Disciple is a lonesome and threatening one. Only those who forget their name will learn to sneak within shadows. And only those who will overcome their greatest fear can become a true master of assassination.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe path of the Shadowlotus Disciple is a lonesome and threatening one. Only those who forget their name will learn to sneak within shadows. And only those who will overcome their greatest fear can become a true master of assassination.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO caminho do Shadowlotus Disciple é solitário e ameaçador. Somente aqueles que esquecem o próprio nome aprenderão a se esgueirar entre as sombras. E somente aqueles que superarem seu maior medo poderão se tornar verdadeiros mestres do assassinato."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1581,
@@ -2798,7 +3170,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-siege-master-outfit",
         "name": "Full Siege Master Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nNeither thick stone walls nor heavily armoured gates can stop the Siege Master, who brings down hostile fortifications in the blink of an eye. Whenever he tenses his muscular arms to lift the powerful battering ram, his enemies' knees begin to buckle. It is the perfect outfit for those who also stand for brute strength and immense destruction.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nNeither thick stone walls nor heavily armoured gates can stop the Siege Master, who brings down hostile fortifications in the blink of an eye. Whenever he tenses his muscular arms to lift the powerful battering ram, his enemies' knees begin to buckle. It is the perfect outfit for those who also stand for brute strength and immense destruction.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nNem grossas muralhas de pedra nem portões fortemente blindados conseguem deter o Siege Master, que derruba fortificações inimigas num piscar de olhos. Sempre que ele tensiona seus braços musculosos para erguer o poderoso aríete, os joelhos de seus inimigos começam a fraquejar. É o traje perfeito para quem também representa força bruta e destruição imensa."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1051,
@@ -2821,7 +3196,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-sinister-archer-outfit",
         "name": "Full Sinister Archer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFrom an early age, the Sinister Archer has been fascinated by people's dark machinations and perversions. Sinister Archers claim that they advocate the good and that they only use their arrows to pierce the hearts of those who have committed many crimes and misdeeds. However, they are still viewed by the public with much suspicion due to their dubious appearance. To keep their identity secret, they often hide themselves behind a skull-like face guard that can easily withstand even axe and club blows.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nFrom an early age, the Sinister Archer has been fascinated by people's dark machinations and perversions. Sinister Archers claim that they advocate the good and that they only use their arrows to pierce the hearts of those who have committed many crimes and misdeeds. However, they are still viewed by the public with much suspicion due to their dubious appearance. To keep their identity secret, they often hide themselves behind a skull-like face guard that can easily withstand even axe and club blows.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nDesde muito jovem, o Sinister Archer é fascinado pelas maquinações sombrias e perversões das pessoas. Os Sinister Archers afirmam que defendem o bem e que só usam suas flechas para perfurar o coração daqueles que cometeram muitos crimes e malfeitos. Ainda assim, o público os vê com muita desconfiança por causa de sua aparência duvidosa. Para manter sua identidade em segredo, eles costumam se esconder atrás de uma máscara em forma de caveira que resiste facilmente até a golpes de machado e clava."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1102,
@@ -2844,7 +3222,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-spirit-caller-outfit",
         "name": "Full Spirit Caller Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou are in love with the deep soul of Mother Earth and prefer to walk in the shadows of her wooden children? Choose the Spirit Caller outfit to live in harmony with nature.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou are in love with the deep soul of Mother Earth and prefer to walk in the shadows of her wooden children? Choose the Spirit Caller outfit to live in harmony with nature.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê é apaixonado pela alma profunda da Mãe Terra e prefere caminhar à sombra de seus filhos de madeira? Escolha o traje Spirit Caller para viver em harmonia com a natureza."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 699,
@@ -2867,7 +3248,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-sun-priest-outfit",
         "name": "Full Sun Priest Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you worship warm temperatures and are opposed to the thought of long and dark winter nights? Do you refuse to spend countless evenings in front of your chimney while ice-cold wind whistles through the cracks and niches of your house? It is time to stop freezing and to become an honourable Sun Priest! With this stylish outfit, you can finally show the world your unconditional dedication and commitment to the sun!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nDo you worship warm temperatures and are opposed to the thought of long and dark winter nights? Do you refuse to spend countless evenings in front of your chimney while ice-cold wind whistles through the cracks and niches of your house? It is time to stop freezing and to become an honourable Sun Priest! With this stylish outfit, you can finally show the world your unconditional dedication and commitment to the sun!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê venera temperaturas quentes e é contra a ideia de noites de inverno longas e escuras? Você se recusa a passar incontáveis noites em frente à lareira enquanto o vento gelado assobia pelas frestas e cantos da sua casa? É hora de parar de congelar e se tornar um honrado Sun Priest! Com este traje estiloso, você pode finalmente mostrar ao mundo sua dedicação e seu compromisso incondicionais com o sol!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1023,
@@ -2890,7 +3274,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-trailblazer-outfit",
         "name": "Full Trailblazer Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Trailblazer is on a mission of enlightenment and carries the flame of wisdom near and far. The everlasting shine brightens the hearts and minds of all creatures its rays touch, bringing light even to the darkest corners of the world as a beacon of insight and knowledge.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nThe Trailblazer is on a mission of enlightenment and carries the flame of wisdom near and far. The everlasting shine brightens the hearts and minds of all creatures its rays touch, bringing light even to the darkest corners of the world as a beacon of insight and knowledge.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO Trailblazer está em uma missão de iluminação e carrega a chama da sabedoria por toda parte. Seu brilho eterno ilumina os corações e as mentes de todas as criaturas que seus raios tocam, levando luz até aos cantos mais escuros do mundo como um farol de percepção e conhecimento."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1292,
@@ -2913,7 +3300,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-trophy-hunter-outfit",
         "name": "Full Trophy Hunter Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou spend hours in the woods in search of wild and rare animals? Countless stuffed skulls of deer, wolves and other creatures are decorating your walls? Now you have the chance to present your trophies in public. Become a Trophy Hunter and cover your shoulders with the finest bear skulls!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nYou spend hours in the woods in search of wild and rare animals? Countless stuffed skulls of deer, wolves and other creatures are decorating your walls? Now you have the chance to present your trophies in public. Become a Trophy Hunter and cover your shoulders with the finest bear skulls!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nVocê passa horas na mata em busca de animais selvagens e raros? Incontáveis crânios empalhados de cervos, lobos e outras criaturas decoram suas paredes? Agora você tem a chance de exibir seus troféus em público. Torne-se um Trophy Hunter e cubra seus ombros com os mais finos crânios de urso!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 957,
@@ -2936,7 +3326,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-veteran-paladin-outfit",
         "name": "Full Veteran Paladin Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Veteran Paladin has mastered the art of distance fighting. No matter how far away his prey may be, a marksman like the Veteran Paladin will always hit with extraordinary precision. No one can escape his keen hawk-eyed vision and even small stones become deadly weapons in his hands.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nA Veteran Paladin has mastered the art of distance fighting. No matter how far away his prey may be, a marksman like the Veteran Paladin will always hit with extraordinary precision. No one can escape his keen hawk-eyed vision and even small stones become deadly weapons in his hands.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nUm Veteran Paladin dominou a arte da luta à distância. Não importa quão longe esteja sua presa, um atirador como o Veteran Paladin sempre acertará com precisão extraordinária. Ninguém escapa de sua visão aguçada de falcão, e até pequenas pedras se tornam armas mortais em suas mãos."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1204,
@@ -2959,7 +3352,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-void-master-outfit",
         "name": "Full Void Master Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAccording to ancient rumours, the pulsating orb that the Void Master balances skilfully on the tip of his staff consists of powerful cosmic spheres. If you gaze too long into the infinite emptiness inside the orb, its powers will absorb your mind.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nAccording to ancient rumours, the pulsating orb that the Void Master balances skilfully on the tip of his staff consists of powerful cosmic spheres. If you gaze too long into the infinite emptiness inside the orb, its powers will absorb your mind.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nSegundo antigos rumores, o orbe pulsante que o Void Master equilibra habilmente na ponta de seu cajado é feito de poderosas esferas cósmicas. Se você contemplar por tempo demais o vazio infinito dentro do orbe, seus poderes absorverão sua mente."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1202,
@@ -2982,7 +3378,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-winter-warden-outfit",
         "name": "Full Winter Warden Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe warm and cosy cloak of the Winter Warden outfit will keep you warm in every situation. Best thing, it is not only comfortable but fashionable as well. You will be the envy of any snow queen or king, guaranteed!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nThe warm and cosy cloak of the Winter Warden outfit will keep you warm in every situation. Best thing, it is not only comfortable but fashionable as well. You will be the envy of any snow queen or king, guaranteed!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nO manto quente e aconchegante do traje Winter Warden vai manter você aquecido em qualquer situação. O melhor de tudo: ele não é apenas confortável, mas também elegante. Você será a inveja de qualquer rainha ou rei da neve, garantido!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 853,
@@ -3005,7 +3404,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-full-winged-druid-outfit",
         "name": "Full Winged Druid Outfit",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWinged Druids are figures of both grace and menace. Wings that cut through the air like blades and an aura of unshakable determination make them a true force to be reckoned with. Harness the raw fury of nature and unleash its vengeance upon those who threaten it!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n{info} includes basic outfit and 2 addons which can be selected individually\n\nWinged Druids are figures of both grace and menace. Wings that cut through the air like blades and an aura of unshakable determination make them a true force to be reckoned with. Harness the raw fury of nature and unleash its vengeance upon those who threaten it!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n{info} inclui o traje básico e 2 adicionais que podem ser selecionados individualmente\n\nOs Winged Druids são figuras de graça e de ameaça ao mesmo tempo. Asas que cortam o ar como lâminas e uma aura de determinação inabalável fazem deles uma verdadeira força a ser temida. Domine a fúria bruta da natureza e libere sua vingança sobre aqueles que a ameaçam!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 1831,
@@ -3028,7 +3430,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-citizen",
         "name": "Retro Citizen",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDo you still remember your first stroll through the streets of Thais? For old times' sake, walk the paths of Nostalgia as a Retro Citizen!",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDo you still remember your first stroll through the streets of Thais? For old times' sake, walk the paths of Nostalgia as a Retro Citizen!",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVocê ainda se lembra do seu primeiro passeio pelas ruas de Thais? Pelos velhos tempos, percorra os caminhos da Nostalgia como um Retro Citizen!"
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 974,
@@ -3051,7 +3456,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-hunter",
         "name": "Retro Hunter",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhenever you pick up your bow and spears, you walk down memory lane and think of your early days? Treat yourself with the fashionable Retro Hunter outfit and hunt some good old monsters from your childhood.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhenever you pick up your bow and spears, you walk down memory lane and think of your early days? Treat yourself with the fashionable Retro Hunter outfit and hunt some good old monsters from your childhood.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nSempre que você pega seu arco e suas lanças, viaja pelas lembranças e pensa nos seus primeiros dias? Presenteie-se com o elegante traje Retro Hunter e cace alguns bons e velhos monstros da sua infância."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 972,
@@ -3074,7 +3482,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-knight",
         "name": "Retro Knight",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWho needs a fancy looking sword with bling-bling and ornaments? Back in the days, we survived without such unnecessary accessories! Time to show those younkers what a Retro Knight is made of.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWho needs a fancy looking sword with bling-bling and ornaments? Back in the days, we survived without such unnecessary accessories! Time to show those younkers what a Retro Knight is made of.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nQuem precisa de uma espada chique cheia de brilhos e ornamentos? Antigamente, nós sobrevivíamos sem esses acessórios desnecessários! Hora de mostrar a esses novatos do que um Retro Knight é feito."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 970,
@@ -3097,7 +3508,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-mage",
         "name": "Retro Mage",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDress up as a Retro Mage and you will always cut a fine figure on the battleground while eliminating your enemies with your magical powers the old-fashioned way.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nDress up as a Retro Mage and you will always cut a fine figure on the battleground while eliminating your enemies with your magical powers the old-fashioned way.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVista-se como um Retro Mage e você sempre fará bonito no campo de batalha enquanto elimina seus inimigos com seus poderes mágicos à moda antiga."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 968,
@@ -3120,7 +3534,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-noble-wo-man",
         "name": "Retro Noble(wo)man",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nKing Tibianus has invited you to a summer ball and you have nothing to wear for this special event? Do not worry, the Retro Noble(wo)man outfit makes you a real eye catcher on every festive occasion.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nKing Tibianus has invited you to a summer ball and you have nothing to wear for this special event? Do not worry, the Retro Noble(wo)man outfit makes you a real eye catcher on every festive occasion.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nO King Tibianus convidou você para um baile de verão e você não tem nada para vestir nesse evento especial? Não se preocupe, o traje Retro Noble(wo)man faz de você o centro das atenções em qualquer ocasião festiva."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 966,
@@ -3143,7 +3560,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-summoner",
         "name": "Retro Summoner",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhile the Retro Mage usually throws runes and mighty spells directly at the enemies, the Retro Summoner outfit might be the better choice for Tibians that prefer to send mighty summons to the battlefield to keep their enemies at distance.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nWhile the Retro Mage usually throws runes and mighty spells directly at the enemies, the Retro Summoner outfit might be the better choice for Tibians that prefer to send mighty summons to the battlefield to keep their enemies at distance.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nEnquanto o Retro Mage costuma lançar runas e magias poderosas diretamente nos inimigos, o traje Retro Summoner pode ser a melhor escolha para os Tibians que preferem enviar poderosas invocações ao campo de batalha para manter seus inimigos à distância."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 964,
@@ -3166,7 +3586,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "outfits-retro-warrior",
         "name": "Retro Warrior",
         "kind": "outfit",
-        "description": "{character}\n{info} colours can be changed using the Outfit dialog\n\nYou are fearless and strong as a behemoth but have problems finding the right outfit for your adventures? The Retro Warrior outfit is a must-have for all fashion-conscious old-school Tibians out there.",
+        "description": {
+          "en": "{character}\n{info} colours can be changed using the Outfit dialog\n\nYou are fearless and strong as a behemoth but have problems finding the right outfit for your adventures? The Retro Warrior outfit is a must-have for all fashion-conscious old-school Tibians out there.",
+          "pt-BR": "{character}\n{info} as cores podem ser alteradas na janela de Trajes\n\nVocê é destemido e forte como um behemoth, mas tem dificuldade em encontrar o traje certo para suas aventuras? O traje Retro Warrior é indispensável para todos os Tibians da velha guarda antenados na moda."
+        },
         "icon": {
           "kind": "outfit",
           "lookType": 962,
@@ -3189,7 +3612,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "mounts",
-    "name": "Mounts",
+    "name": {
+      "en": "Mounts",
+      "pt-BR": "Montarias"
+    },
     "parentId": "cosmetics",
     "icon": {
       "kind": "mount",
@@ -3200,7 +3626,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-armoured-war-horse",
         "name": "Armoured War Horse",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Armoured War Horse is a dangerous black beauty! When you see its threatening, blood-red eyes coming towards you, you'll know trouble is on its way. Protected by its heavy armour plates, the warhorse is the perfect partner for dangerous hunting sessions and excessive enemy slaughtering.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Armoured War Horse is a dangerous black beauty! When you see its threatening, blood-red eyes coming towards you, you'll know trouble is on its way. Protected by its heavy armour plates, the warhorse is the perfect partner for dangerous hunting sessions and excessive enemy slaughtering.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Armoured War Horse é uma beleza negra perigosa! Quando você vir seus olhos ameaçadores, vermelhos como sangue, vindo na sua direção, saberá que problemas estão a caminho. Protegido por suas pesadas placas de armadura, o cavalo de guerra é o parceiro perfeito para caçadas perigosas e matanças excessivas de inimigos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 426
@@ -3220,7 +3649,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-artic-unicorn",
         "name": "Artic Unicorn",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Arctic Unicorn lives in a deep rivalry with its cousin the Blazing Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Tangerine vs.crystal blue! The choice is yours!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Arctic Unicorn lives in a deep rivalry with its cousin the Blazing Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Tangerine vs.crystal blue! The choice is yours!",
+          "pt-BR": "{character}\n{speedboost}\n\nO Arctic Unicorn vive em profunda rivalidade com seu primo, o Blazing Unicorn. Embora tenham nascido em regiões completamente diferentes, de alguma forma eles compartilham a mesma linhagem. A eterna batalha entre fogo e gelo continua. Quem vencerá? Tangerina vs. azul-cristal! A escolha é sua!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1018
@@ -3240,7 +3672,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-batcat",
         "name": "Batcat",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Batcat to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Batcat to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem os rumores que, muitos anos atrás, bruxas anciãs se reuniram para celebrar um banquete mágico no alto das montanhas. Elas cruzaram o Batcat para conquistar com facilidade desfiladeiros rochosos e vales profundos. Ninguém sabe o que aconteceu na subida, mas desde então apenas a montaria foi vista."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 728
@@ -3260,7 +3695,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-battle-badger",
         "name": "Battle Badger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1229
@@ -3280,7 +3718,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-black-stag",
         "name": "Black Stag",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Black Stag will carry you through the deepest snow.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Black Stag will carry you through the deepest snow.",
+          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e chifres impressionantes: o nobre Black Stag vai carregar você através da neve mais profunda."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 686
@@ -3300,7 +3741,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-blackpelt",
         "name": "Blackpelt",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Blackpelt is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Blackpelt is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Blackpelt está em busca do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem com sua comida favorita de vez em quando e ele se tornará um parceiro leal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 651
@@ -3320,7 +3764,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-blazing-unicorn",
         "name": "Blazing Unicorn",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Blazing Unicorn lives in a deep rivalry with its cousin the Arctic Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Crystal blue vs. tangerine! The choice is yours!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Blazing Unicorn lives in a deep rivalry with its cousin the Arctic Unicorn. Even though they were born in completely different areas, they somehow share the same bloodline. The eternal battle between fire and ice continues. Who will win? Crystal blue vs. tangerine! The choice is yours!",
+          "pt-BR": "{character}\n{speedboost}\n\nO Blazing Unicorn vive em profunda rivalidade com seu primo, o Arctic Unicorn. Embora tenham nascido em regiões completamente diferentes, de alguma forma eles compartilham a mesma linhagem. A eterna batalha entre fogo e gelo continua. Quem vencerá? Azul-cristal vs. tangerina! A escolha é sua!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1017
@@ -3340,7 +3787,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-bloodcurl",
         "name": "Bloodcurl",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Bloodcurl will carry you through the Tibian wilderness with ease.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Bloodcurl will carry you through the Tibian wilderness with ease.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas em combate ou apenas para viajar? O Bloodcurl vai carregar você pelas terras selvagens de Tibia com facilidade."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 869
@@ -3360,7 +3810,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-bogwurm",
         "name": "Bogwurm",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1447
@@ -3380,7 +3833,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-boreal-owl",
         "name": "Boreal Owl",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1106
@@ -3400,7 +3856,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-brass-speckled-koi",
         "name": "Brass Speckled Koi",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1609
@@ -3420,7 +3879,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-bunny-dray",
         "name": "Bunny Dray",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Bunny Dray comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Bunny Dray comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo da sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Bunny Dray vem com duas lebres de alto desempenho que nunca se cansam graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo ficará bem!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1180
@@ -3440,7 +3902,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-caped-snowman",
         "name": "Caped Snowman",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Caped Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Caped Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites vão ficando mais longas e o vento gelado traz nevascas para as terras, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Caped Snowman. Agasalhe-se bem e suba no lombo do seu novo companheiro gelado."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1169
@@ -3460,7 +3925,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cave-tarantula",
         "name": "Cave Tarantula",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that the Cave Tarantula was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that the Cave Tarantula was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Cave Tarantula nasceu muito antes de Banor caminhar pela terra de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, ela está totalmente crescida e sedenta por vingança."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1026
@@ -3480,7 +3948,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cinderhoof",
         "name": "Cinderhoof",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Cinderhoof to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Cinderhoof to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais um diabinho do que um anjo, talvez prefira sair cavalgando um Cinderhoof para assustar os outros Tibians em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 851
@@ -3500,7 +3971,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cinnamon-ibex",
         "name": "Cinnamon Ibex",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1528
@@ -3520,7 +3994,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cony-cart",
         "name": "Cony Cart",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Cony Cart comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Cony Cart comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo da sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Cony Cart vem com duas lebres de alto desempenho que nunca se cansam graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo ficará bem!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1181
@@ -3540,7 +4017,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-copper-fly",
         "name": "Copper Fly",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Copper Fly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Copper Fly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, pode gostar de um passeio no Copper Fly, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 671
@@ -3560,7 +4040,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-coral-rhea",
         "name": "Coral Rhea",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1325
@@ -3580,7 +4063,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-coralripper",
         "name": "Coralripper",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf the Coralripper moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf the Coralripper moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando o Coralripper move suas nadadeiras, ele gera pressão de ar suficiente para até flutuar sobre a terra. Seus inúmeros olhos permitem que ele detecte perigos rapidamente mesmo em situações confusas e os elimine com uma única mordida poderosa. Se você cuidar dos seus dedos, vocês serão bons amigos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 735
@@ -3600,7 +4086,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cranium-spider",
         "name": "Cranium Spider",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that the Cranium Spider was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that the Cranium Spider was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Cranium Spider nasceu muito antes de Banor caminhar pela terra de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, ela está totalmente crescida e sedenta por vingança."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1025
@@ -3620,7 +4109,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-crimson-ray",
         "name": "Crimson Ray",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nHave you ever dreamed of gliding through the air on the back of a winged creature? With its deep red wings, the majestic Crimson Ray is a worthy mount for courageous heroes. Feel like a king on its back as you ride into your next adventure.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nHave you ever dreamed of gliding through the air on the back of a winged creature? With its deep red wings, the majestic Crimson Ray is a worthy mount for courageous heroes. Feel like a king on its back as you ride into your next adventure.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê já sonhou em planar pelo ar no lombo de uma criatura alada? Com suas asas de um vermelho profundo, o majestoso Crimson Ray é uma montaria digna de heróis corajosos. Sinta-se como um rei em seu lombo enquanto cavalga rumo à sua próxima aventura."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 521
@@ -3640,7 +4132,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-cunning-hyaena",
         "name": "Cunning Hyaena",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1334
@@ -3660,7 +4155,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-dandelion",
         "name": "Dandelion",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1441
@@ -3680,7 +4178,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-darkfire-devourer",
         "name": "Darkfire Devourer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
+          "pt-BR": "{character}\n{speedboost}\n\nUma criatura selvagem e ancestral, que ficou escondida nas profundezas das sombras por muito tempo, foi avistada novamente em Tibia! O todo-poderoso Shadow Draptor retornou, e somente os Tibians mais corajosos conseguem controlar uma fera dessas!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1677
@@ -3700,7 +4201,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-dawn-strayer",
         "name": "Dawn Strayer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1286
@@ -3720,7 +4224,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-death-crawler",
         "name": "Death Crawler",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Death Crawler is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Death Crawler is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Death Crawler é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido do que os escorpiões comuns, ele é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 624
@@ -3740,7 +4247,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-desert-king",
         "name": "Desert King",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Desert King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Desert King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido atravessa até a medula dos ossos e pode ser ouvido a mais de dez milhas de distância. O Desert King é o soberano incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove que você é digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 572
@@ -3760,7 +4270,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-doombringer",
         "name": "Doombringer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Doombringer is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Doombringer is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+          "pt-BR": "{character}\n{speedboost}\n\nCapturado e mantido em cativeiro por um caçador louco, o Doombringer é o resultado de experimentos doentios. Alimentado apenas com pó de demônio e sangue demoníaco concentrado, teve de suportar uma transformação terrível. O sangue demoníaco que agora corre em suas veias, porém, lhe confere força e resistência incríveis."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 644
@@ -3780,7 +4293,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-dreadhare",
         "name": "Dreadhare",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Dreadhare consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Dreadhare consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê gosta de coelhinhos fofos, mas acha que eles são pequenos demais? Admira a majestade dos cervos e de suas galhadas, mas tem medo de sua natureza selvagem e indomável? Não se preocupe: a criatura mística Dreadhare reúne as melhores qualidades dos dois animais. Suba em seu lombo e aproveite o passeio."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 906
@@ -3800,7 +4316,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-dusk-pryer",
         "name": "Dusk Pryer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1285
@@ -3820,7 +4339,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ebony-tiger",
         "name": "Ebony Tiger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Ebony Tiger has developed its extraordinary colouring over several generations.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Ebony Tiger has developed its extraordinary colouring over several generations.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Ebony Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1091
@@ -3840,7 +4362,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ember-saurian",
         "name": "Ember Saurian",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Ember Saurian has been spotted in a sea of flames and fire deep down in the depths of Kazordoon.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Ember Saurian has been spotted in a sea of flames and fire deep down in the depths of Kazordoon.",
+          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Ember Saurian foi avistado em um mar de chamas e fogo nas profundezas de Kazordoon."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 960
@@ -3860,7 +4385,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-emerald-raven",
         "name": "Emerald Raven",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1453
@@ -3880,7 +4408,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-emerald-sphinx",
         "name": "Emerald Sphinx",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRide an Emerald Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRide an Emerald Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Emerald Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 951
@@ -3900,7 +4431,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-emerald-waccoon",
         "name": "Emerald Waccoon",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Emerald Waccoon and scratch it behind its ears to make it happy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Emerald Waccoon and scratch it behind its ears to make it happy.",
+          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Emerald Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 693
@@ -3920,7 +4454,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-emperor-deer",
         "name": "Emperor Deer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Emperor Deer will carry you through the deepest snow.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Emperor Deer will carry you through the deepest snow.",
+          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e galhada impressionante: o nobre Emperor Deer vai levar você através da neve mais profunda."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 687
@@ -3940,7 +4477,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ether-badger",
         "name": "Ether Badger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1230
@@ -3960,7 +4500,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-eventide-nandu",
         "name": "Eventide Nandu",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1326
@@ -3980,7 +4523,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-feral-tiger",
         "name": "Feral Tiger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Feral Tiger has developed its extraordinary colouring over several generations.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Feral Tiger has developed its extraordinary colouring over several generations.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Feral Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1092
@@ -4000,7 +4546,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-festive-mammoth",
         "name": "Festive Mammoth",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1381
@@ -4020,7 +4569,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-festive-snowman",
         "name": "Festive Snowman",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Festive Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Festive Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites ficam mais longas e o vento gélido traz nevascas para a terra, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Festive Snowman. Agasalhe-se bem e pule nas costas de seu novo companheiro gelado."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1167
@@ -4040,7 +4592,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-flamesteed",
         "name": "Flamesteed",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Flamesteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Flamesteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+          "pt-BR": "{character}\n{speedboost}\n\nOutrora um cavalo de guerra majestoso e orgulhoso, o Flamesteed tombou em uma batalha terrível muitos anos atrás. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 626
@@ -4060,7 +4615,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-flitterkatzen",
         "name": "Flitterkatzen",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Flitterkatzen to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Flitterkatzen to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que, muitos anos atrás, bruxas anciãs se reuniram para realizar um banquete mágico no alto das montanhas. Elas cruzaram Flitterkatzen para vencer com facilidade cânions rochosos e vales profundos. Ninguém sabe o que aconteceu no caminho até lá, mas desde então apenas a montaria foi vista."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 726
@@ -4080,7 +4638,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-floating-augur",
         "name": "Floating Augur",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1249
@@ -4100,7 +4661,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-floating-kashmir",
         "name": "Floating Kashmir",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Floating Kashmir is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Floating Kashmir is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Floating Kashmir é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 690
@@ -4120,7 +4684,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-floating-sage",
         "name": "Floating Sage",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1247
@@ -4140,7 +4707,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-floating-scholar",
         "name": "Floating Scholar",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese creatures are Floating Savants whose mind has been warped and bent to focus their extraordinary mental capabilities on one single goal: to do their master's bidding. Instead of being filled with an endless pursuit of knowledge, their live is now one of continuous thralldom and serfhood. The Floating Sage, the Floating Scholar and the Floating Augur are at your disposal.",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas criaturas são Floating Savants cujas mentes foram distorcidas e dobradas para concentrar suas extraordinárias capacidades mentais em um único objetivo: cumprir as ordens de seu mestre. Em vez de uma vida repleta de uma busca infinita por conhecimento, sua existência agora é de contínua escravidão e servidão. O Floating Sage, o Floating Scholar e o Floating Augur estão à sua disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1248
@@ -4160,7 +4730,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-flying-divan",
         "name": "Flying Divan",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Flying Divan is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Flying Divan is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Flying Divan é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 688
@@ -4180,7 +4753,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-frostbringer",
         "name": "Frostbringer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1615
@@ -4200,7 +4776,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-frostflare",
         "name": "Frostflare",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Frostflare to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Frostflare to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais diabinho do que anjo, talvez prefira sair cavalgando em um Frostflare para assustar outros Tibianos em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 850
@@ -4220,7 +4799,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-glacier-vagabond",
         "name": "Glacier Vagabond",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Glacier Vagabond will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Glacier Vagabond will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo espesso e desgrenhado, o Glacier Vagabond vai manter você aquecido até mesmo no clima gelado das Ice Islands. Devido à sua natureza calma e pacífica, ele não se irrita com facilidade."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 674
@@ -4240,7 +4822,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-gloom-widow",
         "name": "Gloom Widow",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that the Gloom Widow was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that the Gloom Widow was born long before Banor walked the earth of Tibia. While its parents died in the war against the cruel hordes sent by Brog and Zathroth, their child survived by hiding in skulls of burned enemies. It never left its hiding spot and as it grew older, the skulls merged into its body. Now, it is fully-grown and thirsts for revenge.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que a Gloom Widow nasceu muito antes de Banor caminhar pelas terras de Tibia. Enquanto seus pais morreram na guerra contra as hordas cruéis enviadas por Brog e Zathroth, sua cria sobreviveu escondendo-se nos crânios de inimigos queimados. Ela nunca deixou seu esconderijo e, à medida que crescia, os crânios se fundiram ao seu corpo. Agora, está totalmente crescida e tem sede de vingança."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1027
@@ -4260,7 +4845,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-gloomwurm",
         "name": "Gloomwurm",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1448
@@ -4280,7 +4868,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-gold-sphinx",
         "name": "Gold Sphinx",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRide a Gold Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRide a Gold Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Gold Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 950
@@ -4300,7 +4891,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-golden-dragonfly",
         "name": "Golden Dragonfly",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Golden Dragonfly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Golden Dragonfly, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, talvez goste de um passeio na Golden Dragonfly, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 669
@@ -4320,7 +4914,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-gorongra",
         "name": "Gorongra",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Gorongra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Gorongra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Gorongra é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 738
@@ -4340,7 +4937,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-hailstorm-fury",
         "name": "Hailstorm Fury",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Hailstorm Fury is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Hailstorm Fury is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+          "pt-BR": "{character}\n{speedboost}\n\nCapturado e mantido em cativeiro por um caçador louco, o Hailstorm Fury é o resultado de experimentos doentios. Alimentado apenas com pó de demônio e sangue demoníaco concentrado, teve de suportar uma transformação terrível. O sangue demoníaco que agora corre em suas veias, porém, lhe confere força e resistência incríveis."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 648
@@ -4360,7 +4960,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-highland-yak",
         "name": "Highland Yak",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Highland Yak will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Highland Yak will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo espesso e desgrenhado, o Highland Yak vai manter você aquecido até mesmo no clima gelado das Ice Islands. Devido à sua natureza calma e pacífica, ele não se irrita com facilidade."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 673
@@ -4380,7 +4983,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-holiday-mammoth",
         "name": "Holiday Mammoth",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1380
@@ -4400,7 +5006,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-hyacinth",
         "name": "Hyacinth",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1439
@@ -4420,7 +5029,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-icebreacher",
         "name": "Icebreacher",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1617
@@ -4440,7 +5052,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ink-spotted-koi",
         "name": "Ink Spotted Koi",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1610
@@ -4460,7 +5075,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ivory-fang",
         "name": "Ivory Fang",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Ivory Fang, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Ivory Fang, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Ivory Fang, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 901
@@ -4480,7 +5098,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jackalope",
         "name": "Jackalope",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Jackalope consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nDo you like fluffy bunnies but think they are too small? Do you admire the majesty of stags and their antlers but are afraid of their untameable wilderness? Do not worry, the mystic creature Jackalope consolidates the best qualities of both animals. Hop on its backs and enjoy the ride.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê gosta de coelhinhos fofos, mas acha que eles são pequenos demais? Admira a majestade dos cervos e de suas galhadas, mas tem medo de sua natureza selvagem e indomável? Não se preocupe: a criatura mística Jackalope reúne as melhores qualidades dos dois animais. Suba em seu lombo e aproveite o passeio."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 905
@@ -4500,7 +5121,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jade-lion",
         "name": "Jade Lion",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Jade Lion is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Jade Lion is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido atravessa até a medula dos ossos e pode ser ouvido a mais de dez milhas de distância. O Jade Lion é o soberano incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove que você é digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 627
@@ -4520,7 +5144,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jade-pincer",
         "name": "Jade Pincer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Jade Pincer is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Jade Pincer is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Jade Pincer é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido do que os escorpiões comuns, ele é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 628
@@ -4540,7 +5167,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jade-shrine",
         "name": "Jade Shrine",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1492
@@ -4560,7 +5190,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jousting-horse",
         "name": "Jousting Horse",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1579
@@ -4580,7 +5213,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jungle-saurian",
         "name": "Jungle Saurian",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Jungle Saurian likes to hide in dense wood and overturned trees.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Jungle Saurian likes to hide in dense wood and overturned trees.",
+          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Jungle Saurian gosta de se esconder em matas densas e entre árvores caídas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 959
@@ -4600,7 +5236,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-jungle-tiger",
         "name": "Jungle Tiger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Jungle Tiger has developed its extraordinary colouring over several generations.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIt is said that in ancient times, the sabre-tooth tiger was already used as a mount by elder warriors of Svargrond. As seafaring began to expand, this noble big cat was also transported to other regions in Tibia. Influenced by the new environment and climatic changes, the fur of the Jungle Tiger has developed its extraordinary colouring over several generations.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem que, em tempos antigos, o tigre-dentes-de-sabre já era usado como montaria pelos guerreiros anciãos de Svargrond. Com a expansão da navegação, esse nobre felino também foi transportado para outras regiões de Tibia. Influenciada pelo novo ambiente e pelas mudanças climáticas, a pelagem do Jungle Tiger desenvolveu sua coloração extraordinária ao longo de várias gerações."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1093
@@ -4620,7 +5259,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-lagoon-saurian",
         "name": "Lagoon Saurian",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Lagoon Saurian feels most comfortable in torrential rivers and behind dangerous waterfalls.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThousands of years ago, its ancestors ruled the world. Only recently, it found its way into Tibia. The Lagoon Saurian feels most comfortable in torrential rivers and behind dangerous waterfalls.",
+          "pt-BR": "{character}\n{speedboost}\n\nMilhares de anos atrás, seus ancestrais governavam o mundo. Só recentemente ele encontrou seu caminho até Tibia. O Lagoon Saurian se sente mais à vontade em rios torrenciais e atrás de cachoeiras perigosas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 961
@@ -4640,7 +5282,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-leafscuttler",
         "name": "Leafscuttler",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Leafscuttler will carry you through the Tibian wilderness with ease.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Leafscuttler will carry you through the Tibian wilderness with ease.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas durante o combate ou apenas para viajar? O Leafscuttler vai levar você pela natureza selvagem de Tibia com facilidade."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 870
@@ -4660,7 +5305,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-magic-carpet",
         "name": "Magic Carpet",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Magic Carpet is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Magic Carpet is the perfect mount for those who are too busy to take care of an animal mount or simply like to travel on a beautiful, magic hand-woven carpet.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Magic Carpet é a montaria perfeita para quem está ocupado demais para cuidar de uma montaria animal ou simplesmente gosta de viajar em um belo tapete mágico tecido à mão."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 689
@@ -4680,7 +5328,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-marsh-toad",
         "name": "Marsh Toad",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Marsh Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Marsh Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
+          "pt-BR": "{character}\n{speedboost}\n\nPor séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Marsh Toad uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1052
@@ -4700,7 +5351,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-merry-mammoth",
         "name": "Merry Mammoth",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Festive Mammoth, Holiday Mammoth and Merry Mammoth are gentle giants with a massive appearance and impressive tusks, whose mission it is to deliver gifts all across Tibia. They are good-natured beings, spreading joy wherever they go, but you best not cross them - a mammoth never forgets.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Festive Mammoth, o Holiday Mammoth e o Merry Mammoth são gigantes gentis de aparência imponente e presas impressionantes, cuja missão é entregar presentes por toda Tibia. São seres bondosos, que espalham alegria por onde passam, mas é melhor não contrariá-los: um mamute nunca esquece."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1379
@@ -4720,7 +5374,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-mint-ibex",
         "name": "Mint Ibex",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1527
@@ -4740,7 +5397,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-mould-shell",
         "name": "Mould Shell",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Mould Shell might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Mould Shell might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Mould Shell pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 887
@@ -4760,7 +5420,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-mouldpincer",
         "name": "Mouldpincer",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Mouldpincer will carry you through the Tibian wilderness with ease.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are fascinated by insectoid creatures and can picture yourself riding one during combat or just for travelling? The Mouldpincer will carry you through the Tibian wilderness with ease.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê é fascinado por criaturas insetoides e consegue se imaginar montando uma delas durante o combate ou apenas para viajar? O Mouldpincer vai levar você pela natureza selvagem de Tibia com facilidade."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 868
@@ -4780,7 +5443,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-muffled-snowman",
         "name": "Muffled Snowman",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Muffled Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWhen the nights are getting longer and freezing wind brings driving snow into the land, snowmen rise and shine on every corner. Lately, a peaceful, arcane creature has found shelter in one of them and used its magical power to call the Muffled Snowman into being. Wrap yourself up well and warmly and jump on the back of your new frosty companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando as noites ficam mais longas e o vento gélido traz nevascas para a terra, bonecos de neve surgem e brilham em cada esquina. Recentemente, uma criatura arcana e pacífica encontrou abrigo em um deles e usou seu poder mágico para dar vida ao Muffled Snowman. Agasalhe-se bem e pule nas costas de seu novo companheiro gelado."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1168
@@ -4800,7 +5466,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-mystic-raven",
         "name": "Mystic Raven",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1454
@@ -4820,7 +5489,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-nethersteed",
         "name": "Nethersteed",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Nethersteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Nethersteed has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+          "pt-BR": "{character}\n{speedboost}\n\nOutrora um cavalo de guerra majestoso e orgulhoso, o Nethersteed tombou em uma batalha terrível muitos anos atrás. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 629
@@ -4840,7 +5512,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-night-waccoon",
         "name": "Night Waccoon",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Night Waccoon and scratch it behind its ears to make it happy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Night Waccoon and scratch it behind its ears to make it happy.",
+          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Night Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 692
@@ -4860,7 +5535,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-nightdweller",
         "name": "Nightdweller",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Nightdweller to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more of an imp than an angel, you may prefer riding out on a Nightdweller to scare fellow Tibians on their festive strolls. Its devilish mask, claw-like hands and sharp hooves makes it the perfect companion for any daring adventurer who likes to stand out.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você é mais diabinho do que anjo, talvez prefira sair cavalgando em um Nightdweller para assustar outros Tibianos em seus passeios festivos. Sua máscara diabólica, mãos em forma de garras e cascos afiados fazem dele o companheiro perfeito para qualquer aventureiro ousado que gosta de se destacar."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 849
@@ -4880,7 +5558,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-nightmarish-crocovile",
         "name": "Nightmarish Crocovile",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1185
@@ -4900,7 +5581,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-nightstinger",
         "name": "Nightstinger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Nightstinger has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Nightstinger has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Nightstinger tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 762
@@ -4920,7 +5604,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-noctungra",
         "name": "Noctungra",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Noctungra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Noctungra is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Noctungra é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 739
@@ -4940,7 +5627,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-obsidian-shrine",
         "name": "Obsidian Shrine",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1493
@@ -4960,7 +5650,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-parade-horse",
         "name": "Parade Horse",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1578
@@ -4980,7 +5673,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-peony",
         "name": "Peony",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the depths of the forest, where flora and fauna intertwine in mysterious ways, the Floral Beast is a colourful creature that is sure to turn some heads. The Hyacinth, Peony, and Dandelion mount are loyal companions that will safely carry you through their natural habitat of the woods, or lands unknown to them.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascido das profundezas da floresta, onde flora e fauna se entrelaçam de maneiras misteriosas, o Floral Beast é uma criatura colorida que certamente vai chamar a atenção. As montarias Hyacinth, Peony e Dandelion são companheiras leais que vão carregar você em segurança por seu habitat natural, as matas, ou por terras desconhecidas para elas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1440
@@ -5000,7 +5696,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-plumfish",
         "name": "Plumfish",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf the Plumfish moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf the Plumfish moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando o Plumfish move suas nadadeiras, gera pressão de ar suficiente para até mesmo flutuar sobre a terra. Seus numerosos olhos permitem que ele detecte perigos rapidamente, mesmo em situações confusas, e os elimine com uma única mordida poderosa. Se você cuidar bem dos seus dedos, vocês serão bons amigos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 736
@@ -5020,7 +5719,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-poisonbane",
         "name": "Poisonbane",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Poisonbane is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Poisonbane is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Poisonbane está à procura do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem, com sua comida favorita de vez em quando, e ele se tornará um parceiro leal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 650
@@ -5040,7 +5742,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-poppy-ibex",
         "name": "Poppy Ibex",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nNo mountain is too high, no wall too steep to climb for the agile Poppy, Mint and Cinnamon Ibex. They keep their balance on the thinnest of ledges, so you will never stumble, slip or go flying off the edges. Moreover, these sturdy fellows certainly know how to make an entrance as they dive down from the highest peaks and attack opponents with their impressive horns. And if you dare to call them a wild goat, they might kick you with their legs.",
+          "pt-BR": "{character}\n{speedboost}\n\nNenhuma montanha é alta demais, nenhuma muralha é íngreme demais para os ágeis Poppy, Mint e Cinnamon Ibex. Eles mantêm o equilíbrio nas saliências mais estreitas, então você nunca vai tropeçar, escorregar ou voar pela beirada. Além disso, esses companheiros robustos certamente sabem como fazer uma entrada triunfal ao mergulhar dos picos mais altos e atacar os oponentes com seus chifres impressionantes. E se você ousar chamá-los de cabra selvagem, eles podem lhe dar um coice."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1526
@@ -5060,7 +5765,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-prismatic-unicorn",
         "name": "Prismatic Unicorn",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nLegend has it that a mare and a stallion once reached the end of a rainbow and decided to stay there. Influenced by the mystical power of the rainbow, the mare gave birth to an exceptional foal: Not only the big, strong horn on its forehead but the unusual colouring of its hair makes the Prismatic Unicorn a unique mount in every respect.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nLegend has it that a mare and a stallion once reached the end of a rainbow and decided to stay there. Influenced by the mystical power of the rainbow, the mare gave birth to an exceptional foal: Not only the big, strong horn on its forehead but the unusual colouring of its hair makes the Prismatic Unicorn a unique mount in every respect.",
+          "pt-BR": "{character}\n{speedboost}\n\nDiz a lenda que uma égua e um garanhão certa vez chegaram ao fim de um arco-íris e decidiram ficar por lá. Influenciada pelo poder místico do arco-íris, a égua deu à luz um potro excepcional: não apenas o grande e forte chifre em sua testa, mas também a coloração incomum de sua crina fazem do Prismatic Unicorn uma montaria única em todos os aspectos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1019
@@ -5080,7 +5788,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-rabbit-rickshaw",
         "name": "Rabbit Rickshaw",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Rabbit Rickshaw comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYour lower back worsens with every trip you spend on the back of your mount and you are looking for a more comfortable alternative to travel through the lands? Say no more! The Rabbit Rickshaw comes with two top-performing hares that never get tired thanks to the brand new and highly innovative propulsion technology. Just keep some back-up carrots in your pocket and you will be fine!",
+          "pt-BR": "{character}\n{speedboost}\n\nSua lombar piora a cada viagem que você passa no lombo de sua montaria e você está procurando uma alternativa mais confortável para viajar pelas terras? Não diga mais nada! O Rabbit Rickshaw vem com duas lebres de alto desempenho que nunca se cansam, graças à novíssima e altamente inovadora tecnologia de propulsão. Basta manter algumas cenouras de reserva no bolso e tudo vai dar certo!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1179
@@ -5100,7 +5811,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-radiant-raven",
         "name": "Radiant Raven",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe origins of the Emerald Raven, Mystic Raven, and Radiant Raven are shrouded in darkness, as no written record nor tale told by even the most knowing storytellers mentions but a trace of them. Superstition surrounds them, as some see these gigantic birds as an echo of a long forgotten past, while others believe them to herald hitherto unknown events. What is clear is that they are highly intelligent beings which make great companions if they deem somebody worthy.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs origens do Emerald Raven, do Mystic Raven e do Radiant Raven estão envoltas em trevas, pois nenhum registro escrito nem conto narrado, mesmo pelos contadores de histórias mais sábios, menciona mais do que um vestígio deles. Superstições os cercam: alguns veem essas aves gigantescas como um eco de um passado há muito esquecido, enquanto outros acreditam que elas anunciam eventos até então desconhecidos. O que está claro é que são seres altamente inteligentes, que se tornam ótimos companheiros se julgarem alguém digno."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1455
@@ -5120,7 +5834,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-razorcreep",
         "name": "Razorcreep",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Razorcreep has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Razorcreep has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Razorcreep tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 763
@@ -5140,7 +5857,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-reed-lurker",
         "name": "Reed Lurker",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Reed Lurker might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Reed Lurker might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Reed Lurker pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 888
@@ -5160,7 +5880,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-rift-watcher",
         "name": "Rift Watcher",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rift Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rift Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você está procurando um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Rift Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estiveram observando você das sombras!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1391
@@ -5180,7 +5903,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-ringtail-waccoon",
         "name": "Ringtail Waccoon",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Ringtail Waccoon and scratch it behind its ears to make it happy.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWaccoons are cuddly creatures that love nothing more than to be petted and snuggled! Share a hug, ruffle the fur of the Ringtail Waccoon and scratch it behind its ears to make it happy.",
+          "pt-BR": "{character}\n{speedboost}\n\nWaccoons são criaturas fofinhas que não amam nada mais do que receber carinho e aconchego! Dê um abraço, bagunce o pelo do Ringtail Waccoon e coce atrás de suas orelhas para deixá-lo feliz."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 691
@@ -5200,7 +5926,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-river-crocovile",
         "name": "River Crocovile",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1183
@@ -5220,7 +5949,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-rune-watcher",
         "name": "Rune Watcher",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rune Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Rune Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você está procurando um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Rune Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estiveram observando você das sombras!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1390
@@ -5240,7 +5972,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-rustwurm",
         "name": "Rustwurm",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Bogwurm, Gloomwurm, and Rustwurm belong to a little known subset of the dragon family, and usually live out their lives in habitats far away from human interaction. Them being cunning hunters, and their keen sense of perception make these wurms great companions for whomever can locate and tame them.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Bogwurm, o Gloomwurm e o Rustwurm pertencem a um ramo pouco conhecido da família dos dragões e costumam viver em habitats bem distantes do contato humano. Por serem caçadores astutos e terem um senso de percepção aguçado, esses wurms são ótimos companheiros para quem conseguir encontrá-los e domá-los."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1446
@@ -5260,7 +5995,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-sanguine-frog",
         "name": "Sanguine Frog",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Sanguine Frog a faithful mount for your adventures even beyond the bounds of the swamp.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Sanguine Frog a faithful mount for your adventures even beyond the bounds of the swamp.",
+          "pt-BR": "{character}\n{speedboost}\n\nPor séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Sanguine Frog uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1053
@@ -5280,7 +6018,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-savanna-ostrich",
         "name": "Savanna Ostrich",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThese birds have a strong maternal instinct since their fledglings are completely dependent on their parents for protection. Do not expect them to abandon their brood only because they are carrying you around. In fact, if you were to separate them from their chick, the Savanna Ostrich, Coral Rhea and Eventide Nandu would turn into vicious beings, so don't even try it!",
+          "pt-BR": "{character}\n{speedboost}\n\nEssas aves têm um forte instinto maternal, já que seus filhotes dependem completamente dos pais para se proteger. Não espere que elas abandonem sua ninhada só porque estão carregando você por aí. Na verdade, se você tentasse separá-las de seu filhote, o Savanna Ostrich, o Coral Rhea e o Eventide Nandu se transformariam em seres cruéis, então nem tente!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1324
@@ -5300,7 +6041,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-scruffy-hyaena",
         "name": "Scruffy Hyaena",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1335
@@ -5320,7 +6064,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-sea-devil",
         "name": "Sea Devil",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf the Sea Devil moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf the Sea Devil moves its fins, it generates enough air pressure that it can even float over land. Its numerous eyes allow it to quickly detect dangers even in confusing situations and eliminate them with one powerful bite. If you watch your fingers, you are going to be good friends.",
+          "pt-BR": "{character}\n{speedboost}\n\nQuando o Sea Devil move suas nadadeiras, gera pressão de ar suficiente para até mesmo flutuar sobre a terra. Seus numerosos olhos permitem que ele detecte perigos rapidamente, mesmo em situações confusas, e os elimine com uma única mordida poderosa. Se você cuidar bem dos seus dedos, vocês serão bons amigos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 734
@@ -5340,7 +6087,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-shadow-claw",
         "name": "Shadow Claw",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Shadow Claw, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Shadow Claw, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Shadow Claw, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 902
@@ -5360,7 +6110,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-shadow-draptor",
         "name": "Shadow Draptor",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA wild, ancient creature, which had been hiding in the depths of the shadows for a very long time, has been spotted in Tibia again! The almighty Shadow Draptor has returned and only the bravest Tibians can control such a beast!",
+          "pt-BR": "{character}\n{speedboost}\n\nUma criatura selvagem e ancestral, que ficou escondida nas profundezas das sombras por muito tempo, foi avistada novamente em Tibia! O todo-poderoso Shadow Draptor retornou, e somente os Tibians mais corajosos conseguem controlar uma fera dessas!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 427
@@ -5380,7 +6133,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-shadow-hart",
         "name": "Shadow Hart",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Shadow Hart will carry you through the deepest snow.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTreat your character to a new travelling companion with a gentle nature and an impressive antler: The noble Shadow Hart will carry you through the deepest snow.",
+          "pt-BR": "{character}\n{speedboost}\n\nPresenteie seu personagem com um novo companheiro de viagem de natureza gentil e galhada impressionante: o nobre Shadow Hart vai levar você através da neve mais profunda."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 685
@@ -5400,7 +6156,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-shadow-sphinx",
         "name": "Shadow Sphinx",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRide a Shadow Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRide a Shadow Sphinx on your way through ancient chambers and tombs and have a loyal friend by your side while fighting countless mummies and other creatures.",
+          "pt-BR": "{character}\n{speedboost}\n\nMonte uma Shadow Sphinx em seu caminho por câmaras e tumbas antigas e tenha um amigo leal ao seu lado enquanto enfrenta inúmeras múmias e outras criaturas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 952
@@ -5420,7 +6179,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-siegebreaker",
         "name": "Siegebreaker",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Siegebreaker is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Siegebreaker is out searching for the best bamboo in Tibia. Its heavy armour allows it to visit even the most dangerous places. Treat it nicely with its favourite food from time to time and it will become a loyal partner.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Siegebreaker está à procura do melhor bambu de Tibia. Sua armadura pesada permite que ele visite até os lugares mais perigosos. Trate-o bem, com sua comida favorita de vez em quando, e ele se tornará um parceiro leal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 649
@@ -5440,7 +6202,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-silverneck",
         "name": "Silverneck",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Silverneck is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nGet yourself a mighty travelling companion with broad shoulders and a gentle heart. Silverneck is a physically imposing creature that is much more peaceful than its relatives, Tiquanda's wild kongras, and will carry you safely wherever you ask it to go.",
+          "pt-BR": "{character}\n{speedboost}\n\nConsiga um poderoso companheiro de viagem com ombros largos e um coração gentil. Silverneck é uma criatura fisicamente imponente, muito mais pacífica do que seus parentes, os kongras selvagens de Tiquanda, e vai levar você em segurança aonde quer que você peça."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 740
@@ -5460,7 +6225,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-slagsnare",
         "name": "Slagsnare",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Slagsnare has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Slagsnare has external characteristics of different breeds. It is assumed that his brain is also composed of many different species, which makes it completely unpredictable. Only few have managed to approach this creature unharmed and only the best could tame it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Slagsnare tem características externas de diferentes raças. Presume-se que seu cérebro também seja composto de muitas espécies diferentes, o que o torna completamente imprevisível. Poucos conseguiram se aproximar dessa criatura sem se ferir, e apenas os melhores conseguiram domá-la."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 761
@@ -5480,7 +6248,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-snow-pelt",
         "name": "Snow Pelt",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Snow Pelt, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIncredible strength and smartness, an irrepressible will to survive, passionately hunting in groups. If these attributes apply to your character, we have found the perfect partner for you. Have a proper look at Snow Pelt, which stands loyally by its master's side in every situation. It is time to become the leader of the wolf pack!",
+          "pt-BR": "{character}\n{speedboost}\n\nForça e inteligência incríveis, uma vontade irreprimível de sobreviver, caça em grupo com paixão. Se esses atributos se aplicam ao seu personagem, encontramos o parceiro perfeito para você. Dê uma boa olhada em Snow Pelt, que permanece lealmente ao lado de seu mestre em qualquer situação. É hora de se tornar o líder da alcateia!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 903
@@ -5500,7 +6271,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-snow-strider",
         "name": "Snow Strider",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA magical fire burns inside these wolves. Bred as the faithful guardians for an eccentric wizard's tower, these creatures make for loyal companions during your travels. While not originally intended for riding, their sturdy frame makes the Dawn Strayer, Dusk Pryer and Snow Strider suitable mounts.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm fogo mágico arde dentro desses lobos. Criados como guardiões fiéis da torre de um mago excêntrico, essas criaturas são companheiras leais em suas viagens. Embora não tenham sido originalmente destinados à montaria, sua estrutura robusta faz do Dawn Strayer, do Dusk Pryer e do Snow Strider montarias adequadas."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1284
@@ -5520,7 +6294,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-snowy-owl",
         "name": "Snowy Owl",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1105
@@ -5540,7 +6317,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-steel-bee",
         "name": "Steel Bee",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Steel Bee, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are more interested in the achievements of science, you may enjoy a ride on the Steel Bee, one of the new insect-like flying machines. Even if you do not move around, the wings of these unusual vehicles are always in motion.",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você se interessa mais pelas conquistas da ciência, talvez goste de um passeio na Steel Bee, uma das novas máquinas voadoras semelhantes a insetos. Mesmo que você não se mova, as asas desses veículos incomuns estão sempre em movimento."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 670
@@ -5560,7 +6340,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-steelbeak",
         "name": "Steelbeak",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nForged by only the highest skilled blacksmiths in the depths of Kazordoon's furnaces, a wild animal made out of the finest steel arose from glowing embers and blazing heat. Protected by its impenetrable armour, the Steelbeak is ready to accompany its master on every battleground.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nForged by only the highest skilled blacksmiths in the depths of Kazordoon's furnaces, a wild animal made out of the finest steel arose from glowing embers and blazing heat. Protected by its impenetrable armour, the Steelbeak is ready to accompany its master on every battleground.",
+          "pt-BR": "{character}\n{speedboost}\n\nForjado apenas pelos ferreiros mais habilidosos nas profundezas das fornalhas de Kazordoon, um animal selvagem feito do mais fino aço surgiu de brasas incandescentes e calor abrasador. Protegido por sua armadura impenetrável, o Steelbeak está pronto para acompanhar seu mestre em qualquer campo de batalha."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 522
@@ -5580,7 +6363,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-swamp-crocovile",
         "name": "Swamp Crocovile",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTo the keen observer, the crocovile is clearly a relative of the crocodile, albeit their look suggests an even more aggressive nature. While it is true that the power of its massive and muscular body can not only crush enemies dead but also break through any gate like a battering ram, a crocovile is, above all, a steadfast companion showing unwavering loyalty to its owner.",
+          "pt-BR": "{character}\n{speedboost}\n\nPara o observador atento, o crocovile é claramente um parente do crocodilo, embora sua aparência sugira uma natureza ainda mais agressiva. Embora seja verdade que a força de seu corpo maciço e musculoso pode não apenas esmagar inimigos até a morte, mas também romper qualquer portão como um aríete, um crocovile é, acima de tudo, um companheiro firme que demonstra lealdade inabalável a seu dono."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1184
@@ -5600,7 +6386,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-swamp-snapper",
         "name": "Swamp Snapper",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Swamp Snapper might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nYou are intrigued by tortoises and would love to throne on a tortoise shell when travelling the Tibian wilderness? The Swamp Snapper might become your new trustworthy companion then, which will transport you safely and even carry you during combat.",
+          "pt-BR": "{character}\n{speedboost}\n\nVocê se interessa por tartarugas e adoraria reinar sobre um casco de tartaruga ao viajar pela natureza selvagem de Tibia? Então o Swamp Snapper pode se tornar seu novo companheiro de confiança, que vai transportar você em segurança e até carregá-lo durante o combate."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 886
@@ -5620,7 +6409,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tangerine-speckled-koi",
         "name": "Tangerine Speckled Koi",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe vibrant colours and elegance of a Tangerine Flecked Koi, a Brass Speckled Koi, and an Ink Spotted Koi make them a fascinating sight to behold, and their boisterous nature and speed will make you the first to arrive wherever there are riches to gain. Wield your weapon as gracefully and effortlessly as your swimming companion glides through the water, and the two of you will make the perfect and most deadly pair.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs cores vibrantes e a elegância de um Tangerine Flecked Koi, um Brass Speckled Koi e um Ink Spotted Koi fazem deles uma visão fascinante, e sua natureza agitada e sua velocidade farão de você o primeiro a chegar onde quer que haja riquezas a conquistar. Empunhe sua arma com a mesma graça e leveza com que seu companheiro nadador desliza pela água, e vocês dois formarão a dupla perfeita e mais mortal."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1608
@@ -5640,7 +6432,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tawny-owl",
         "name": "Tawny Owl",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOwls have always been a symbol of mystery, magic and wisdom in Tibian myths and fairy tales. Having one of these enigmatic creatures of the night as a trustworthy companion provides you with a silent guide whose ever-watchful eyes will cut through the shadows, help you navigate the darkness and unravel great secrets.",
+          "pt-BR": "{character}\n{speedboost}\n\nAs corujas sempre foram um símbolo de mistério, magia e sabedoria nos mitos e contos de fadas de Tibia. Ter uma dessas criaturas enigmáticas da noite como companheira de confiança dá a você um guia silencioso, cujos olhos sempre vigilantes atravessam as sombras, ajudam você a navegar pela escuridão e a desvendar grandes segredos."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1104
@@ -5660,7 +6455,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tempest",
         "name": "Tempest",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Tempest has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce a majestic and proud warhorse, the Tempest has fallen in a horrible battle many years ago. Driven by agony and pain, its spirit once again took possession of its rotten corpse to avenge its death. Stronger than ever, it seeks a master to join the battlefield, aiming for nothing but death and destruction.",
+          "pt-BR": "{character}\n{speedboost}\n\nOutrora um majestoso e orgulhoso cavalo de guerra, o Tempest caiu em uma batalha terrível há muitos anos. Movido pela agonia e pela dor, seu espírito voltou a tomar posse de seu corpo apodrecido para vingar sua morte. Mais forte do que nunca, ele busca um mestre para se juntar ao campo de batalha, almejando nada além de morte e destruição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 630
@@ -5680,7 +6478,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tombstinger",
         "name": "Tombstinger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Tombstinger is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Tombstinger is a scorpion that has surpassed the natural boundaries of its own kind. Way bigger, stronger and faster than ordinary scorpions, it makes a perfect companion for fearless heroes and explorers. Just be careful of his poisonous sting when you mount it.",
+          "pt-BR": "{character}\n{speedboost}\n\nO Tombstinger é um escorpião que superou os limites naturais de sua própria espécie. Muito maior, mais forte e mais rápido que os escorpiões comuns, é o companheiro perfeito para heróis e exploradores destemidos. Só tome cuidado com seu ferrão venenoso ao montá-lo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 546
@@ -5700,7 +6501,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-topaz-shrine",
         "name": "Topaz Shrine",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe famous Wandering Shrines were first raised by the nomad people of the Zaoan steppe. Their exceptional craftsmanship, combining architectonic features with living animals, is acknowledged even far beyond the continent of Zao. These spiritual companions will give you the opportunity to regain your strength during long and exciting journeys.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs famosos Wandering Shrines foram erguidos pela primeira vez pelo povo nômade da estepe de Zao. Sua habilidade artesanal excepcional, que combina elementos arquitetônicos com animais vivos, é reconhecida até muito além do continente de Zao. Esses companheiros espirituais lhe darão a oportunidade de recuperar suas forças durante jornadas longas e emocionantes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1491
@@ -5720,7 +6524,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tourney-horse",
         "name": "Tourney Horse",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nA seasoned warrior knows how to make an entry, and so does his faithful companion: Fully armored! Saddle up your impressive Jousting Horse to charge into battle in style, gallop into the arena on the back of your striking Tourney Horse, and ride your distinguished Parade Horse through the streets of Thais to show off your chivalrous qualities. With a horse in full barding, nobody will ever rain on your parade again.",
+          "pt-BR": "{character}\n{speedboost}\n\nUm guerreiro experiente sabe como fazer uma entrada triunfal, e seu fiel companheiro também: totalmente blindado! Sele seu impressionante Jousting Horse para investir na batalha com estilo, galope para a arena no lombo de seu deslumbrante Tourney Horse e cavalgue seu distinto Parade Horse pelas ruas de Thais para exibir suas qualidades cavalheirescas. Com um cavalo em armadura completa, ninguém jamais vai estragar seu desfile de novo."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1580
@@ -5740,7 +6547,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-toxic-toad",
         "name": "Toxic Toad",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Toxic Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nFor centuries, humans and monsters have dumped their garbage in the swamps around Venore. The combination of old, rusty weapons, stale mana and broken runes have turned some of the swamp dwellers into gigantic frogs. Benefit from those mutations and make the Toxic Toad a faithful mount for your adventures even beyond the bounds of the swamp.",
+          "pt-BR": "{character}\n{speedboost}\n\nDurante séculos, humanos e monstros despejaram seu lixo nos pântanos ao redor de Venore. A combinação de armas velhas e enferrujadas, mana estagnada e runas quebradas transformou alguns dos habitantes do pântano em sapos gigantescos. Aproveite essas mutações e faça do Toxic Toad uma montaria fiel para suas aventuras, mesmo além dos limites do pântano."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1054
@@ -5760,7 +6570,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-tundra-rambler",
         "name": "Tundra Rambler",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Tundra Rambler will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nWith its thick, shaggy hair, the Tundra Rambler will keep you warm even in the chilly climate of the Ice Islands. Due to its calm and peaceful nature, it is not letting itself getting worked up easily.",
+          "pt-BR": "{character}\n{speedboost}\n\nCom seu pelo grosso e desgrenhado, o Tundra Rambler vai manter você aquecido até mesmo no clima gélido das Ice Islands. Devido à sua natureza calma e pacífica, ele não se deixa irritar facilmente."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 672
@@ -5780,7 +6593,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-venompaw",
         "name": "Venompaw",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Venompaw to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nRumour has it that many years ago elder witches had gathered to hold a magical feast high up in the mountains. They had crossbred Venompaw to easily conquer rocky canyons and deep valleys. Nobody knows what happened on their way up but only the mount has been seen ever since.",
+          "pt-BR": "{character}\n{speedboost}\n\nDizem os boatos que, muitos anos atrás, bruxas anciãs se reuniram para celebrar um banquete mágico no alto das montanhas. Elas cruzaram o Venompaw para conquistar com facilidade desfiladeiros rochosos e vales profundos. Ninguém sabe o que aconteceu no caminho até o topo, mas desde então apenas a montaria foi vista."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 727
@@ -5800,7 +6616,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-void-watcher",
         "name": "Void Watcher",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Void Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIf you are looking for a vigilant and faithful companion, look no further! Glide through every realm and stare into the darkest abyss on the back of a Void Watcher. They already know everything about you anyway for they have been watching you from the shadows!",
+          "pt-BR": "{character}\n{speedboost}\n\nSe você procura um companheiro vigilante e fiel, não procure mais! Deslize por todos os reinos e encare o abismo mais sombrio no lombo de um Void Watcher. Eles já sabem tudo sobre você de qualquer forma, pois estão observando você das sombras!"
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1389
@@ -5820,7 +6639,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-voracious-hyaena",
         "name": "Voracious Hyaena",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nThe Cunning Hyaena, Scruffy Hyaena and Voracious Hyaena are highly social animals and loyal companions to whomever is able to befriend them. Coming from sun-soaked places, they prefer a warm climate, but are able to cope in other environments as well.",
+          "pt-BR": "{character}\n{speedboost}\n\nA Cunning Hyaena, a Scruffy Hyaena e a Voracious Hyaena são animais altamente sociais e companheiras leais de quem conseguir conquistar sua amizade. Vindas de lugares ensolarados, elas preferem um clima quente, mas também conseguem se adaptar a outros ambientes."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1333
@@ -5840,7 +6662,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-winter-king",
         "name": "Winter King",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Winter King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nIts roaring is piercing marrow and bone and can be heard over ten miles away. The Winter King is the undisputed ruler of its territory and no one messes with this animal. Show no fear and prove yourself worthy of its trust and you will get yourself a valuable companion for your adventures.",
+          "pt-BR": "{character}\n{speedboost}\n\nSeu rugido penetra até os ossos e a medula e pode ser ouvido a mais de dez milhas de distância. O Winter King é o governante incontestável de seu território, e ninguém se mete com esse animal. Não demonstre medo, prove-se digno de sua confiança e você terá um valioso companheiro para suas aventuras."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 631
@@ -5860,7 +6685,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-winterstride",
         "name": "Winterstride",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nTenacity, strength and loyalty are the hallmarks of a Frostbringer, a Winterstride or an Icebreacher. Those travelling through barren lands, pursuing goals in forbidding environments, or simply wanting a comrade for a lifetime should fall back on this stalwart companion.",
+          "pt-BR": "{character}\n{speedboost}\n\nTenacidade, força e lealdade são as marcas de um Frostbringer, de um Winterstride ou de um Icebreacher. Quem viaja por terras áridas, persegue objetivos em ambientes inóspitos ou simplesmente deseja um camarada para a vida toda deve contar com esse companheiro inabalável."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1616
@@ -5880,7 +6708,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-wolpertinger",
         "name": "Wolpertinger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+          "pt-BR": "{character}\n{speedboost}\n\nOutrora capturado e mantido em cativeiro por um caçador louco, o Woodland Prince é o resultado de experimentos doentios. Alimentado apenas com demon dust e sangue demoníaco concentrado, ele teve de suportar uma transformação terrível. No entanto, o sangue demoníaco que agora corre em suas veias lhe confere força e resistência incríveis."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 907
@@ -5900,7 +6731,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-woodland-prince",
         "name": "Woodland Prince",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nOnce captured and held captive by a mad hunter, the Woodland Prince is the result of sick experiments. Fed only with demon dust and concentrated demonic blood it had to endure a dreadful transformation. The demonic blood that is now running through its veins, however, provides it with incredible strength and endurance.",
+          "pt-BR": "{character}\n{speedboost}\n\nOutrora capturado e mantido em cativeiro por um caçador louco, o Woodland Prince é o resultado de experimentos doentios. Alimentado apenas com demon dust e sangue demoníaco concentrado, ele teve de suportar uma transformação terrível. No entanto, o sangue demoníaco que agora corre em suas veias lhe confere força e resistência incríveis."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 647
@@ -5920,7 +6754,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-zaoan-badger",
         "name": "Zaoan Badger",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBadgers have been a staple of the Tibian fauna for a long time, and finally some daring souls have braved the challenge to tame some exceptional specimens - and succeeded! While the common badger you can encounter during your travels might seem like a rather unassuming creature, the Battle Badger, the Ether Badger, and the Zaoan Badger are fierce and mighty beasts, which are at your beck and call.",
+          "pt-BR": "{character}\n{speedboost}\n\nOs texugos são parte da fauna de Tibia há muito tempo e, finalmente, algumas almas ousadas encararam o desafio de domar alguns espécimes excepcionais, e conseguiram! Enquanto o texugo comum que você pode encontrar em suas viagens parece uma criatura bastante modesta, o Battle Badger, o Ether Badger e o Zaoan Badger são feras ferozes e poderosas, que ficam à sua inteira disposição."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1231
@@ -5940,7 +6777,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-night-locust",
         "name": "Night Locust",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1833
@@ -5960,7 +6800,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-leaf-locust",
         "name": "Leaf Locust",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1834
@@ -5980,7 +6823,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "mounts-pearl-locust",
         "name": "Pearl Locust",
         "kind": "mount",
-        "description": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+        "description": {
+          "en": "{character}\n{speedboost}\n\nBorn from the buzzing chaos of nature's most untamed corners, the Night Locust, Leaf Locust, and Pearl Locust are said to be harbingers of fortune for their allies and heralds of despair for their foes. With their vibrant wings and shimmering shells, these eerie yet majestic creatures are exceptional mounts for adventurers who thrive in the wilds.",
+          "pt-BR": "{character}\n{speedboost}\n\nNascidos do caos zumbidor dos cantos mais indomados da natureza, o Night Locust, o Leaf Locust e o Pearl Locust são tidos como arautos da fortuna para seus aliados e mensageiros do desespero para seus inimigos. Com suas asas vibrantes e carapaças cintilantes, essas criaturas sinistras, porém majestosas, são montarias excepcionais para aventureiros que prosperam nas terras selvagens."
+        },
         "icon": {
           "kind": "mount",
           "lookType": 1835
@@ -6000,7 +6846,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "upgrades",
-    "name": "Upgrades",
+    "name": {
+      "en": "Upgrades",
+      "pt-BR": "Melhorias"
+    },
     "parentId": "houses",
     "icon": {
       "kind": "item",
@@ -6011,7 +6860,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-daily-reward-shrine",
         "name": "Daily Reward Shrine",
         "kind": "house-item",
-        "description": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+        "description": {
+          "en": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+          "pt-BR": "Pegue sua recompensa diária confortavelmente entre suas próprias quatro paredes!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use-o para abrir o mural de recompensas\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25721
@@ -6032,7 +6884,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-demon-exercise-dummy",
         "name": "Demon Exercise Dummy",
         "kind": "house-item",
-        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "description": {
+          "en": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+          "pt-BR": "Treine suas habilidades com mais eficiência em casa do que em público neste boneco de treino avançado!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} só pode ser usado por um personagem por vez\n{useicon} use uma das armas de treino neste boneco\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28561
@@ -6053,7 +6908,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-ferumbras-exercise-dummy",
         "name": "Ferumbras Exercise Dummy",
         "kind": "house-item",
-        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "description": {
+          "en": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+          "pt-BR": "Treine suas habilidades com mais eficiência em casa do que em público neste boneco de treino avançado!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} só pode ser usado por um personagem por vez\n{useicon} use uma das armas de treino neste boneco\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28559
@@ -6074,7 +6932,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-gilded-imbuing-shrine",
         "name": "Gilded Imbuing Shrine",
         "kind": "house-item",
-        "description": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+        "description": {
+          "en": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+          "pt-BR": "Aprimore seu equipamento confortavelmente entre suas próprias quatro paredes!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use-o com um item imbuível para abrir a janela de imbuement\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25183
@@ -6095,7 +6956,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-imbuing-shrine",
         "name": "Imbuing Shrine",
         "kind": "house-item",
-        "description": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+        "description": {
+          "en": "Enhance your equipment comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it with an imbuable item to open the imbuing dialog\n{backtoinbox}",
+          "pt-BR": "Aprimore seu equipamento confortavelmente entre suas próprias quatro paredes!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use-o com um item imbuível para abrir a janela de imbuement\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25175
@@ -6116,7 +6980,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-mailbox",
         "name": "Mailbox",
         "kind": "house-item",
-        "description": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+        "description": {
+          "en": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+          "pt-BR": "Envie suas cartas e encomendas diretamente da sua própria casa!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23399
@@ -6137,7 +7004,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-monk-exercise-dummy",
         "name": "Monk Exercise Dummy",
         "kind": "house-item",
-        "description": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+        "description": {
+          "en": "Train your skills more effectively at home than in public on this expert exercise dummy!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} can only be used by one character at a time\n{useicon} use one of the exercise weapons on this dummy\n{backtoinbox}",
+          "pt-BR": "Treine suas habilidades com mais eficiência em casa do que em público neste boneco de treino avançado!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{info} só pode ser usado por um personagem por vez\n{useicon} use uma das armas de treino neste boneco\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28563
@@ -6158,7 +7028,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-ornate-mailbox",
         "name": "Ornate Mailbox",
         "kind": "house-item",
-        "description": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+        "description": {
+          "en": "Send your letters and parcels right from your own home!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}",
+          "pt-BR": "Envie suas cartas e encomendas diretamente da sua própria casa!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23401
@@ -6179,7 +7052,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "upgrades-shiny-daily-reward-shrine",
         "name": "Shiny Daily Reward Shrine",
         "kind": "house-item",
-        "description": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+        "description": {
+          "en": "Pick up your daily reward comfortably in your own four walls!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use it to open the reward wall\n{backtoinbox}",
+          "pt-BR": "Pegue sua recompensa diária confortavelmente entre suas próprias quatro paredes!\n\n{house}\n{box}\n{storeinbox}\n{usablebyall}\n{useicon} use-o para abrir o mural de recompensas\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25723
@@ -6200,7 +7076,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "furniture",
-    "name": "Furniture",
+    "name": {
+      "en": "Furniture",
+      "pt-BR": "Móveis"
+    },
     "parentId": "houses",
     "icon": {
       "kind": "item",
@@ -6211,7 +7090,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-alchemistic-cabinet",
         "name": "Alchemistic Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27664
@@ -6232,7 +7114,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-alchemistic-chair",
         "name": "Alchemistic Chair",
         "kind": "house-item",
-        "description": "An alchemistic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An alchemistic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27662
@@ -6253,7 +7138,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-alchemistic-table",
         "name": "Alchemistic Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27665
@@ -6274,7 +7162,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-artist-chair",
         "name": "Artist Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34036
@@ -6295,7 +7186,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-artist-chest",
         "name": "Artist Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34040
@@ -6316,7 +7210,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-artist-shelf",
         "name": "Artist Shelf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34030
@@ -6337,7 +7234,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-artist-table",
         "name": "Artist Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34034
@@ -6358,7 +7258,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-comfy-cabinet",
         "name": "Comfy Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28942
@@ -6379,7 +7282,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-comfy-chair",
         "name": "Comfy Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28934
@@ -6400,7 +7306,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-comfy-chest",
         "name": "Comfy Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28938
@@ -6421,7 +7330,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-comfy-table",
         "name": "Comfy Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28936
@@ -6442,7 +7354,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-cupboard",
         "name": "Cupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34276
@@ -6463,7 +7378,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-dwarven-stone-cabinet",
         "name": "Dwarven Stone Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31192
@@ -6484,7 +7402,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-dwarven-stone-chair",
         "name": "Dwarven Stone Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31185
@@ -6505,7 +7426,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-dwarven-stone-chest",
         "name": "Dwarven Stone Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31187
@@ -6526,7 +7450,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-dwarven-stone-table",
         "name": "Dwarven Stone Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} use it to open up some storage space\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} use-o para abrir um pouco de espaço de armazenamento\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31191
@@ -6547,7 +7474,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-cabinet",
         "name": "Ferocious Cabinet",
         "kind": "house-item",
-        "description": "A ferocious cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ferocious cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23421
@@ -6568,7 +7498,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-chair",
         "name": "Ferocious Chair",
         "kind": "house-item",
-        "description": "A ferocious chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ferocious chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23409
@@ -6589,7 +7522,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-table",
         "name": "Ferocious Table",
         "kind": "house-item",
-        "description": "A ferocious table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ferocious table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23414
@@ -6610,7 +7546,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-trunk",
         "name": "Ferocious Trunk",
         "kind": "house-item",
-        "description": "A ferocious trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ferocious trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23423
@@ -6631,7 +7570,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-cabinet",
         "name": "Flower Cabinet",
         "kind": "house-item",
-        "description": "A flower cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A flower cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39775
@@ -6652,7 +7594,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-chair",
         "name": "Flower Chair",
         "kind": "house-item",
-        "description": "A flower chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A flower chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39768
@@ -6673,7 +7618,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-chest",
         "name": "Flower Chest",
         "kind": "house-item",
-        "description": "A flower chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A flower chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39777
@@ -6694,7 +7642,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-table",
         "name": "Flower Table",
         "kind": "house-item",
-        "description": "A flower table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A flower table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39772
@@ -6715,7 +7666,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-chair",
         "name": "Grandiose Chair",
         "kind": "house-item",
-        "description": "A grandiose chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35915
@@ -6736,7 +7690,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-left",
         "name": "Grandiose Couch Left",
         "kind": "house-item",
-        "description": "The left part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The left part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte esquerda de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35959
@@ -6757,7 +7714,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-middle",
         "name": "Grandiose Couch Middle",
         "kind": "house-item",
-        "description": "The middle part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The middle part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte central de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35960
@@ -6778,7 +7738,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-right",
         "name": "Grandiose Couch Right",
         "kind": "house-item",
-        "description": "The right part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The right part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte direita de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35961
@@ -6799,7 +7762,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-cupboard",
         "name": "Grandiose Cupboard",
         "kind": "house-item",
-        "description": "A grandiose cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35911
@@ -6820,7 +7786,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-gilded-chest",
         "name": "Grandiose Gilded Chest",
         "kind": "house-item",
-        "description": "A grandiose gilded chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose gilded chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35923
@@ -6841,7 +7810,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-refined-chest",
         "name": "Grandiose Refined Chest",
         "kind": "house-item",
-        "description": "A grandiose refined chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose refined chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35919
@@ -6862,7 +7834,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-table",
         "name": "Grandiose Table",
         "kind": "house-item",
-        "description": "A grandiose table. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose table. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35913
@@ -6883,7 +7858,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-cabinet",
         "name": "Heart Cabinet",
         "kind": "house-item",
-        "description": "A heart cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A heart cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33032
@@ -6904,7 +7882,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-chair",
         "name": "Heart Chair",
         "kind": "house-item",
-        "description": "A heart chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A heart chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33036
@@ -6925,7 +7906,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-chest",
         "name": "Heart Chest",
         "kind": "house-item",
-        "description": "A heart chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A heart chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33043
@@ -6946,7 +7930,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-chair",
         "name": "Hrodmir Chair",
         "kind": "house-item",
-        "description": "A Hrodmir chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Hrodmir chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31693
@@ -6967,7 +7954,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-chest",
         "name": "Hrodmir Chest",
         "kind": "house-item",
-        "description": "A Hrodmir chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Hrodmir chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31687
@@ -6988,7 +7978,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-cupboard",
         "name": "Hrodmir Cupboard",
         "kind": "house-item",
-        "description": "A Hrodmir cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Hrodmir cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31705
@@ -7009,7 +8002,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-table",
         "name": "Hrodmir Table",
         "kind": "house-item",
-        "description": "A Hrodmir table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Hrodmir table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31679
@@ -7030,7 +8026,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-cabinet",
         "name": "Ice Cabinet",
         "kind": "house-item",
-        "description": "An ice cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ice cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32775
@@ -7051,7 +8050,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-chest",
         "name": "Ice Chest",
         "kind": "house-item",
-        "description": "An ice chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ice chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32780
@@ -7072,7 +8074,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-stool",
         "name": "Ice Stool",
         "kind": "house-item",
-        "description": "An ice stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ice stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32778
@@ -7093,7 +8098,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-table",
         "name": "Ice Table",
         "kind": "house-item",
-        "description": "An ice table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ice table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32777
@@ -7114,7 +8122,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-katana-display",
         "name": "Katana Display",
         "kind": "house-item",
-        "description": "A katana display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A katana display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37804
@@ -7135,7 +8146,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-chair",
         "name": "Kitchen Chair",
         "kind": "house-item",
-        "description": "A kitchen chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34292
@@ -7156,7 +8170,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-chest",
         "name": "Kitchen Chest",
         "kind": "house-item",
-        "description": "A kitchen chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34296
@@ -7177,7 +8194,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-table",
         "name": "Kitchen Table",
         "kind": "house-item",
-        "description": "A kitchen table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34285
@@ -7198,7 +8218,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-large-left",
         "name": "Knightly Bench Large Left",
         "kind": "house-item",
-        "description": "The left part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The left part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte esquerda de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39518
@@ -7219,7 +8242,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-large-right",
         "name": "Knightly Bench Large Right",
         "kind": "house-item",
-        "description": "The right part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The right part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte direita de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39520
@@ -7240,7 +8266,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-left",
         "name": "Knightly Bench Left",
         "kind": "house-item",
-        "description": "The left part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The left part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte esquerda de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39517
@@ -7261,7 +8290,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-middle",
         "name": "Knightly Bench Middle",
         "kind": "house-item",
-        "description": "The middle part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The middle part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte central de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39519
@@ -7282,7 +8314,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-right",
         "name": "Knightly Bench Right",
         "kind": "house-item",
-        "description": "The right part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The right part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A parte direita de um móvel em partes. Coloque as partes lado a lado para montar a peça completa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39521
@@ -7303,7 +8338,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-cabinet",
         "name": "Knightly Cabinet",
         "kind": "house-item",
-        "description": "A knightly cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39441
@@ -7324,7 +8362,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chair",
         "name": "Knightly Chair",
         "kind": "house-item",
-        "description": "A knightly chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39419
@@ -7345,7 +8386,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chess-table",
         "name": "Knightly Chess Table",
         "kind": "house-item",
-        "description": "A knightly chess table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly chess table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39427
@@ -7366,7 +8410,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chest",
         "name": "Knightly Chest",
         "kind": "house-item",
-        "description": "A knightly chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39504
@@ -7387,7 +8434,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-decorative-shield",
         "name": "Knightly Decorative Shield",
         "kind": "house-item",
-        "description": "A knightly decorative shield to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly decorative shield to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39502
@@ -7408,7 +8458,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-table",
         "name": "Knightly Table",
         "kind": "house-item",
-        "description": "A knightly table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39423
@@ -7429,7 +8482,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-cabinet",
         "name": "Kraken Cabinet",
         "kind": "house-item",
-        "description": "A kraken cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37179
@@ -7450,7 +8506,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-chair",
         "name": "Kraken Chair",
         "kind": "house-item",
-        "description": "A kraken chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37174
@@ -7471,7 +8530,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-chest",
         "name": "Kraken Chest",
         "kind": "house-item",
-        "description": "A kraken chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37181
@@ -7492,7 +8554,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-table",
         "name": "Kraken Table",
         "kind": "house-item",
-        "description": "A kraken table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37178
@@ -7513,7 +8578,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-leaf-chair",
         "name": "Leaf Chair",
         "kind": "house-item",
-        "description": "A leaf chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A leaf chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37004
@@ -7534,7 +8602,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-log-chest",
         "name": "Log Chest",
         "kind": "house-item",
-        "description": "A log chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A log chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37011
@@ -7555,7 +8626,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-cabinet",
         "name": "Magnificent Cabinet",
         "kind": "house-item",
-        "description": "A magnificent cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A magnificent cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23419
@@ -7576,7 +8650,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-chair",
         "name": "Magnificent Chair",
         "kind": "house-item",
-        "description": "A magnificent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A magnificent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23405
@@ -7597,7 +8674,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-table",
         "name": "Magnificent Table",
         "kind": "house-item",
-        "description": "A magnificent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A magnificent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23418
@@ -7618,7 +8698,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-trunk",
         "name": "Magnificent Trunk",
         "kind": "house-item",
-        "description": "A magnificent trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A magnificent trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23427
@@ -7639,7 +8722,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-book-case",
         "name": "Opulent Book Case",
         "kind": "house-item",
-        "description": "An opulent book case to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent book case to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42332
@@ -7660,7 +8746,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-chair",
         "name": "Opulent Chair",
         "kind": "house-item",
-        "description": "An opulent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42320
@@ -7681,7 +8770,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-chest",
         "name": "Opulent Chest",
         "kind": "house-item",
-        "description": "An opulent chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42328
@@ -7702,7 +8794,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-item-stand",
         "name": "Opulent Item Stand",
         "kind": "house-item",
-        "description": "An opulent item stand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent item stand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42350
@@ -7723,7 +8818,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-spice-rack",
         "name": "Opulent Spice Rack",
         "kind": "house-item",
-        "description": "An opulent spice rack to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent spice rack to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42334
@@ -7744,7 +8842,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-table",
         "name": "Opulent Table",
         "kind": "house-item",
-        "description": "An opulent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42324
@@ -7765,7 +8866,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-cabinet",
         "name": "Ornate Cabinet",
         "kind": "house-item",
-        "description": "An ornate cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ornate cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26162
@@ -7786,7 +8890,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-chair",
         "name": "Ornate Chair",
         "kind": "house-item",
-        "description": "An ornate chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ornate chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26158
@@ -7807,7 +8914,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-chest",
         "name": "Ornate Chest",
         "kind": "house-item",
-        "description": "An ornate chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ornate chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26165
@@ -7828,7 +8938,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-table",
         "name": "Ornate Table",
         "kind": "house-item",
-        "description": "An ornate table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ornate table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26161
@@ -7849,7 +8962,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-round-side-table",
         "name": "Round Side Table",
         "kind": "house-item",
-        "description": "A round side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A round side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31208
@@ -7870,7 +8986,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-cabinet",
         "name": "Rustic Cabinet",
         "kind": "house-item",
-        "description": "A rustic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A rustic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23700
@@ -7891,7 +9010,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-chair",
         "name": "Rustic Chair",
         "kind": "house-item",
-        "description": "A rustic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A rustic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23695
@@ -7912,7 +9034,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-table",
         "name": "Rustic Table",
         "kind": "house-item",
-        "description": "A rustic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A rustic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23698
@@ -7933,7 +9058,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-trunk",
         "name": "Rustic Trunk",
         "kind": "house-item",
-        "description": "A rustic trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A rustic trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23702
@@ -7954,7 +9082,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-chair",
         "name": "Sculptor Chair",
         "kind": "house-item",
-        "description": "A sculptor chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sculptor chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34050
@@ -7975,7 +9106,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-chest",
         "name": "Sculptor Chest",
         "kind": "house-item",
-        "description": "A sculptor chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sculptor chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34054
@@ -7996,7 +9130,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-shelf",
         "name": "Sculptor Shelf",
         "kind": "house-item",
-        "description": "A sculptor shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sculptor shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34044
@@ -8017,7 +9154,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-table",
         "name": "Sculptor Table",
         "kind": "house-item",
-        "description": "A sculptor table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sculptor table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34048
@@ -8038,7 +9178,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-cabinet",
         "name": "Seafarer Cabinet",
         "kind": "house-item",
-        "description": "A seafarer cabinet to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seafarer cabinet to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42273
@@ -8059,7 +9202,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-chair",
         "name": "Seafarer Chair",
         "kind": "house-item",
-        "description": "A seafarer chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seafarer chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42267
@@ -8080,7 +9226,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-chest",
         "name": "Seafarer Chest",
         "kind": "house-item",
-        "description": "A seafarer chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seafarer chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42275
@@ -8101,7 +9250,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-table",
         "name": "Seafarer Table",
         "kind": "house-item",
-        "description": "A seafarer table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seafarer table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42271
@@ -8122,7 +9274,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-shroom-cupboard",
         "name": "Shroom Cupboard",
         "kind": "house-item",
-        "description": "A shroom cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A shroom cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37009
@@ -8143,7 +9298,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-cabinet",
         "name": "Skeletal Cabinet",
         "kind": "house-item",
-        "description": "A skeletal cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A skeletal cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28687
@@ -8164,7 +9322,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-chair",
         "name": "Skeletal Chair",
         "kind": "house-item",
-        "description": "A skeletal chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A skeletal chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28676
@@ -8185,7 +9346,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-chest",
         "name": "Skeletal Chest",
         "kind": "house-item",
-        "description": "A skeletal chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A skeletal chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28682
@@ -8206,7 +9370,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-table",
         "name": "Skeletal Table",
         "kind": "house-item",
-        "description": "A skeletal table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A skeletal table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28680
@@ -8227,7 +9394,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-square-side-table",
         "name": "Square Side Table",
         "kind": "house-item",
-        "description": "A square side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A square side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31207
@@ -8248,7 +9418,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-stump-table",
         "name": "Stump Table",
         "kind": "house-item",
-        "description": "A stump table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A stump table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37008
@@ -8269,7 +9442,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-toolbox",
         "name": "Toolbox",
         "kind": "house-item",
-        "description": "A toolbox. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A toolbox. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35171
@@ -8290,7 +9466,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-cabinet",
         "name": "Vengothic Cabinet",
         "kind": "house-item",
-        "description": "A vengothic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vengothic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25227
@@ -8311,7 +9490,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-chair",
         "name": "Vengothic Chair",
         "kind": "house-item",
-        "description": "A vengothic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vengothic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25223
@@ -8332,7 +9514,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-chest",
         "name": "Vengothic Chest",
         "kind": "house-item",
-        "description": "A vengothic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vengothic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25229
@@ -8353,7 +9538,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-table",
         "name": "Vengothic Table",
         "kind": "house-item",
-        "description": "A vengothic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vengothic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25225
@@ -8374,7 +9562,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-cabinet",
         "name": "Verdant Cabinet",
         "kind": "house-item",
-        "description": "A verdant cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A verdant cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26105
@@ -8395,7 +9586,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-chair",
         "name": "Verdant Chair",
         "kind": "house-item",
-        "description": "A verdant chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A verdant chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26103
@@ -8416,7 +9610,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-table",
         "name": "Verdant Table",
         "kind": "house-item",
-        "description": "A verdant table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A verdant table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26111
@@ -8437,7 +9634,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-trunk",
         "name": "Verdant Trunk",
         "kind": "house-item",
-        "description": "A verdant trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A verdant trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26107
@@ -8458,7 +9658,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-chair",
         "name": "Volcanic Chair",
         "kind": "house-item",
-        "description": "A volcanic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36634
@@ -8479,7 +9682,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-chest",
         "name": "Volcanic Chest",
         "kind": "house-item",
-        "description": "A volcanic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36630
@@ -8500,7 +9706,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-shelf",
         "name": "Volcanic Shelf",
         "kind": "house-item",
-        "description": "A volcanic shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36640
@@ -8521,7 +9730,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-table",
         "name": "Volcanic Table",
         "kind": "house-item",
-        "description": "A volcanic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36638
@@ -8542,7 +9754,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-bookcase",
         "name": "Wooden Bookcase",
         "kind": "house-item",
-        "description": "A wooden bookcase. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A wooden bookcase. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31194
@@ -8563,7 +9778,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-cabinet",
         "name": "Wooden Cabinet",
         "kind": "house-item",
-        "description": "A wooden cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A wooden cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35175
@@ -8584,7 +9802,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-stool",
         "name": "Wooden Stool",
         "kind": "house-item",
-        "description": "A wooden stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A wooden stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35167
@@ -8605,7 +9826,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-workbench",
         "name": "Workbench",
         "kind": "house-item",
-        "description": "A workbench, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A workbench, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35163
@@ -8626,7 +9850,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-cabinet",
         "name": "Zaoan Cabinet",
         "kind": "house-item",
-        "description": "A Zaoan cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 8 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37782
@@ -8647,7 +9874,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-hassock",
         "name": "Zaoan Hassock",
         "kind": "house-item",
-        "description": "A Zaoan hassock — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan hassock — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37778
@@ -8668,7 +9898,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-side-table",
         "name": "Zaoan Side Table",
         "kind": "house-item",
-        "description": "A Zaoan side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37803
@@ -8689,7 +9922,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "decorations",
-    "name": "Decorations",
+    "name": {
+      "en": "Decorations",
+      "pt-BR": "Decorações"
+    },
     "parentId": "houses",
     "icon": {
       "kind": "item",
@@ -8700,7 +9936,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-bookstand",
         "name": "Alchemistic Bookstand",
         "kind": "house-item",
-        "description": "An alchemistic bookstand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An alchemistic bookstand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27679
@@ -8721,7 +9960,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-cupboard",
         "name": "Alchemistic Cupboard",
         "kind": "house-item",
-        "description": "An alchemistic cupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An alchemistic cupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27689
@@ -8742,7 +9984,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-scales",
         "name": "Alchemistic Scales",
         "kind": "house-item",
-        "description": "Alchemistic scales to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Alchemistic scales to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27683
@@ -8763,7 +10008,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-all-seeing-tapestry",
         "name": "All-Seeing Tapestry",
         "kind": "house-item",
-        "description": "Following your every move.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Following your every move.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Seguindo cada movimento seu.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23450
@@ -8784,7 +10032,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-anglerfish-lamp",
         "name": "Anglerfish Lamp",
         "kind": "house-item",
-        "description": "An anglerfish lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An anglerfish lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28675
@@ -8805,7 +10056,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-anvil",
         "name": "Anvil",
         "kind": "house-item",
-        "description": "An anvil to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An anvil to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35185
@@ -8826,7 +10080,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-arrival-at-thais-painting",
         "name": "Arrival at Thais Painting",
         "kind": "house-item",
-        "description": "An arrival at Thais painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An arrival at Thais painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27698
@@ -8847,7 +10104,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-azure-carpet",
         "name": "Azure Carpet",
         "kind": "house-item",
-        "description": "An azure carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An azure carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23710
@@ -8878,7 +10138,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-bonelord",
         "name": "Baby Bonelord",
         "kind": "house-item",
-        "description": "It seems to sleep.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It seems to sleep.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Parece estar dormindo.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34026
@@ -8899,7 +10162,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-dragon",
         "name": "Baby Dragon",
         "kind": "house-item",
-        "description": "This baby dragon is looking at you very attentively.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This baby dragon is looking at you very attentively.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este bebê dragão está olhando para você com muita atenção.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23442
@@ -8920,7 +10186,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-elephant",
         "name": "Baby Elephant",
         "kind": "house-item",
-        "description": "It looks at you curiously.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It looks at you curiously.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Olha para você com curiosidade.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35153
@@ -8941,7 +10210,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-polar-bear",
         "name": "Baby Polar Bear",
         "kind": "house-item",
-        "description": "It looks very soft and cuddly.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It looks very soft and cuddly.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Parece muito macio e fofinho.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32790
@@ -8962,7 +10234,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-rotworm",
         "name": "Baby Rotworm",
         "kind": "house-item",
-        "description": "The rotworm is harmless in this juvenile stadium. But take care to release it by time, otherwise it could get dangerous. At least it's your supplies being threatened instead of you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The rotworm is harmless in this juvenile stadium. But take care to release it by time, otherwise it could get dangerous. At least it's your supplies being threatened instead of you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O rotworm é inofensivo neste estágio juvenil. Mas cuide de soltá-lo a tempo, caso contrário ele pode se tornar perigoso. Pelo menos são os seus suprimentos que estão ameaçados, e não você.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28690
@@ -8983,7 +10258,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-seal",
         "name": "Baby Seal",
         "kind": "house-item",
-        "description": "Nobody can ever resist this cute little furball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Nobody can ever resist this cute little furball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ninguém consegue resistir a esta bolinha de pelo fofa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32788
@@ -9004,7 +10282,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-unicorn",
         "name": "Baby Unicorn",
         "kind": "house-item",
-        "description": "The purest eyes are blinking back at you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The purest eyes are blinking back at you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Os olhos mais puros piscam de volta para você.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31703
@@ -9025,7 +10306,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bamboo-mat",
         "name": "Bamboo Mat",
         "kind": "house-item",
-        "description": "A bamboo mat to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A bamboo mat to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23433
@@ -9056,7 +10340,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-barrel",
         "name": "Barrel",
         "kind": "house-item",
-        "description": "A barrel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A barrel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34300
@@ -9077,7 +10364,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-barrel-anchor-lamp",
         "name": "Barrel & Anchor Lamp",
         "kind": "house-item",
-        "description": "A barrel & anchor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A barrel & anchor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31937
@@ -9098,7 +10388,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bat",
         "name": "Bat",
         "kind": "house-item",
-        "description": "Its eyes are gleaming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Its eyes are gleaming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Seus olhos estão brilhando.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33040
@@ -9119,7 +10412,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bath-tub",
         "name": "Bath Tub",
         "kind": "house-item",
-        "description": "A very inviting bath tub filled with water.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A very inviting bath tub filled with water.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Uma banheira muito convidativa cheia de água.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26076
@@ -9140,7 +10436,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bellflower",
         "name": "Bellflower",
         "kind": "house-item",
-        "description": "Let the flower ring.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Let the flower ring.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Deixe a flor tocar.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28697
@@ -9161,7 +10460,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bitter-smack-leaf",
         "name": "Bitter-Smack Leaf",
         "kind": "house-item",
-        "description": "A full grown bitter-smack leaf.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A full grown bitter-smack leaf.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Uma folha de bitter-smack totalmente crescida.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25217
@@ -9182,7 +10484,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blank-zaoan-panel",
         "name": "Blank Zaoan Panel",
         "kind": "house-item",
-        "description": "A blank Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A blank Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37777
@@ -9203,7 +10508,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blooming-cactus",
         "name": "Blooming Cactus",
         "kind": "house-item",
-        "description": "A beautiful cactus in full bloom.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A beautiful cactus in full bloom.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Um belo cacto em plena floração.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25216
@@ -9224,7 +10532,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blue-round-cushion",
         "name": "Blue Round Cushion",
         "kind": "house-item",
-        "description": "A blue round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A blue round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31222
@@ -9245,7 +10556,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blue-square-cushion",
         "name": "Blue Square Cushion",
         "kind": "house-item",
-        "description": "A blue square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A blue square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31219
@@ -9266,7 +10580,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-brocade-tapestry",
         "name": "Brocade Tapestry",
         "kind": "house-item",
-        "description": "A brocade tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A brocade tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23725
@@ -9287,7 +10604,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-captain-crab",
         "name": "Captain Crab",
         "kind": "house-item",
-        "description": "A captain crab to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A captain crab to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42308
@@ -9308,7 +10628,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-carnivorous-plant",
         "name": "Carnivorous Plant",
         "kind": "house-item",
-        "description": "Beware of the biting plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Beware of the biting plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cuidado com a planta que morde.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28689
@@ -9329,7 +10652,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-cat-in-a-basket",
         "name": "Cat in a Basket",
         "kind": "house-item",
-        "description": "This cat is enjoying a carefree nap.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This cat is enjoying a carefree nap.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este gato está aproveitando uma soneca despreocupada.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23451
@@ -9350,7 +10676,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-chameleon",
         "name": "Chameleon",
         "kind": "house-item",
-        "description": "This chameleon is trying very hard to look absolutely unsuspicious.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This chameleon is trying very hard to look absolutely unsuspicious.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este camaleão está se esforçando muito para não parecer nem um pouco suspeito.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25213
@@ -9371,7 +10700,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-chest-of-abundance",
         "name": "Chest of Abundance",
         "kind": "house-item",
-        "description": "A chest of abundance. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A chest of abundance. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Abre como um contêiner com 18 espaços, guardando seus pertences tão bem quanto enfeita a casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28945
@@ -9392,7 +10724,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-colourful-carpet",
         "name": "Colourful Carpet",
         "kind": "house-item",
-        "description": "A colourful carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A colourful carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24416
@@ -9423,7 +10758,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-colourful-pom-pom-carpet",
         "name": "Colourful Pom-Pom Carpet",
         "kind": "house-item",
-        "description": "A colourful pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A colourful pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35889
@@ -9454,7 +10792,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crested-carpet",
         "name": "Crested Carpet",
         "kind": "house-item",
-        "description": "A crested carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A crested carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26152
@@ -9485,7 +10826,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crimson-carpet",
         "name": "Crimson Carpet",
         "kind": "house-item",
-        "description": "A crimson carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A crimson carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23707
@@ -9516,7 +10860,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crystal-lamp",
         "name": "Crystal Lamp",
         "kind": "house-item",
-        "description": "A crystal lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A crystal lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31196
@@ -9537,7 +10884,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-curly-hortensis-lamp",
         "name": "Curly Hortensis Lamp",
         "kind": "house-item",
-        "description": "A curly Hortensis lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A curly Hortensis lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31695
@@ -9558,7 +10908,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dark-parquet",
         "name": "Dark Parquet",
         "kind": "house-item",
-        "description": "A dark parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A dark parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23713
@@ -9579,7 +10932,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-decorated-carpet",
         "name": "Decorated Carpet",
         "kind": "house-item",
-        "description": "A decorated carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A decorated carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26154
@@ -9610,7 +10966,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-baller",
         "name": "Demon Baller",
         "kind": "house-item",
-        "description": "A demon baller to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A demon baller to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36646
@@ -9631,7 +10990,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-pet",
         "name": "Demon Pet",
         "kind": "house-item",
-        "description": "A demon pet to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A demon pet to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26173
@@ -9652,7 +11014,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-skull",
         "name": "Demon Skull",
         "kind": "house-item",
-        "description": "A demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31212
@@ -9673,7 +11038,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-statue",
         "name": "Demon Statue",
         "kind": "house-item",
-        "description": "A demon statue to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A demon statue to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34058
@@ -9694,7 +11062,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-diamond-carpet",
         "name": "Diamond Carpet",
         "kind": "house-item",
-        "description": "A diamond carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A diamond carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24420
@@ -9725,7 +11096,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-djinn-lamp",
         "name": "Djinn Lamp",
         "kind": "house-item",
-        "description": "A djinn lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A djinn lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42363
@@ -9746,7 +11120,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dog-house",
         "name": "Dog House",
         "kind": "house-item",
-        "description": "This dog is waiting quite eagerly for attention.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This dog is waiting quite eagerly for attention.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este cachorro está esperando ansiosamente por atenção.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23697
@@ -9767,7 +11144,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dragon-plant",
         "name": "Dragon Plant",
         "kind": "house-item",
-        "description": "Now and then it roars hungrily.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Now and then it roars hungrily.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "De vez em quando, ele ruge com fome.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37021
@@ -9788,7 +11168,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-drawing-board",
         "name": "Drawing Board",
         "kind": "house-item",
-        "description": "A drawing board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A drawing board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34062
@@ -9809,7 +11192,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dungeon-scene-painting",
         "name": "Dungeon Scene Painting",
         "kind": "house-item",
-        "description": "A dungeon scene painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A dungeon scene painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27697
@@ -9830,7 +11216,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-emerald-carpet",
         "name": "Emerald Carpet",
         "kind": "house-item",
-        "description": "An emerald carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An emerald carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23711
@@ -9861,7 +11250,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fennec",
         "name": "Fennec",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{useicon} to trigger an animation feed it with meat, ham, dragon ham, haunch of a boar, roasted meat or bug meat\n{info} can be fed once every 65 seconds\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{useicon} to trigger an animation feed it with meat, ham, dragon ham, haunch of a boar, roasted meat or bug meat\n{info} can be fed once every 65 seconds\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{useicon} para ativar uma animação, alimente-o com meat, ham, dragon ham, haunch of a boar, roasted meat ou bug meat\n{info} pode ser alimentado uma vez a cada 65 segundos\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28694
@@ -9882,7 +11274,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ferumbras-dust",
         "name": "Ferumbras Dust",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{backtoinbox}\n{useicon} house owner can use it to display a duplicate of an owned Ferumbras' Hat on this bust - also works if the character has already turned Ferumbras' hat in to earn the outfit addon",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{backtoinbox}\n{useicon} house owner can use it to display a duplicate of an owned Ferumbras' Hat on this bust - also works if the character has already turned Ferumbras' hat in to earn the outfit addon",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{backtoinbox}\n{useicon} o dono da casa pode usá-lo para exibir uma réplica de um Ferumbras' Hat que possua neste busto - também funciona se o personagem já tiver entregue o Ferumbras' hat para obter o adicional do traje"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27692
@@ -9903,7 +11298,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ferumbras-portrait",
         "name": "Ferumbras Portrait",
         "kind": "house-item",
-        "description": "A Ferumbras portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Ferumbras portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27700
@@ -9924,7 +11322,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ferumbras-snowman",
         "name": "Ferumbras Snowman",
         "kind": "house-item",
-        "description": "A Ferumbras snowman to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Ferumbras snowman to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32786
@@ -9945,7 +11346,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-filled-shoes",
         "name": "Festive Filled Shoes",
         "kind": "house-item",
-        "description": "Festive filled shoes to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Festive filled shoes to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30227
@@ -9966,7 +11370,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-fireplace",
         "name": "Festive Fireplace",
         "kind": "house-item",
-        "description": "A festive fireplace to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive fireplace to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30233
@@ -9987,7 +11394,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-pile-of-presents",
         "name": "Festive Pile of Presents",
         "kind": "house-item",
-        "description": "A festive pile of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive pile of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30245
@@ -10008,7 +11418,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-pyramid",
         "name": "Festive Pyramid",
         "kind": "house-item",
-        "description": "A festive pyramid to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive pyramid to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30248
@@ -10029,7 +11442,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-rocking-chair",
         "name": "Festive Rocking Chair",
         "kind": "house-item",
-        "description": "A festive rocking chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive rocking chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30241
@@ -10050,7 +11466,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-sack-of-presents",
         "name": "Festive Sack of Presents",
         "kind": "house-item",
-        "description": "A festive sack of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive sack of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30247
@@ -10071,7 +11490,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-sleigh",
         "name": "Festive Sleigh",
         "kind": "house-item",
-        "description": "A festive sleigh to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive sleigh to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30244
@@ -10092,7 +11514,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-table",
         "name": "Festive Table",
         "kind": "house-item",
-        "description": "A festive table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Com espaço para tudo o que você quiser colocar em cima.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30229
@@ -10113,7 +11538,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-tree",
         "name": "Festive Tree",
         "kind": "house-item",
-        "description": "A festive tree to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A festive tree to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 30237
@@ -10134,7 +11562,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fish-hook-board",
         "name": "Fish Hook Board",
         "kind": "house-item",
-        "description": "A fish hook board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A fish hook board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42304
@@ -10155,7 +11586,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fish-tank",
         "name": "Fish Tank",
         "kind": "house-item",
-        "description": "A small fish is minding his own business in this tank.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A small fish is minding his own business in this tank.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Um peixinho cuida da própria vida neste aquário.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23691
@@ -10176,7 +11610,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-flowery-carpet",
         "name": "Flowery Carpet",
         "kind": "house-item",
-        "description": "A flowery carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A flowery carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24417
@@ -10207,7 +11644,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-flowery-grass",
         "name": "Flowery Grass",
         "kind": "house-item",
-        "description": "Flowery grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Flowery grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39797
@@ -10238,7 +11678,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fluorescent-fungi",
         "name": "Fluorescent Fungi",
         "kind": "house-item",
-        "description": "Fluorescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Fluorescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28920
@@ -10259,7 +11702,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-forge",
         "name": "Forge",
         "kind": "house-item",
-        "description": "A forge to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A forge to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35155
@@ -10280,7 +11726,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-forget-me-not",
         "name": "Forget-Me-Not",
         "kind": "house-item",
-        "description": "Legends say that displanting forget-me-nots causes rain the next day.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Legends say that displanting forget-me-nots causes rain the next day.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Dizem as lendas que transplantar não-me-esqueças causa chuva no dia seguinte.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28698
@@ -10301,7 +11750,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-four-hearts-lamp",
         "name": "Four Hearts Lamp",
         "kind": "house-item",
-        "description": "A four hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A four hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33028
@@ -10322,7 +11774,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fur-carpet",
         "name": "Fur Carpet",
         "kind": "house-item",
-        "description": "A fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24419
@@ -10353,7 +11808,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-gloomy-poisonous-fungi",
         "name": "Gloomy Poisonous Fungi",
         "kind": "house-item",
-        "description": "Gloomy poisonous fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Gloomy poisonous fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28926
@@ -10374,7 +11832,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-glowing-sulphur-fungi",
         "name": "Glowing Sulphur Fungi",
         "kind": "house-item",
-        "description": "Glowing sulphur fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Glowing sulphur fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28924
@@ -10395,7 +11856,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-glowworms",
         "name": "Glowworms",
         "kind": "house-item",
-        "description": "Some glowworms are said to be giving off a mysterious, soothing light.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Some glowworms are said to be giving off a mysterious, soothing light.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Dizem que alguns pirilampos emitem uma luz misteriosa e relaxante.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34270
@@ -10416,7 +11880,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-golden-demon-skull",
         "name": "Golden Demon Skull",
         "kind": "house-item",
-        "description": "A golden demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A golden demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31211
@@ -10437,7 +11904,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-golden-dragon-tapestry",
         "name": "Golden Dragon Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{info} drag the unwrapped tapestry to a wall to hang it up\n{backtoinbox}",
+        "description": {
+          "en": "{house}\n{box}\n{storeinbox}\n{info} drag the unwrapped tapestry to a wall to hang it up\n{backtoinbox}",
+          "pt-BR": "{house}\n{box}\n{storeinbox}\n{info} arraste a tapeçaria desembrulhada até uma parede para pendurá-la\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23723
@@ -10458,7 +11928,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-golden-minotaur-skull",
         "name": "Golden Minotaur Skull",
         "kind": "house-item",
-        "description": "A golden minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A golden minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31209
@@ -10479,7 +11952,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-carpet",
         "name": "Grandiose Carpet",
         "kind": "house-item",
-        "description": "A grandiose carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35942
@@ -10500,7 +11976,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-lamp",
         "name": "Grandiose Lamp",
         "kind": "house-item",
-        "description": "A grandiose lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35943
@@ -10521,7 +12000,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-painting",
         "name": "Grandiose Painting",
         "kind": "house-item",
-        "description": "A grandiose painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grandiose painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35940
@@ -10542,7 +12024,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grass",
         "name": "Grass",
         "kind": "house-item",
-        "description": "Grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37019
@@ -10563,7 +12048,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-green-round-cushion",
         "name": "Green Round Cushion",
         "kind": "house-item",
-        "description": "A green round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A green round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31221
@@ -10584,7 +12072,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-green-square-cushion",
         "name": "Green Square Cushion",
         "kind": "house-item",
-        "description": "A green square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A green square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31218
@@ -10605,7 +12096,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grinding-wheel",
         "name": "Grinding Wheel",
         "kind": "house-item",
-        "description": "A grinding wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A grinding wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35177
@@ -10626,7 +12120,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hamster-in-a-wheel",
         "name": "Hamster in a Wheel",
         "kind": "house-item",
-        "description": "This hamster sits very relaxed in his wheel and seems at ease with the world.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This hamster sits very relaxed in his wheel and seems at ease with the world.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este hamster está sentado bem relaxado em sua roda e parece em paz com o mundo.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23444
@@ -10647,7 +12144,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-heart-lamp",
         "name": "Heart Lamp",
         "kind": "house-item",
-        "description": "A heart lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A heart lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33026
@@ -10668,7 +12168,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hedgehog",
         "name": "Hedgehog",
         "kind": "house-item",
-        "description": "This baby hedgehog loves hurling into a tiny ball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This baby hedgehog loves hurling into a tiny ball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este bebê ouriço adora se enrolar em uma bolinha.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31680
@@ -10689,7 +12192,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hrodmir-weapons-rack",
         "name": "Hrodmir Weapons Rack",
         "kind": "house-item",
-        "description": "A sturdy weapons rack made from the finest hrodmiran wood.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sturdy weapons rack made from the finest hrodmiran wood.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Um robusto suporte de armas feito da mais fina madeira de Hrodmir.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26081
@@ -10710,7 +12216,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ice-chandelier",
         "name": "Ice Chandelier",
         "kind": "house-item",
-        "description": "An ice chandelier to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An ice chandelier to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 32784
@@ -10731,7 +12240,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-idol-lamp",
         "name": "Idol Lamp",
         "kind": "house-item",
-        "description": "An idol lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An idol lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31214
@@ -10752,7 +12264,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-incomprehensible-riches",
         "name": "Incomprehensible Riches",
         "kind": "house-item",
-        "description": "Incomprehensible riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Incomprehensible riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28944
@@ -10773,7 +12288,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-king-tibianus-bust",
         "name": "King Tibianus Bust",
         "kind": "house-item",
-        "description": "A King Tibianus bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A King Tibianus bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27702
@@ -10794,7 +12312,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-clock",
         "name": "Kitchen Clock",
         "kind": "house-item",
-        "description": "A kitchen clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34309
@@ -10815,7 +12336,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-lamp",
         "name": "Kitchen Lamp",
         "kind": "house-item",
-        "description": "A kitchen lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34304
@@ -10836,7 +12360,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-shelf",
         "name": "Kitchen Shelf",
         "kind": "house-item",
-        "description": "A kitchen shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kitchen shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34282
@@ -10857,7 +12384,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-candelabra",
         "name": "Knightly Candelabra",
         "kind": "house-item",
-        "description": "A knightly candelabra to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly candelabra to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39498
@@ -10878,7 +12408,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-candle-holder",
         "name": "Knightly Candle Holder",
         "kind": "house-item",
-        "description": "A knightly candle holder to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly candle holder to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39500
@@ -10899,7 +12432,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-fire-bowl",
         "name": "Knightly Fire Bowl",
         "kind": "house-item",
-        "description": "A knightly fire bowl to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly fire bowl to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39443
@@ -10920,7 +12456,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-guard",
         "name": "Knightly Guard",
         "kind": "house-item",
-        "description": "This guard stands firm and will defend his post, no matter what.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This guard stands firm and will defend his post, no matter what.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este guarda se mantém firme e defenderá seu posto, aconteça o que acontecer.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39508
@@ -10941,7 +12480,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-sword-lamp",
         "name": "Knightly Sword Lamp",
         "kind": "house-item",
-        "description": "A knightly sword lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly sword lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39496
@@ -10962,7 +12504,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-wall-lamp",
         "name": "Knightly Wall Lamp",
         "kind": "house-item",
-        "description": "A knightly wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A knightly wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39446
@@ -10983,7 +12528,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-buoy-lamp",
         "name": "Kraken Buoy Lamp",
         "kind": "house-item",
-        "description": "A kraken buoy lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken buoy lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37187
@@ -11004,7 +12552,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-shelf",
         "name": "Kraken Shelf",
         "kind": "house-item",
-        "description": "A kraken shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37189
@@ -11025,7 +12576,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-tentacle-lamp",
         "name": "Kraken Tentacle Lamp",
         "kind": "house-item",
-        "description": "A kraken tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37520
@@ -11046,7 +12600,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-watcher-lamp",
         "name": "Kraken Watcher Lamp",
         "kind": "house-item",
-        "description": "A kraken watcher lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A kraken watcher lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37700
@@ -11067,7 +12624,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-life-buoy",
         "name": "Life Buoy",
         "kind": "house-item",
-        "description": "A life buoy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A life buoy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42305
@@ -11088,7 +12648,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-light-of-change",
         "name": "Light of Change",
         "kind": "house-item",
-        "description": "A light of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A light of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27667
@@ -11109,7 +12672,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-light-parquet",
         "name": "Light Parquet",
         "kind": "house-item",
-        "description": "A light parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A light parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23712
@@ -11130,7 +12696,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-predator-lamp",
         "name": "Lit Predator Lamp",
         "kind": "house-item",
-        "description": "A lit predator lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A lit predator lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23436
@@ -11151,7 +12720,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-protectress-lamp",
         "name": "Lit Protectress Lamp",
         "kind": "house-item",
-        "description": "A lit protectress lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A lit protectress lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23440
@@ -11172,7 +12744,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-skull-lamp",
         "name": "Lit Skull Lamp",
         "kind": "house-item",
-        "description": "A lit skull lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A lit skull lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24435
@@ -11193,7 +12768,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-little-big-flower-lamp",
         "name": "Little Big Flower Lamp",
         "kind": "house-item",
-        "description": "A little big flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A little big flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31697
@@ -11214,7 +12792,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-loose-opulent-floor-intarsia",
         "name": "Loose Opulent Floor Intarsia",
         "kind": "house-item",
-        "description": "A loose opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A loose opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42338
@@ -11235,7 +12816,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lordly-tapestry",
         "name": "Lordly Tapestry",
         "kind": "house-item",
-        "description": "A tapestry of lordly caliber.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A tapestry of lordly caliber.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Uma tapeçaria de calibre senhorial.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23448
@@ -11256,7 +12840,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-luminescent-fungi",
         "name": "Luminescent Fungi",
         "kind": "house-item",
-        "description": "Luminescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Luminescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28922
@@ -11277,7 +12864,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-marble-floor",
         "name": "Marble Floor",
         "kind": "house-item",
-        "description": "A marble floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A marble floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23720
@@ -11298,7 +12888,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-menacing-tapestry",
         "name": "Menacing Tapestry",
         "kind": "house-item",
-        "description": "The dark side is vigilant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The dark side is vigilant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O lado sombrio está vigilante.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23449
@@ -11319,7 +12912,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-merchant-portrait",
         "name": "Merchant Portrait",
         "kind": "house-item",
-        "description": "A merchant portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A merchant portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42343
@@ -11340,7 +12936,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-mermaid-figure-head",
         "name": "Mermaid Figure Head",
         "kind": "house-item",
-        "description": "A mermaid figure head to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A mermaid figure head to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31949
@@ -11361,7 +12960,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-metal-wall-lamp",
         "name": "Metal Wall Lamp",
         "kind": "house-item",
-        "description": "A metal wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A metal wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35161
@@ -11382,7 +12984,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-midnight-panther-rug",
         "name": "Midnight Panther Rug",
         "kind": "house-item",
-        "description": "A midnight panther rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A midnight panther rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35895
@@ -11403,7 +13008,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-minotaur-skull",
         "name": "Minotaur Skull",
         "kind": "house-item",
-        "description": "A minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31210
@@ -11424,7 +13032,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-model-ship-lamp",
         "name": "Model Ship Lamp",
         "kind": "house-item",
-        "description": "A model ship lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A model ship lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31942
@@ -11445,7 +13056,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-monkey",
         "name": "Monkey",
         "kind": "house-item",
-        "description": "It is cheerfully swinging back and forth.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It is cheerfully swinging back and forth.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Está balançando alegremente para frente e para trás.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31955
@@ -11466,7 +13080,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-moon-carpet",
         "name": "Moon Carpet",
         "kind": "house-item",
-        "description": "A moon carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A moon carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35898
@@ -11487,7 +13104,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-mystic-carpet",
         "name": "Mystic Carpet",
         "kind": "house-item",
-        "description": "A mystic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A mystic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26118
@@ -11518,7 +13138,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-natural-pom-pom-carpet",
         "name": "Natural Pom-Pom Carpet",
         "kind": "house-item",
-        "description": "A natural pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A natural pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35891
@@ -11539,7 +13162,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-night-sky-carpet",
         "name": "Night Sky Carpet",
         "kind": "house-item",
-        "description": "A night sky carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A night sky carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24422
@@ -11570,7 +13196,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-octoputz",
         "name": "Octoputz",
         "kind": "house-item",
-        "description": "Juding by the pinching of his beak, this one seems to be born to joust.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Juding by the pinching of his beak, this one seems to be born to joust.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "A julgar pelas beliscadas de seu bico, este aqui parece ter nascido para as justas.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37211
@@ -11591,7 +13220,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-floor-intarsia",
         "name": "Opulent Floor Intarsia",
         "kind": "house-item",
-        "description": "An opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42339
@@ -11612,7 +13244,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-floor-lamp",
         "name": "Opulent Floor Lamp",
         "kind": "house-item",
-        "description": "An opulent floor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent floor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42348
@@ -11633,7 +13268,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-wooden-floor",
         "name": "Opulent Wooden Floor",
         "kind": "house-item",
-        "description": "An opulent wooden floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An opulent wooden floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42337
@@ -11654,7 +13292,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-wood-floor-planks",
         "name": "Opulent Wood Floor Planks",
         "kind": "house-item",
-        "description": "Opulent wood floor planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Opulent wood floor planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42336
@@ -11675,7 +13316,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-oven",
         "name": "Oven",
         "kind": "house-item",
-        "description": "An oven to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An oven to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34272
@@ -11696,7 +13340,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-owin-rug",
         "name": "Owin Rug",
         "kind": "house-item",
-        "description": "An Owin rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "An Owin rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35893
@@ -11717,7 +13364,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-painting-of-tibiasula",
         "name": "Painting of Tibiasula",
         "kind": "house-item",
-        "description": "A painting of Tibiasula to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A painting of Tibiasula to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28947
@@ -11738,7 +13388,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pair-of-bellows",
         "name": "Pair of Bellows",
         "kind": "house-item",
-        "description": "A pair of bellows to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pair of bellows to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35181
@@ -11759,7 +13412,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-parrot",
         "name": "Parrot",
         "kind": "house-item",
-        "description": "The parrot is flapping its wings and screaks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The parrot is flapping its wings and screaks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O papagaio está batendo as asas e guinchando.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24432
@@ -11780,7 +13436,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-rolled-up-opulent-carpet",
         "name": "Rolled-Up Opulent Carpet",
         "kind": "house-item",
-        "description": "A rolled-up opulent carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A rolled-up opulent carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42340
@@ -11811,7 +13470,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-patterned-carpet",
         "name": "Patterned Carpet",
         "kind": "house-item",
-        "description": "A patterned carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A patterned carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24421
@@ -11842,7 +13504,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pile-of-alchemistic-books",
         "name": "Pile of Alchemistic Books",
         "kind": "house-item",
-        "description": "A pile of alchemistic books to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pile of alchemistic books to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27687
@@ -11863,7 +13528,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pile-of-riches",
         "name": "Pile of Riches",
         "kind": "house-item",
-        "description": "A pile of riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pile of riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42342
@@ -11884,7 +13552,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pink-roses",
         "name": "Pink Roses",
         "kind": "house-item",
-        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O aroma característico destas rosas levanta seu ânimo na hora.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25218
@@ -11905,7 +13576,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pink-shroom-lamp",
         "name": "Pink Shroom Lamp",
         "kind": "house-item",
-        "description": "A pink shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pink shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37018
@@ -11926,7 +13600,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-flag",
         "name": "Pirate Flag",
         "kind": "house-item",
-        "description": "A pirate flag to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pirate flag to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31945
@@ -11947,7 +13624,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-ship-ballista",
         "name": "Pirate Ship Ballista",
         "kind": "house-item",
-        "description": "A pirate ship ballista to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pirate ship ballista to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31933
@@ -11968,7 +13648,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-skeleton-cage",
         "name": "Pirate Skeleton Cage",
         "kind": "house-item",
-        "description": "A pirate skeleton cage to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pirate skeleton cage to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31947
@@ -11989,7 +13672,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-treasure-chest",
         "name": "Pirate Treasure Chest",
         "kind": "house-item",
-        "description": "A pirate treasure chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pirate treasure chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31936
@@ -12010,7 +13696,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-treasure-map",
         "name": "Pirate Treasure Map",
         "kind": "house-item",
-        "description": "A pirate treasure map to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A pirate treasure map to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31946
@@ -12031,7 +13720,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-podium-of-renown",
         "name": "Podium of Renown",
         "kind": "house-item",
-        "description": "A podium of renown to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A podium of renown to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35973
@@ -12052,7 +13744,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-podium-of-tenacity",
         "name": "Podium of Tenacity",
         "kind": "house-item",
-        "description": "A podium of tenacity to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A podium of tenacity to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42367
@@ -12073,7 +13768,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-portable-aqueduct",
         "name": "Portable Aqueduct",
         "kind": "house-item",
-        "description": "This little fellow just keeps on swimming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "This little fellow just keeps on swimming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Este pequenino simplesmente continua nadando.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35949
@@ -12094,7 +13792,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-purple-flower-lamp",
         "name": "Purple Flower Lamp",
         "kind": "house-item",
-        "description": "A purple flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A purple flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39795
@@ -12115,7 +13816,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-queen-eloise-bust",
         "name": "Queen Eloise Bust",
         "kind": "house-item",
-        "description": "A Queen Eloise bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Queen Eloise bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27695
@@ -12136,7 +13840,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-red-geranium",
         "name": "Red Geranium",
         "kind": "house-item",
-        "description": "No lovely balcony would be complete without this plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "No lovely balcony would be complete without this plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Nenhuma varanda encantadora estaria completa sem esta planta.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28699
@@ -12157,7 +13864,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-red-roses",
         "name": "Red Roses",
         "kind": "house-item",
-        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O aroma característico destas rosas levanta seu ânimo na hora.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25219
@@ -12178,7 +13888,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-romantic-carpet",
         "name": "Romantic Carpet",
         "kind": "house-item",
-        "description": "A romantic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A romantic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35899
@@ -12199,7 +13912,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sabertooth-skull",
         "name": "Sabertooth Skull",
         "kind": "house-item",
-        "description": "A sabertooth skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sabertooth skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34060
@@ -12220,7 +13936,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sarcophagus",
         "name": "Sarcophagus",
         "kind": "house-item",
-        "description": "Something inside this hungers to be set free.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Something inside this hungers to be set free.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Algo aqui dentro anseia por ser libertado.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31683
@@ -12241,7 +13960,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-scales-wall-lamp",
         "name": "Scales Wall Lamp",
         "kind": "house-item",
-        "description": "A scales wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A scales wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42345
@@ -12262,7 +13984,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-a-fox",
         "name": "Sculpture of a Fox",
         "kind": "house-item",
-        "description": "It symbolises the spirit of the fox. A mystic aura surrounds this sculpture.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It symbolises the spirit of the fox. A mystic aura surrounds this sculpture.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Simboliza o espírito da raposa. Uma aura mística envolve esta escultura.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37811
@@ -12283,7 +14008,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-a-noblewoman",
         "name": "Sculpture of a Noblewoman",
         "kind": "house-item",
-        "description": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ainda é um trabalho em andamento.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34064
@@ -12304,7 +14032,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-an-octoputz",
         "name": "Sculpture of an Octoputz",
         "kind": "house-item",
-        "description": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ainda é um trabalho em andamento.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37205
@@ -12325,7 +14056,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sea-devil-wall-lamp",
         "name": "Sea-devil Wall Lamp",
         "kind": "house-item",
-        "description": "A sea-devil wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sea-devil wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42300
@@ -12346,7 +14080,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-seafood-bucket",
         "name": "Seafood Bucket",
         "kind": "house-item",
-        "description": "A seafood bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seafood bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42301
@@ -12367,7 +14104,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-seashell-lamp",
         "name": "Seashell Lamp",
         "kind": "house-item",
-        "description": "A seashell lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A seashell lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42292
@@ -12388,7 +14128,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-shaggy-carpet",
         "name": "Shaggy Carpet",
         "kind": "house-item",
-        "description": "A shaggy carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A shaggy carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26116
@@ -12419,7 +14162,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ship-bell",
         "name": "Ship Bell",
         "kind": "house-item",
-        "description": "A ship bell to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ship bell to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42303
@@ -12440,7 +14186,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ship-s-wheel",
         "name": "Ship's Wheel",
         "kind": "house-item",
-        "description": "A ship's wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A ship's wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31948
@@ -12461,7 +14210,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-small-hearts-lamp",
         "name": "Small Hearts Lamp",
         "kind": "house-item",
-        "description": "A small hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A small hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 33030
@@ -12482,7 +14234,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-star-carpet",
         "name": "Star Carpet",
         "kind": "house-item",
-        "description": "A star carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A star carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24423
@@ -12513,7 +14268,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stone-tiles",
         "name": "Stone Tiles",
         "kind": "house-item",
-        "description": "Stone tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Stone tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26121
@@ -12534,7 +14292,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-striped-carpet",
         "name": "Striped Carpet",
         "kind": "house-item",
-        "description": "A striped carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A striped carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 24418
@@ -12565,7 +14326,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stuffed-bear-display",
         "name": "Stuffed Bear Display",
         "kind": "house-item",
-        "description": "A stuffed bear display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A stuffed bear display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28928
@@ -12586,7 +14350,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stuffed-teddy-display",
         "name": "Stuffed Teddy Display",
         "kind": "house-item",
-        "description": "A stuffed teddy display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A stuffed teddy display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28930
@@ -12607,7 +14374,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sulphur-blossom-lamp",
         "name": "Sulphur Blossom Lamp",
         "kind": "house-item",
-        "description": "A sulphur blossom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sulphur blossom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31723
@@ -12628,7 +14398,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sword-tapestry",
         "name": "Sword Tapestry",
         "kind": "house-item",
-        "description": "A sword tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A sword tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23724
@@ -12649,7 +14422,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tendrils",
         "name": "Tendrils",
         "kind": "house-item",
-        "description": "Tendrils to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Tendrils to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39803
@@ -12670,7 +14446,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tentacle-lamp",
         "name": "Tentacle Lamp",
         "kind": "house-item",
-        "description": "A tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 42298
@@ -12691,7 +14470,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-terrarium-snake",
         "name": "Terrarium Snake",
         "kind": "house-item",
-        "description": "A little snake is wiggling in the terrarium.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A little snake is wiggling in the terrarium.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Uma cobrinha está se contorcendo no terrário.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26171
@@ -12712,7 +14494,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-terrarium-spider",
         "name": "Terrarium Spider",
         "kind": "house-item",
-        "description": "A spider minding her own business.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A spider minding her own business.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Uma aranha cuidando da própria vida.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26078
@@ -12733,7 +14518,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tibia-streets-painting",
         "name": "Tibia Streets Painting",
         "kind": "house-item",
-        "description": "A Tibia streets painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Tibia streets painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27699
@@ -12754,7 +14542,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-torch-of-change",
         "name": "Torch of Change",
         "kind": "house-item",
-        "description": "A torch of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A torch of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 27673
@@ -12775,7 +14566,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-turquoise-flower-lamp",
         "name": "Turquoise Flower Lamp",
         "kind": "house-item",
-        "description": "A turquoise flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A turquoise flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39793
@@ -12796,7 +14590,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-vegetable-basket",
         "name": "Vegetable Basket",
         "kind": "house-item",
-        "description": "A vegetable basket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vegetable basket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34302
@@ -12817,7 +14614,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-vengothic-lamp",
         "name": "Vengothic Lamp",
         "kind": "house-item",
-        "description": "A vengothic lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A vengothic lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25210
@@ -12838,7 +14638,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-venorean-table-clock",
         "name": "Venorean Table Clock",
         "kind": "house-item",
-        "description": "A Venorean table clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Venorean table clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26112
@@ -12859,7 +14662,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-verdant-carpet",
         "name": "Verdant Carpet",
         "kind": "house-item",
-        "description": "A verdant carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A verdant carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26114
@@ -12890,7 +14696,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-violet-round-cushion",
         "name": "Violet Round Cushion",
         "kind": "house-item",
-        "description": "A violet round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A violet round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31220
@@ -12911,7 +14720,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-violet-square-cushion",
         "name": "Violet Square Cushion",
         "kind": "house-item",
-        "description": "A violet square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A violet square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Sente-se e fique à vontade na sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31217
@@ -12932,7 +14744,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-basin",
         "name": "Volcanic Basin",
         "kind": "house-item",
-        "description": "A volcanic basin to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic basin to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36618
@@ -12953,7 +14768,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-bulb",
         "name": "Volcanic Bulb",
         "kind": "house-item",
-        "description": "A volcanic bulb to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic bulb to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36624
@@ -12974,7 +14792,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-mirror",
         "name": "Volcanic Mirror",
         "kind": "house-item",
-        "description": "A volcanic mirror to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic mirror to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36626
@@ -12995,7 +14816,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-sphere",
         "name": "Volcanic Sphere",
         "kind": "house-item",
-        "description": "A volcanic sphere to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A volcanic sphere to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 36620
@@ -13016,7 +14840,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-fern",
         "name": "Wall Fern",
         "kind": "house-item",
-        "description": "Its leaves are fresh and lush.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Its leaves are fresh and lush.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Suas folhas são frescas e viçosas.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39800
@@ -13037,7 +14864,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-flowers",
         "name": "Wall Flowers",
         "kind": "house-item",
-        "description": "The small blossoms are of a deep purple hue.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The small blossoms are of a deep purple hue.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "As pequenas flores têm um tom roxo profundo.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39799
@@ -13058,7 +14888,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-leaves",
         "name": "Wall Leaves",
         "kind": "house-item",
-        "description": "Wall leaves to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Wall leaves to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39801
@@ -13079,7 +14912,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wallcupboard",
         "name": "Wallcupboard",
         "kind": "house-item",
-        "description": "A wallcupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A wallcupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Mobília para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 34280
@@ -13100,7 +14936,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-water-bucket",
         "name": "Water Bucket",
         "kind": "house-item",
-        "description": "A water bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A water bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 35188
@@ -13121,7 +14960,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-water-nymph",
         "name": "Water Nymph",
         "kind": "house-item",
-        "description": "Well, you almost see her. At the moment, she is hiding beneath the water surface.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Well, you almost see her. At the moment, she is hiding beneath the water surface.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Bem, você quase consegue vê-la. No momento, ela está escondida sob a superfície da água.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 39805
@@ -13142,7 +14984,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wheat-carpet",
         "name": "Wheat Carpet",
         "kind": "house-item",
-        "description": "A wheat carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A wheat carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26151
@@ -13173,7 +15018,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-white-fur-carpet",
         "name": "White Fur Carpet",
         "kind": "house-item",
-        "description": "A white fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A white fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23432
@@ -13204,7 +15052,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-white-shark-trophy",
         "name": "White Shark Trophy",
         "kind": "house-item",
-        "description": "A white shark trophy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A white shark trophy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 31951
@@ -13225,7 +15076,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wooden-planks",
         "name": "Wooden Planks",
         "kind": "house-item",
-        "description": "Wooden planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Wooden planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 26123
@@ -13256,7 +15110,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wooden-sandals",
         "name": "Wooden Sandals",
         "kind": "house-item",
-        "description": "Wooden sandals to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Wooden sandals to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37801
@@ -13277,7 +15134,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yalaharian-carpet",
         "name": "Yalaharian Carpet",
         "kind": "house-item",
-        "description": "A Yalaharian carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Yalaharian carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23431
@@ -13308,7 +15168,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yellow-roses",
         "name": "Yellow Roses",
         "kind": "house-item",
-        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "O aroma característico destas rosas levanta seu ânimo na hora.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 25220
@@ -13329,7 +15192,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yellow-shroom-lamp",
         "name": "Yellow Shroom Lamp",
         "kind": "house-item",
-        "description": "A yellow shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A yellow shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37015
@@ -13350,7 +15216,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-1",
         "name": "Zaoan Bamboo Tiles 1",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37763
@@ -13371,7 +15240,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-2",
         "name": "Zaoan Bamboo Tiles 2",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37764
@@ -13392,7 +15264,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-3",
         "name": "Zaoan Bamboo Tiles 3",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37765
@@ -13413,7 +15288,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-4",
         "name": "Zaoan Bamboo Tiles 4",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37766
@@ -13434,7 +15312,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-5",
         "name": "Zaoan Bamboo Tiles 5",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37767
@@ -13455,7 +15336,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-6",
         "name": "Zaoan Bamboo Tiles 6",
         "kind": "house-item",
-        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Cobre o chão da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37768
@@ -13476,7 +15360,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bonsai",
         "name": "Zaoan Bonsai",
         "kind": "house-item",
-        "description": "It looks and feels like a miniature tree.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "It looks and feels like a miniature tree.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Parece e dá a sensação de uma árvore em miniatura.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37798
@@ -13497,7 +15384,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-divider",
         "name": "Zaoan Divider",
         "kind": "house-item",
-        "description": "A Zaoan divider to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan divider to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37815
@@ -13518,7 +15408,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-drawing",
         "name": "Zaoan Drawing",
         "kind": "house-item",
-        "description": "A Zaoan drawing to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan drawing to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37800
@@ -13539,7 +15432,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-panel",
         "name": "Zaoan Panel",
         "kind": "house-item",
-        "description": "A Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37776
@@ -13560,7 +15456,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-panel-base",
         "name": "Zaoan Panel Base",
         "kind": "house-item",
-        "description": "A Zaoan panel base to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan panel base to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Enfeita uma parede da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37775
@@ -13581,7 +15480,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-paravent",
         "name": "Zaoan Paravent",
         "kind": "house-item",
-        "description": "A Zaoan paravent to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan paravent to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Decoração para a sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37784
@@ -13602,7 +15504,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-pot-bamboo",
         "name": "Zaoan Pot Bamboo",
         "kind": "house-item",
-        "description": "Bamboo from the Zaoan plains.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Bamboo from the Zaoan plains.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Bambu das planícies de Zao.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37799
@@ -13623,7 +15528,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-wall-lamp",
         "name": "Zaoan Wall Lamp",
         "kind": "house-item",
-        "description": "A Zaoan wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "A Zaoan wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37806
@@ -13644,7 +15552,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-wall-lamps",
         "name": "Zaoan Wall Lamps",
         "kind": "house-item",
-        "description": "Zaoan wall lamps to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": {
+          "en": "Zaoan wall lamps to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+          "pt-BR": "Ilumina um cômodo da sua casa.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 37808
@@ -13665,7 +15576,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "extra-services",
-    "name": "Extra Services",
+    "name": {
+      "en": "Extra Services",
+      "pt-BR": "Serviços Extras"
+    },
     "parentId": "extras",
     "icon": {
       "kind": "symbol",
@@ -13676,7 +15590,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "extra-services-character-name-change",
         "name": "Character Name Change",
         "kind": "name-change",
-        "description": "Tired of your current character name? Purchase a new one!\n\n{character}\n{info} relog required after purchase to finalise the name change",
+        "description": {
+          "en": "Tired of your current character name? Purchase a new one!\n\n{character}\n{info} relog required after purchase to finalise the name change",
+          "pt-BR": "Cansado do nome atual do seu personagem? Compre um novo!\n\n{character}\n{info} é necessário relogar após a compra para concluir a troca de nome"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "name-change"
@@ -13695,7 +15612,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "extra-services-character-sex-change",
         "name": "Character Sex Change",
         "kind": "sex-change",
-        "description": "Turns your female character into a male one - or vice versa.\n\n{character}\n{activated}\n{info} you will keep all outfits you have purchased or earned in quest",
+        "description": {
+          "en": "Turns your female character into a male one - or vice versa.\n\n{character}\n{activated}\n{info} you will keep all outfits you have purchased or earned in quest",
+          "pt-BR": "Transforma seu personagem feminino em masculino - ou vice-versa.\n\n{character}\n{activated}\n{info} você manterá todos os trajes que comprou ou conquistou em quests"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "sex-change"
@@ -13714,7 +15634,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
   },
   {
     "id": "useful-things",
-    "name": "Useful Things",
+    "name": {
+      "en": "Useful Things",
+      "pt-BR": "Itens Úteis"
+    },
     "parentId": "extras",
     "icon": {
       "kind": "symbol",
@@ -13725,7 +15648,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-prey-wildcard",
         "name": "Prey Wildcard",
         "kind": "prey-wildcard",
-        "description": "Use Prey Wildcards to reroll the bonus of an active prey, to lock your active prey or to select a prey of your choice.\n\n{character}\n{info} added directly to Prey dialog\n{info} maximum amount that can be owned by character: 50",
+        "description": {
+          "en": "Use Prey Wildcards to reroll the bonus of an active prey, to lock your active prey or to select a prey of your choice.\n\n{character}\n{info} added directly to Prey dialog\n{info} maximum amount that can be owned by character: 50",
+          "pt-BR": "Use Curingas de Presa para sortear novamente o bônus de uma presa ativa, para travar sua presa ativa ou para selecionar uma presa de sua escolha.\n\n{character}\n{info} adicionado diretamente à janela de Presa\n{info} quantidade máxima que um personagem pode possuir: 50"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "prey-wildcard"
@@ -13755,7 +15681,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-permanent-prey-slot",
         "name": "Permanent Prey Slot",
         "kind": "prey-slot",
-        "description": "Get an additional prey slot to activate additional prey!\n\n{character}\n{info} maximum amount that can be owned by character: 3\n{info} added directly to Prey dialog",
+        "description": {
+          "en": "Get an additional prey slot to activate additional prey!\n\n{character}\n{info} maximum amount that can be owned by character: 3\n{info} added directly to Prey dialog",
+          "pt-BR": "Obtenha um espaço de presa adicional para ativar mais presas!\n\n{character}\n{info} quantidade máxima que um personagem pode possuir: 3\n{info} adicionado diretamente à janela de Presa"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "prey-slot"
@@ -13774,7 +15703,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-permanent-hunting-task-slot",
         "name": "Permanent Hunting Task Slot",
         "kind": "hunting-slot",
-        "description": "Get an additional hunting tasks slot to activate additional hunting task!\n\n{character}\n{info} maximum amount that can be owned by character: 3\n{info} added directly to Hunting Task dialog",
+        "description": {
+          "en": "Get an additional hunting tasks slot to activate additional hunting task!\n\n{character}\n{info} maximum amount that can be owned by character: 3\n{info} added directly to Hunting Task dialog",
+          "pt-BR": "Obtenha um espaço de tarefa de caça adicional para ativar mais tarefas de caça!\n\n{character}\n{info} quantidade máxima que um personagem pode possuir: 3\n{info} adicionado diretamente à janela de Tarefas de Caça"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "hunting"
@@ -13793,7 +15725,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-gold-converter",
         "name": "Gold Converter",
         "kind": "charges",
-        "description": "Changes either a stack of 100 gold pieces into 1 platinum coin, or a stack of 100 platinum coins into 1 crystal coin!\n\n{character}\n{storeinbox}\n{useicon} use it on a stack of 100 to change it to the superior currency\n{info} usable 500 times a piece",
+        "description": {
+          "en": "Changes either a stack of 100 gold pieces into 1 platinum coin, or a stack of 100 platinum coins into 1 crystal coin!\n\n{character}\n{storeinbox}\n{useicon} use it on a stack of 100 to change it to the superior currency\n{info} usable 500 times a piece",
+          "pt-BR": "Transforma uma pilha de 100 moedas de ouro em 1 moeda de platina, ou uma pilha de 100 moedas de platina em 1 moeda de cristal!\n\n{character}\n{storeinbox}\n{useicon} use-o em uma pilha de 100 para transformá-la na moeda superior\n{info} pode ser usado 500 vezes por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23722
@@ -13814,7 +15749,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-loot-pouch",
         "name": "Loot Pouch",
         "kind": "item",
-        "description": "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{once}\n{useicon} use it to open it\n{info} all looted items go straight into it",
+        "description": {
+          "en": "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{once}\n{useicon} use it to open it\n{info} all looted items go straight into it",
+          "pt-BR": "Carrega quantos itens de qualquer tipo sua capacidade permitir — seus espaços nunca se esgotam.\n\n{character}\n{once}\n{useicon} use-o para abri-lo\n{info} todos os itens saqueados vão direto para dentro dele"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 23721
@@ -13837,7 +15775,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-magic-gold-converter",
         "name": "Magic Gold Converter",
         "kind": "charges",
-        "description": "Changes automatically either a stack of 100 gold pieces into 1 platinum coin, or a stack of 100 platinum coins into 1 crystal coin!\n\n{character}\n{storeinbox}\n{useicon} use it to activate or deactivate the automatic conversion\n{info} converts all stacks of 100 gold or platinum in the inventory whenever it is activated\n{info} deactivated upon purchase\n{info} usable for 500 conversions a piece",
+        "description": {
+          "en": "Changes automatically either a stack of 100 gold pieces into 1 platinum coin, or a stack of 100 platinum coins into 1 crystal coin!\n\n{character}\n{storeinbox}\n{useicon} use it to activate or deactivate the automatic conversion\n{info} converts all stacks of 100 gold or platinum in the inventory whenever it is activated\n{info} deactivated upon purchase\n{info} usable for 500 conversions a piece",
+          "pt-BR": "Transforma automaticamente uma pilha de 100 moedas de ouro em 1 moeda de platina, ou uma pilha de 100 moedas de platina em 1 moeda de cristal!\n\n{character}\n{storeinbox}\n{useicon} use-o para ativar ou desativar a conversão automática\n{info} converte todas as pilhas de 100 moedas de ouro ou de platina no inventário sempre que estiver ativado\n{info} desativado ao ser comprado\n{info} pode ser usado para 500 conversões por unidade"
+        },
         "icon": {
           "kind": "item",
           "itemTypeId": 28525
@@ -13858,7 +15799,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "useful-things-temple-teleport",
         "name": "Temple Teleport",
         "kind": "temple-teleport",
-        "description": "Teleports you instantly to your home temple.\n\n{character}\n{useicon} use it to teleport you to your home temple\n{battlesign}\n{info} does not work in no-logout zones or close to a character's home temple",
+        "description": {
+          "en": "Teleports you instantly to your home temple.\n\n{character}\n{useicon} use it to teleport you to your home temple\n{battlesign}\n{info} does not work in no-logout zones or close to a character's home temple",
+          "pt-BR": "Teleporta você instantaneamente para o seu templo de origem.\n\n{character}\n{useicon} use-o para se teleportar ao seu templo de origem\n{battlesign}\n{info} não funciona em zonas sem logout ou perto do templo de origem de um personagem"
+        },
         "icon": {
           "kind": "symbol",
           "symbol": "temple"
