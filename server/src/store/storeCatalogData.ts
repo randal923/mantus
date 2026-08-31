@@ -1332,7 +1332,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "kegs-ultimate-mana-keg",
         "name": "Ultimate Mana Keg",
         "kind": "charges",
-        "description": "",
+        "description": "Fill up potions to restore your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
         "icon": {
           "kind": "item",
           "itemTypeId": 25911
@@ -6232,7 +6232,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-alchemistic-chair",
         "name": "Alchemistic Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An alchemistic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27662
@@ -6547,7 +6547,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-cabinet",
         "name": "Ferocious Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ferocious cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23421
@@ -6568,7 +6568,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-chair",
         "name": "Ferocious Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ferocious chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23409
@@ -6589,7 +6589,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-table",
         "name": "Ferocious Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ferocious table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23414
@@ -6610,7 +6610,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ferocious-trunk",
         "name": "Ferocious Trunk",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ferocious trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23423
@@ -6631,7 +6631,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-cabinet",
         "name": "Flower Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A flower cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39775
@@ -6652,7 +6652,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-chair",
         "name": "Flower Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A flower chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39768
@@ -6673,7 +6673,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-chest",
         "name": "Flower Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A flower chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39777
@@ -6694,7 +6694,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-flower-table",
         "name": "Flower Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A flower table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39772
@@ -6715,7 +6715,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-chair",
         "name": "Grandiose Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35915
@@ -6736,7 +6736,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-left",
         "name": "Grandiose Couch Left",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The left part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35959
@@ -6757,7 +6757,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-middle",
         "name": "Grandiose Couch Middle",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The middle part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35960
@@ -6778,7 +6778,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-couch-right",
         "name": "Grandiose Couch Right",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The right part of a grandiose couch. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35961
@@ -6799,7 +6799,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-cupboard",
         "name": "Grandiose Cupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35911
@@ -6820,7 +6820,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-gilded-chest",
         "name": "Grandiose Gilded Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose gilded chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35923
@@ -6841,7 +6841,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-refined-chest",
         "name": "Grandiose Refined Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose refined chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35919
@@ -6862,7 +6862,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-grandiose-table",
         "name": "Grandiose Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose table. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35913
@@ -6883,7 +6883,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-cabinet",
         "name": "Heart Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A heart cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33032
@@ -6904,7 +6904,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-chair",
         "name": "Heart Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A heart chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33036
@@ -6925,7 +6925,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-heart-chest",
         "name": "Heart Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A heart chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33043
@@ -6946,7 +6946,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-chair",
         "name": "Hrodmir Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Hrodmir chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31693
@@ -6967,7 +6967,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-chest",
         "name": "Hrodmir Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Hrodmir chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31687
@@ -6988,7 +6988,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-cupboard",
         "name": "Hrodmir Cupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Hrodmir cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31705
@@ -7009,7 +7009,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-hrodmir-table",
         "name": "Hrodmir Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Hrodmir table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31679
@@ -7030,7 +7030,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-cabinet",
         "name": "Ice Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ice cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32775
@@ -7051,7 +7051,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-chest",
         "name": "Ice Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ice chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32780
@@ -7072,7 +7072,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-stool",
         "name": "Ice Stool",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ice stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32778
@@ -7093,7 +7093,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ice-table",
         "name": "Ice Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ice table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32777
@@ -7114,7 +7114,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-katana-display",
         "name": "Katana Display",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A katana display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37804
@@ -7135,7 +7135,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-chair",
         "name": "Kitchen Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34292
@@ -7156,7 +7156,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-chest",
         "name": "Kitchen Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34296
@@ -7177,7 +7177,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kitchen-table",
         "name": "Kitchen Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34285
@@ -7198,7 +7198,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-large-left",
         "name": "Knightly Bench Large Left",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The left part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39518
@@ -7219,7 +7219,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-large-right",
         "name": "Knightly Bench Large Right",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The right part of a large knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39520
@@ -7240,7 +7240,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-left",
         "name": "Knightly Bench Left",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The left part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39517
@@ -7261,7 +7261,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-middle",
         "name": "Knightly Bench Middle",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The middle part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39519
@@ -7282,7 +7282,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-bench-right",
         "name": "Knightly Bench Right",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The right part of a knightly bench. Place the parts side by side for the full piece.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39521
@@ -7303,7 +7303,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-cabinet",
         "name": "Knightly Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39441
@@ -7324,7 +7324,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chair",
         "name": "Knightly Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39419
@@ -7345,7 +7345,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chess-table",
         "name": "Knightly Chess Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly chess table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39427
@@ -7366,7 +7366,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-chest",
         "name": "Knightly Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39504
@@ -7387,7 +7387,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-decorative-shield",
         "name": "Knightly Decorative Shield",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly decorative shield to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39502
@@ -7408,7 +7408,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-knightly-table",
         "name": "Knightly Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39423
@@ -7429,7 +7429,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-cabinet",
         "name": "Kraken Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37179
@@ -7450,7 +7450,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-chair",
         "name": "Kraken Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37174
@@ -7471,7 +7471,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-chest",
         "name": "Kraken Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37181
@@ -7492,7 +7492,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-kraken-table",
         "name": "Kraken Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37178
@@ -7513,7 +7513,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-leaf-chair",
         "name": "Leaf Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A leaf chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37004
@@ -7534,7 +7534,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-log-chest",
         "name": "Log Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A log chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37011
@@ -7555,7 +7555,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-cabinet",
         "name": "Magnificent Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A magnificent cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23419
@@ -7576,7 +7576,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-chair",
         "name": "Magnificent Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A magnificent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23405
@@ -7597,7 +7597,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-table",
         "name": "Magnificent Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A magnificent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23418
@@ -7618,7 +7618,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-magnificent-trunk",
         "name": "Magnificent Trunk",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A magnificent trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23427
@@ -7639,7 +7639,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-book-case",
         "name": "Opulent Book Case",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent book case to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42332
@@ -7660,7 +7660,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-chair",
         "name": "Opulent Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42320
@@ -7681,7 +7681,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-chest",
         "name": "Opulent Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42328
@@ -7702,7 +7702,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-item-stand",
         "name": "Opulent Item Stand",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent item stand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42350
@@ -7723,7 +7723,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-spice-rack",
         "name": "Opulent Spice Rack",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent spice rack to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42334
@@ -7744,7 +7744,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-opulent-table",
         "name": "Opulent Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42324
@@ -7765,7 +7765,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-cabinet",
         "name": "Ornate Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ornate cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26162
@@ -7786,7 +7786,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-chair",
         "name": "Ornate Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ornate chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26158
@@ -7807,7 +7807,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-chest",
         "name": "Ornate Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ornate chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26165
@@ -7828,7 +7828,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-ornate-table",
         "name": "Ornate Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ornate table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26161
@@ -7849,7 +7849,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-round-side-table",
         "name": "Round Side Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A round side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31208
@@ -7870,7 +7870,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-cabinet",
         "name": "Rustic Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A rustic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23700
@@ -7891,7 +7891,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-chair",
         "name": "Rustic Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A rustic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23695
@@ -7912,7 +7912,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-table",
         "name": "Rustic Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A rustic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23698
@@ -7933,7 +7933,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-rustic-trunk",
         "name": "Rustic Trunk",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A rustic trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23702
@@ -7954,7 +7954,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-chair",
         "name": "Sculptor Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sculptor chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34050
@@ -7975,7 +7975,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-chest",
         "name": "Sculptor Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sculptor chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34054
@@ -7996,7 +7996,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-shelf",
         "name": "Sculptor Shelf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sculptor shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34044
@@ -8017,7 +8017,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-sculptor-table",
         "name": "Sculptor Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sculptor table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34048
@@ -8038,7 +8038,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-cabinet",
         "name": "Seafarer Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seafarer cabinet to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42273
@@ -8059,7 +8059,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-chair",
         "name": "Seafarer Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seafarer chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42267
@@ -8080,7 +8080,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-chest",
         "name": "Seafarer Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seafarer chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42275
@@ -8101,7 +8101,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-seafarer-table",
         "name": "Seafarer Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seafarer table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42271
@@ -8122,7 +8122,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-shroom-cupboard",
         "name": "Shroom Cupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A shroom cupboard. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37009
@@ -8143,7 +8143,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-cabinet",
         "name": "Skeletal Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A skeletal cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28687
@@ -8164,7 +8164,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-chair",
         "name": "Skeletal Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A skeletal chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28676
@@ -8185,7 +8185,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-chest",
         "name": "Skeletal Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A skeletal chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28682
@@ -8206,7 +8206,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-skeletal-table",
         "name": "Skeletal Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A skeletal table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28680
@@ -8227,7 +8227,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-square-side-table",
         "name": "Square Side Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A square side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31207
@@ -8248,7 +8248,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-stump-table",
         "name": "Stump Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A stump table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37008
@@ -8269,7 +8269,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-toolbox",
         "name": "Toolbox",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A toolbox. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35171
@@ -8290,7 +8290,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-cabinet",
         "name": "Vengothic Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vengothic cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25227
@@ -8311,7 +8311,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-chair",
         "name": "Vengothic Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vengothic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25223
@@ -8332,7 +8332,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-chest",
         "name": "Vengothic Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vengothic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25229
@@ -8353,7 +8353,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-vengothic-table",
         "name": "Vengothic Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vengothic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25225
@@ -8374,7 +8374,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-cabinet",
         "name": "Verdant Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A verdant cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26105
@@ -8395,7 +8395,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-chair",
         "name": "Verdant Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A verdant chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26103
@@ -8416,7 +8416,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-table",
         "name": "Verdant Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A verdant table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26111
@@ -8437,7 +8437,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-verdant-trunk",
         "name": "Verdant Trunk",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A verdant trunk. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26107
@@ -8458,7 +8458,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-chair",
         "name": "Volcanic Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36634
@@ -8479,7 +8479,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-chest",
         "name": "Volcanic Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic chest. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36630
@@ -8500,7 +8500,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-shelf",
         "name": "Volcanic Shelf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36640
@@ -8521,7 +8521,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-volcanic-table",
         "name": "Volcanic Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36638
@@ -8542,7 +8542,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-bookcase",
         "name": "Wooden Bookcase",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A wooden bookcase. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31194
@@ -8563,7 +8563,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-cabinet",
         "name": "Wooden Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A wooden cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35175
@@ -8584,7 +8584,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-wooden-stool",
         "name": "Wooden Stool",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A wooden stool — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35167
@@ -8605,7 +8605,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-workbench",
         "name": "Workbench",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A workbench, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35163
@@ -8626,7 +8626,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-cabinet",
         "name": "Zaoan Cabinet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan cabinet. It opens as a container with 8 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37782
@@ -8647,7 +8647,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-hassock",
         "name": "Zaoan Hassock",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan hassock — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37778
@@ -8668,7 +8668,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "furniture-zaoan-side-table",
         "name": "Zaoan Side Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan side table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37803
@@ -8700,7 +8700,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-bookstand",
         "name": "Alchemistic Bookstand",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An alchemistic bookstand to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27679
@@ -8721,7 +8721,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-cupboard",
         "name": "Alchemistic Cupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An alchemistic cupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27689
@@ -8742,7 +8742,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-alchemistic-scales",
         "name": "Alchemistic Scales",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Alchemistic scales to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27683
@@ -8763,7 +8763,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-all-seeing-tapestry",
         "name": "All-Seeing Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Following your every move.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23450
@@ -8784,7 +8784,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-anglerfish-lamp",
         "name": "Anglerfish Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An anglerfish lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28675
@@ -8805,7 +8805,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-anvil",
         "name": "Anvil",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An anvil to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35185
@@ -8823,10 +8823,10 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         ]
       },
       {
-        "id": "decorations-arrival-the-thais-paint",
-        "name": "Arrival The Thais Paint",
+        "id": "decorations-arrival-at-thais-painting",
+        "name": "Arrival at Thais Painting",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An arrival at Thais painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27698
@@ -8847,7 +8847,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-azure-carpet",
         "name": "Azure Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An azure carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23710
@@ -8878,7 +8878,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-bonelord",
         "name": "Baby Bonelord",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It seems to sleep.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34026
@@ -8899,7 +8899,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-dragon",
         "name": "Baby Dragon",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This baby dragon is looking at you very attentively.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23442
@@ -8920,7 +8920,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-elephant",
         "name": "Baby Elephant",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It looks at you curiously.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35153
@@ -8941,7 +8941,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-polar-bear",
         "name": "Baby Polar Bear",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It looks very soft and cuddly.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32790
@@ -8962,7 +8962,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-rotworm",
         "name": "Baby Rotworm",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The rotworm is harmless in this juvenile stadium. But take care to release it by time, otherwise it could get dangerous. At least it's your supplies being threatened instead of you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28690
@@ -8983,7 +8983,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-seal",
         "name": "Baby Seal",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Nobody can ever resist this cute little furball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32788
@@ -9004,7 +9004,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-baby-unicorn",
         "name": "Baby Unicorn",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The purest eyes are blinking back at you.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31703
@@ -9025,7 +9025,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bamboo-mat",
         "name": "Bamboo Mat",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A bamboo mat to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23433
@@ -9056,7 +9056,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-barrel",
         "name": "Barrel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A barrel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34300
@@ -9077,7 +9077,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-barrel-anchor-lamp",
         "name": "Barrel & Anchor Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A barrel & anchor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31937
@@ -9098,7 +9098,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bat",
         "name": "Bat",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Its eyes are gleaming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33040
@@ -9119,7 +9119,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bath-tub",
         "name": "Bath Tub",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A very inviting bath tub filled with water.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26076
@@ -9140,7 +9140,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bellflower",
         "name": "Bellflower",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Let the flower ring.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28697
@@ -9161,7 +9161,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-bitter-smack-leaf",
         "name": "Bitter-Smack Leaf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A full grown bitter-smack leaf.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25217
@@ -9182,7 +9182,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blank-zaoan-panel",
         "name": "Blank Zaoan Panel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A blank Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37777
@@ -9203,7 +9203,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blooming-cactus",
         "name": "Blooming Cactus",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A beautiful cactus in full bloom.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25216
@@ -9224,7 +9224,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blue-round-cushion",
         "name": "Blue Round Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A blue round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31222
@@ -9245,7 +9245,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-blue-square-cushion",
         "name": "Blue Square Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A blue square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31219
@@ -9266,7 +9266,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-brocade-tapestry",
         "name": "Brocade Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A brocade tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23725
@@ -9287,7 +9287,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-captain-crab",
         "name": "Captain Crab",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A captain crab to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42308
@@ -9308,7 +9308,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-carnivorous-plant",
         "name": "Carnivorous Plant",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Beware of the biting plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28689
@@ -9329,7 +9329,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-cat-in-a-basket",
         "name": "Cat in a Basket",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This cat is enjoying a carefree nap.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23451
@@ -9350,7 +9350,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-chameleon",
         "name": "Chameleon",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This chameleon is trying very hard to look absolutely unsuspicious.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25213
@@ -9371,7 +9371,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-chest-of-abundance",
         "name": "Chest of Abundance",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A chest of abundance. It opens as a container with 18 slots, so it stores your belongings as well as it looks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28945
@@ -9392,28 +9392,28 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-colourful-carpet",
         "name": "Colourful Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A colourful carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
-          "itemTypeId": 24417
+          "itemTypeId": 24416
         },
         "subOffers": [
           {
-            "id": "house-item-24417-1",
+            "id": "house-item-24416-1",
             "price": 35,
             "grant": {
               "kind": "house-item",
-              "itemTypeId": 24417,
+              "itemTypeId": 24416,
               "count": 1
             }
           },
           {
-            "id": "house-item-24417-5",
+            "id": "house-item-24416-5",
             "price": 175,
             "count": 5,
             "grant": {
               "kind": "house-item",
-              "itemTypeId": 24417,
+              "itemTypeId": 24416,
               "count": 5
             }
           }
@@ -9423,7 +9423,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-colourful-pom-pom-carpet",
         "name": "Colourful Pom-Pom Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A colourful pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35889
@@ -9454,7 +9454,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crested-carpet",
         "name": "Crested Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A crested carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26152
@@ -9485,7 +9485,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crimson-carpet",
         "name": "Crimson Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A crimson carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23707
@@ -9516,7 +9516,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-crystal-lamp",
         "name": "Crystal Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A crystal lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31196
@@ -9537,7 +9537,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-curly-hortensis-lamp",
         "name": "Curly Hortensis Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A curly Hortensis lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31695
@@ -9558,7 +9558,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dark-parquet",
         "name": "Dark Parquet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A dark parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23713
@@ -9579,7 +9579,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-decorated-carpet",
         "name": "Decorated Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A decorated carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26154
@@ -9610,7 +9610,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-baller",
         "name": "Demon Baller",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A demon baller to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36646
@@ -9631,7 +9631,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-pet",
         "name": "Demon Pet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A demon pet to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26173
@@ -9652,7 +9652,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-skull",
         "name": "Demon Skull",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31212
@@ -9673,7 +9673,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-demon-statue",
         "name": "Demon Statue",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A demon statue to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34058
@@ -9694,7 +9694,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-diamond-carpet",
         "name": "Diamond Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A diamond carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24420
@@ -9725,7 +9725,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-djinn-lamp",
         "name": "Djinn Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A djinn lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42363
@@ -9746,7 +9746,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dog-house",
         "name": "Dog House",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This dog is waiting quite eagerly for attention.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23697
@@ -9767,7 +9767,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dragon-plant",
         "name": "Dragon Plant",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Now and then it roars hungrily.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37021
@@ -9788,7 +9788,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-drawing-board",
         "name": "Drawing Board",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A drawing board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34062
@@ -9809,7 +9809,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-dungeon-scene-painting",
         "name": "Dungeon Scene Painting",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A dungeon scene painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27697
@@ -9830,7 +9830,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-emerald-carpet",
         "name": "Emerald Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An emerald carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23711
@@ -9903,7 +9903,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ferumbras-portrait",
         "name": "Ferumbras Portrait",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Ferumbras portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27700
@@ -9924,7 +9924,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ferumbras-snowman",
         "name": "Ferumbras Snowman",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Ferumbras snowman to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32786
@@ -9945,7 +9945,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-filled-shoes",
         "name": "Festive Filled Shoes",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Festive filled shoes to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30227
@@ -9966,7 +9966,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-fireplace",
         "name": "Festive Fireplace",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive fireplace to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30233
@@ -9987,7 +9987,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-pile-of-presents",
         "name": "Festive Pile of Presents",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive pile of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30245
@@ -10008,7 +10008,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-pyramid",
         "name": "Festive Pyramid",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive pyramid to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30248
@@ -10029,7 +10029,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-rocking-chair",
         "name": "Festive Rocking Chair",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive rocking chair — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30241
@@ -10050,7 +10050,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-sack-of-presents",
         "name": "Festive Sack of Presents",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive sack of presents to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30247
@@ -10071,7 +10071,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-sleigh",
         "name": "Festive Sleigh",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive sleigh to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30244
@@ -10092,7 +10092,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-table",
         "name": "Festive Table",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive table, with room for whatever you set on it.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30229
@@ -10113,7 +10113,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-festive-tree",
         "name": "Festive Tree",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A festive tree to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 30237
@@ -10134,7 +10134,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fish-hook-board",
         "name": "Fish Hook Board",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A fish hook board to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42304
@@ -10155,7 +10155,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fish-tank",
         "name": "Fish Tank",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A small fish is minding his own business in this tank.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23691
@@ -10176,28 +10176,28 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-flowery-carpet",
         "name": "Flowery Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A flowery carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
-          "itemTypeId": 24416
+          "itemTypeId": 24417
         },
         "subOffers": [
           {
-            "id": "house-item-24416-1",
+            "id": "house-item-24417-1",
             "price": 35,
             "grant": {
               "kind": "house-item",
-              "itemTypeId": 24416,
+              "itemTypeId": 24417,
               "count": 1
             }
           },
           {
-            "id": "house-item-24416-5",
+            "id": "house-item-24417-5",
             "price": 175,
             "count": 5,
             "grant": {
               "kind": "house-item",
-              "itemTypeId": 24416,
+              "itemTypeId": 24417,
               "count": 5
             }
           }
@@ -10207,7 +10207,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-flowery-grass",
         "name": "Flowery Grass",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Flowery grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39797
@@ -10238,7 +10238,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fluorescent-fungi",
         "name": "Fluorescent Fungi",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Fluorescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28920
@@ -10259,7 +10259,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-forge",
         "name": "Forge",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A forge to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35155
@@ -10280,7 +10280,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-forget-me-not",
         "name": "Forget-Me-Not",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Legends say that displanting forget-me-nots causes rain the next day.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28698
@@ -10301,7 +10301,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-four-hearts-lamp",
         "name": "Four Hearts Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A four hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33028
@@ -10322,7 +10322,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-fur-carpet",
         "name": "Fur Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24419
@@ -10353,7 +10353,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-gloomy-poisonous-fungi",
         "name": "Gloomy Poisonous Fungi",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Gloomy poisonous fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28926
@@ -10374,7 +10374,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-glowing-sulphur-fungi",
         "name": "Glowing Sulphur Fungi",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Glowing sulphur fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28924
@@ -10395,7 +10395,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-glowworms",
         "name": "Glowworms",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Some glowworms are said to be giving off a mysterious, soothing light.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34270
@@ -10416,7 +10416,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-golden-demon-skull",
         "name": "Golden Demon Skull",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A golden demon skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31211
@@ -10458,7 +10458,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-golden-minotaur-skull",
         "name": "Golden Minotaur Skull",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A golden minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31209
@@ -10479,7 +10479,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-carpet",
         "name": "Grandiose Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35942
@@ -10500,7 +10500,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-lamp",
         "name": "Grandiose Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35943
@@ -10521,7 +10521,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grandiose-painting",
         "name": "Grandiose Painting",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grandiose painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35940
@@ -10542,7 +10542,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grass",
         "name": "Grass",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Grass to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37019
@@ -10563,7 +10563,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-green-round-cushion",
         "name": "Green Round Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A green round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31221
@@ -10584,7 +10584,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-green-square-cushion",
         "name": "Green Square Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A green square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31218
@@ -10605,7 +10605,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-grinding-wheel",
         "name": "Grinding Wheel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A grinding wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35177
@@ -10626,7 +10626,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hamster-in-a-wheel",
         "name": "Hamster in a Wheel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This hamster sits very relaxed in his wheel and seems at ease with the world.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23444
@@ -10647,7 +10647,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-heart-lamp",
         "name": "Heart Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A heart lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33026
@@ -10668,7 +10668,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hedgehog",
         "name": "Hedgehog",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This baby hedgehog loves hurling into a tiny ball.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31680
@@ -10689,7 +10689,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-hrodmir-weapons-rack",
         "name": "Hrodmir Weapons Rack",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sturdy weapons rack made from the finest hrodmiran wood.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26081
@@ -10708,9 +10708,9 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
       },
       {
         "id": "decorations-ice-chandelier",
-        "name": "Ice_Chandelier",
+        "name": "Ice Chandelier",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An ice chandelier to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 32784
@@ -10731,7 +10731,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-idol-lamp",
         "name": "Idol Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An idol lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31214
@@ -10752,7 +10752,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-incomprehensible-riches",
         "name": "Incomprehensible Riches",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Incomprehensible riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28944
@@ -10773,7 +10773,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-king-tibianus-bust",
         "name": "King Tibianus Bust",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A King Tibianus bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27702
@@ -10794,7 +10794,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-clock",
         "name": "Kitchen Clock",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34309
@@ -10815,7 +10815,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-lamp",
         "name": "Kitchen Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34304
@@ -10836,7 +10836,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kitchen-shelf",
         "name": "Kitchen Shelf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kitchen shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34282
@@ -10857,7 +10857,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-candelabra",
         "name": "Knightly Candelabra",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly candelabra to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39498
@@ -10878,7 +10878,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-candle-holder",
         "name": "Knightly Candle Holder",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly candle holder to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39500
@@ -10899,7 +10899,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-fire-bowl",
         "name": "Knightly Fire Bowl",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly fire bowl to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39443
@@ -10920,7 +10920,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-guard",
         "name": "Knightly Guard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This guard stands firm and will defend his post, no matter what.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39508
@@ -10941,7 +10941,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-sword-lamp",
         "name": "Knightly Sword Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly sword lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39496
@@ -10962,7 +10962,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-knightly-wall-lamp",
         "name": "Knightly Wall Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A knightly wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39446
@@ -10983,7 +10983,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-buoy-lamp",
         "name": "Kraken Buoy Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken buoy lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37187
@@ -11004,7 +11004,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-shelf",
         "name": "Kraken Shelf",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken shelf to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37189
@@ -11025,7 +11025,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-tentacle-lamp",
         "name": "Kraken Tentacle Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37520
@@ -11046,7 +11046,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-kraken-watcher-lamp",
         "name": "Kraken Watcher Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A kraken watcher lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37700
@@ -11067,7 +11067,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-life-buoy",
         "name": "Life Buoy",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A life buoy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42305
@@ -11088,7 +11088,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-light-of-change",
         "name": "Light of Change",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A light of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27667
@@ -11109,7 +11109,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-light-parquet",
         "name": "Light Parquet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A light parquet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23712
@@ -11130,7 +11130,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-predator-lamp",
         "name": "Lit Predator Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A lit predator lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23436
@@ -11151,7 +11151,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-protectress-lamp",
         "name": "Lit Protectress Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A lit protectress lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23440
@@ -11172,7 +11172,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lit-skull-lamp",
         "name": "Lit Skull Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A lit skull lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24435
@@ -11193,7 +11193,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-little-big-flower-lamp",
         "name": "Little Big Flower Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A little big flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31697
@@ -11214,7 +11214,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-loose-opulent-floor-intarsia",
         "name": "Loose Opulent Floor Intarsia",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A loose opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42338
@@ -11235,7 +11235,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-lordly-tapestry",
         "name": "Lordly Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A tapestry of lordly caliber.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23448
@@ -11256,7 +11256,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-luminescent-fungi",
         "name": "Luminescent Fungi",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Luminescent fungi to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28922
@@ -11277,7 +11277,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-marble-floor",
         "name": "Marble Floor",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A marble floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23720
@@ -11298,7 +11298,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-menacing-tapestry",
         "name": "Menacing Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The dark side is vigilant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23449
@@ -11319,7 +11319,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-merchant-portrait",
         "name": "Merchant Portrait",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A merchant portrait to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42343
@@ -11340,7 +11340,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-mermaid-figure-head",
         "name": "Mermaid Figure Head",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A mermaid figure head to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31949
@@ -11361,7 +11361,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-metal-wall-lamp",
         "name": "Metal Wall Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A metal wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35161
@@ -11382,7 +11382,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-midnight-panther-rug",
         "name": "Midnight Panther Rug",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A midnight panther rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35895
@@ -11403,7 +11403,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-minotaur-skull",
         "name": "Minotaur Skull",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A minotaur skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31210
@@ -11424,7 +11424,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-model-ship-lamp",
         "name": "Model Ship Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A model ship lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31942
@@ -11445,7 +11445,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-monkey",
         "name": "Monkey",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It is cheerfully swinging back and forth.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31955
@@ -11466,7 +11466,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-moon-carpet",
         "name": "Moon Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A moon carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35898
@@ -11487,7 +11487,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-mystic-carpet",
         "name": "Mystic Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A mystic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26118
@@ -11518,7 +11518,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-natural-pom-pom-carpet",
         "name": "Natural Pom-Pom Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A natural pom-pom carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35891
@@ -11539,7 +11539,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-night-sky-carpet",
         "name": "Night Sky Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A night sky carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24422
@@ -11570,7 +11570,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-octoputz",
         "name": "Octoputz",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Juding by the pinching of his beak, this one seems to be born to joust.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37211
@@ -11591,7 +11591,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-floor-intarsia",
         "name": "Opulent Floor Intarsia",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent floor intarsia to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42339
@@ -11612,7 +11612,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-floor-lamp",
         "name": "Opulent Floor Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent floor lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42348
@@ -11633,7 +11633,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-wooden-floor",
         "name": "Opulent Wooden Floor",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An opulent wooden floor to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42337
@@ -11654,7 +11654,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-opulent-wood-floor-planks",
         "name": "Opulent Wood Floor Planks",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Opulent wood floor planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42336
@@ -11675,18 +11675,18 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-oven",
         "name": "Oven",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An oven to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
-          "itemTypeId": 37272
+          "itemTypeId": 34272
         },
         "subOffers": [
           {
-            "id": "house-item-37272-1",
+            "id": "house-item-34272-1",
             "price": 120,
             "grant": {
               "kind": "house-item",
-              "itemTypeId": 37272,
+              "itemTypeId": 34272,
               "count": 1
             }
           }
@@ -11696,7 +11696,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-owin-rug",
         "name": "Owin Rug",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "An Owin rug to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35893
@@ -11717,7 +11717,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-painting-of-tibiasula",
         "name": "Painting of Tibiasula",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A painting of Tibiasula to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28947
@@ -11738,7 +11738,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pair-of-bellows",
         "name": "Pair of Bellows",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pair of bellows to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35181
@@ -11759,7 +11759,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-parrot",
         "name": "Parrot",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The parrot is flapping its wings and screaks.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24432
@@ -11780,7 +11780,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-rolled-up-opulent-carpet",
         "name": "Rolled-Up Opulent Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A rolled-up opulent carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42340
@@ -11811,7 +11811,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-patterned-carpet",
         "name": "Patterned Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A patterned carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24421
@@ -11842,7 +11842,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pile-of-alchemistic-books",
         "name": "Pile of Alchemistic Books",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pile of alchemistic books to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27687
@@ -11863,7 +11863,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pile-of-riches",
         "name": "Pile of Riches",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pile of riches to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42342
@@ -11884,7 +11884,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pink-roses",
         "name": "Pink Roses",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25218
@@ -11905,7 +11905,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pink-shroom-lamp",
         "name": "Pink Shroom Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pink shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37018
@@ -11926,7 +11926,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-flag",
         "name": "Pirate Flag",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pirate flag to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31945
@@ -11947,7 +11947,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-ship-ballista",
         "name": "Pirate Ship Ballista",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pirate ship ballista to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31933
@@ -11968,7 +11968,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-skeleton-cage",
         "name": "Pirate Skeleton Cage",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pirate skeleton cage to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31947
@@ -11989,7 +11989,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-treasure-chest",
         "name": "Pirate Treasure Chest",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pirate treasure chest to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31936
@@ -12010,7 +12010,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-pirate-treasure-map",
         "name": "Pirate Treasure Map",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A pirate treasure map to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31946
@@ -12031,7 +12031,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-podium-of-renown",
         "name": "Podium of Renown",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A podium of renown to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35973
@@ -12052,7 +12052,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-podium-of-tenacity",
         "name": "Podium of Tenacity",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A podium of tenacity to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42367
@@ -12073,7 +12073,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-portable-aqueduct",
         "name": "Portable Aqueduct",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "This little fellow just keeps on swimming.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35949
@@ -12094,7 +12094,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-purple-flower-lamp",
         "name": "Purple Flower Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A purple flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39795
@@ -12115,7 +12115,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-queen-eloise-bust",
         "name": "Queen Eloise Bust",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Queen Eloise bust to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27695
@@ -12136,7 +12136,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-red-geranium",
         "name": "Red Geranium",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "No lovely balcony would be complete without this plant.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28699
@@ -12157,7 +12157,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-red-roses",
         "name": "Red Roses",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25219
@@ -12178,7 +12178,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-romantic-carpet",
         "name": "Romantic Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A romantic carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35899
@@ -12199,7 +12199,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sabertooth-skull",
         "name": "Sabertooth Skull",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sabertooth skull to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34060
@@ -12220,7 +12220,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sarcophagus",
         "name": "Sarcophagus",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Something inside this hungers to be set free.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31683
@@ -12241,7 +12241,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-scales-wall-lamp",
         "name": "Scales Wall Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A scales wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42345
@@ -12262,7 +12262,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-a-fox",
         "name": "Sculpture of a Fox",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It symbolises the spirit of the fox. A mystic aura surrounds this sculpture.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37811
@@ -12283,7 +12283,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-a-noblewoman",
         "name": "Sculpture of a Noblewoman",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34064
@@ -12304,7 +12304,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sculpture-of-an-octoputz",
         "name": "Sculpture of an Octoputz",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It is still a work in progress.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37205
@@ -12325,7 +12325,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sea-devil-wall-lamp",
         "name": "Sea-devil Wall Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sea-devil wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42300
@@ -12346,7 +12346,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-seafood-bucket",
         "name": "Seafood Bucket",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seafood bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42301
@@ -12367,7 +12367,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-seashell-lamp",
         "name": "Seashell Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A seashell lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42292
@@ -12388,7 +12388,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-shaggy-carpet",
         "name": "Shaggy Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A shaggy carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26116
@@ -12419,7 +12419,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ship-bell",
         "name": "Ship Bell",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ship bell to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42303
@@ -12440,7 +12440,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-ship-s-wheel",
         "name": "Ship's Wheel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A ship's wheel to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31948
@@ -12461,7 +12461,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-small-hearts-lamp",
         "name": "Small Hearts Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A small hearts lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 33030
@@ -12482,7 +12482,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-star-carpet",
         "name": "Star Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A star carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24423
@@ -12513,7 +12513,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stone-tiles",
         "name": "Stone Tiles",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Stone tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26121
@@ -12534,7 +12534,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-striped-carpet",
         "name": "Striped Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A striped carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 24418
@@ -12565,7 +12565,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stuffed-bear-display",
         "name": "Stuffed Bear Display",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A stuffed bear display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28928
@@ -12586,7 +12586,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-stuffed-teddy-display",
         "name": "Stuffed Teddy Display",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A stuffed teddy display to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 28930
@@ -12607,7 +12607,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sulphur-blossom-lamp",
         "name": "Sulphur Blossom Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sulphur blossom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31723
@@ -12628,7 +12628,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-sword-tapestry",
         "name": "Sword Tapestry",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A sword tapestry to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23724
@@ -12649,7 +12649,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tendrils",
         "name": "Tendrils",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Tendrils to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39803
@@ -12670,7 +12670,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tentacle-lamp",
         "name": "Tentacle Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A tentacle lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 42298
@@ -12691,7 +12691,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-terrarium-snake",
         "name": "Terrarium Snake",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A little snake is wiggling in the terrarium.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26171
@@ -12712,7 +12712,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-terrarium-spider",
         "name": "Terrarium Spider",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A spider minding her own business.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26078
@@ -12733,7 +12733,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-tibia-streets-painting",
         "name": "Tibia Streets Painting",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Tibia streets painting to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27699
@@ -12754,7 +12754,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-torch-of-change",
         "name": "Torch of Change",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A torch of change to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 27673
@@ -12775,7 +12775,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-turquoise-flower-lamp",
         "name": "Turquoise Flower Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A turquoise flower lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39793
@@ -12796,7 +12796,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-vegetable-basket",
         "name": "Vegetable Basket",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vegetable basket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34302
@@ -12817,7 +12817,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-vengothic-lamp",
         "name": "Vengothic Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A vengothic lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25210
@@ -12838,7 +12838,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-venorean-table-clock",
         "name": "Venorean Table Clock",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Venorean table clock to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26112
@@ -12859,7 +12859,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-verdant-carpet",
         "name": "Verdant Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A verdant carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26114
@@ -12890,7 +12890,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-violet-round-cushion",
         "name": "Violet Round Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A violet round cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31220
@@ -12911,7 +12911,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-violet-square-cushion",
         "name": "Violet Square Cushion",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A violet square cushion — take a seat and make yourself at home.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31217
@@ -12932,7 +12932,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-basin",
         "name": "Volcanic Basin",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic basin to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36618
@@ -12953,7 +12953,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-bulb",
         "name": "Volcanic Bulb",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic bulb to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36624
@@ -12974,7 +12974,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-mirror",
         "name": "Volcanic Mirror",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic mirror to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36626
@@ -12995,7 +12995,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-volcanic-sphere",
         "name": "Volcanic Sphere",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A volcanic sphere to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 36620
@@ -13016,7 +13016,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-fern",
         "name": "Wall Fern",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Its leaves are fresh and lush.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39800
@@ -13037,7 +13037,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-flowers",
         "name": "Wall Flowers",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The small blossoms are of a deep purple hue.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39799
@@ -13058,7 +13058,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wall-leaves",
         "name": "Wall Leaves",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Wall leaves to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39801
@@ -13079,7 +13079,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wallcupboard",
         "name": "Wallcupboard",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A wallcupboard to furnish your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 34280
@@ -13100,7 +13100,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-water-bucket",
         "name": "Water Bucket",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A water bucket to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 35188
@@ -13121,7 +13121,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-water-nymph",
         "name": "Water Nymph",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Well, you almost see her. At the moment, she is hiding beneath the water surface.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 39805
@@ -13142,7 +13142,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wheat-carpet",
         "name": "Wheat Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A wheat carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26151
@@ -13173,7 +13173,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-white-fur-carpet",
         "name": "White Fur Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A white fur carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23432
@@ -13204,7 +13204,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-white-shark-trophy",
         "name": "White Shark Trophy",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A white shark trophy to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 31951
@@ -13225,7 +13225,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wooden-planks",
         "name": "Wooden Planks",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Wooden planks to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 26123
@@ -13256,7 +13256,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-wooden-sandals",
         "name": "Wooden Sandals",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Wooden sandals to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37801
@@ -13277,7 +13277,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yalaharian-carpet",
         "name": "Yalaharian Carpet",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Yalaharian carpet to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 23431
@@ -13308,7 +13308,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yellow-roses",
         "name": "Yellow Roses",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "The characteristic scent of these roses instantly lifts your spirits.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 25220
@@ -13329,7 +13329,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-yellow-shroom-lamp",
         "name": "Yellow Shroom Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A yellow shroom lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37015
@@ -13350,7 +13350,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-1",
         "name": "Zaoan Bamboo Tiles 1",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37763
@@ -13371,7 +13371,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-2",
         "name": "Zaoan Bamboo Tiles 2",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37764
@@ -13392,7 +13392,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-3",
         "name": "Zaoan Bamboo Tiles 3",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37765
@@ -13413,7 +13413,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-4",
         "name": "Zaoan Bamboo Tiles 4",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37766
@@ -13434,7 +13434,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-5",
         "name": "Zaoan Bamboo Tiles 5",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37767
@@ -13455,7 +13455,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bamboo-tiles-6",
         "name": "Zaoan Bamboo Tiles 6",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan bamboo tiles to lay over the floor of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37768
@@ -13476,7 +13476,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-bonsai",
         "name": "Zaoan Bonsai",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "It looks and feels like a miniature tree.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37798
@@ -13497,7 +13497,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-divider",
         "name": "Zaoan Divider",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan divider to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37815
@@ -13518,7 +13518,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-drawing",
         "name": "Zaoan Drawing",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan drawing to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37800
@@ -13539,7 +13539,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-panel",
         "name": "Zaoan Panel",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan panel to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37776
@@ -13560,7 +13560,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-panel-base",
         "name": "Zaoan Panel Base",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan panel base to adorn a wall of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37775
@@ -13581,7 +13581,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-paravent",
         "name": "Zaoan Paravent",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan paravent to decorate your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37784
@@ -13602,7 +13602,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-pot-bamboo",
         "name": "Zaoan Pot Bamboo",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Bamboo from the Zaoan plains.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37799
@@ -13623,7 +13623,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-wall-lamp",
         "name": "Zaoan Wall Lamp",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "A Zaoan wall lamp to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37806
@@ -13644,7 +13644,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "id": "decorations-zaoan-wall-lamps",
         "name": "Zaoan Wall Lamps",
         "kind": "house-item",
-        "description": "{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
+        "description": "Zaoan wall lamps to light up a room of your house.\n\n{house}\n{box}\n{storeinbox}\n{use}\n{backtoinbox}",
         "icon": {
           "kind": "item",
           "itemTypeId": 37808
@@ -13718,7 +13718,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
     "parentId": "extras",
     "icon": {
       "kind": "symbol",
-      "symbol": "prey"
+      "symbol": "prey-wildcard"
     },
     "products": [
       {
@@ -13728,7 +13728,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "description": "Use Prey Wildcards to reroll the bonus of an active prey, to lock your active prey or to select a prey of your choice.\n\n{character}\n{info} added directly to Prey dialog\n{info} maximum amount that can be owned by character: 50",
         "icon": {
           "kind": "symbol",
-          "symbol": "prey"
+          "symbol": "prey-wildcard"
         },
         "subOffers": [
           {
@@ -13758,7 +13758,7 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
         "description": "Get an additional prey slot to activate additional prey!\n\n{character}\n{info} maximum amount that can be owned by character: 3\n{info} added directly to Prey dialog",
         "icon": {
           "kind": "symbol",
-          "symbol": "prey"
+          "symbol": "prey-slot"
         },
         "subOffers": [
           {

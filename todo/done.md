@@ -5991,3 +5991,56 @@ reaches players once main is pushed and the Fly deploy runs.
   applied to prod 2026-08-31 03:28 UTC via `fly proxy` + `yarn db:migrate`;
   the server build still needs deploying.
 
+
+## 2026-08-30 — Store catalog: real art for service offers, every product described (`agents/store-catalog-polish`)
+
+- **Problem:** audit of all 631 store products (17 categories). Eight
+  service offers and five categories (Premium Time, XP Boost, Character
+  Name/Sex Change, Prey Wildcard, Permanent Prey Slot, Permanent Hunting Task
+  Slot, Temple Teleport) had no image — `StoreProductIcon` drew a Unicode
+  glyph in a box. The Ultimate Mana Keg had an empty description (Canary ships
+  none), and 326 house furniture/decoration products carried only tag lines
+  (`{house}\n{box}…`) with no sentence of their own. Along the way three
+  Canary item-id bugs surfaced: "Oven" delivered 37272 (a confetti cannon;
+  the kitchen oven is 34272), and Colourful/Flowery Carpet pointed at each
+  other's rolled-up kit; plus two name typos ("Ice_Chandelier", "Arrival The
+  Thais Paint").
+- **What changed:** `tools/importOtclientStoreAssets.mjs` now also imports
+  OTClient-mehah's bundled 64×64 store product art (`modules/game_shop/images`,
+  incl. the unnamed CipSoft `ex/` files identified by eye: 00012 prey slot,
+  00045 prey wildcard — Canary's `Prey_Bonus_Reroll` art for that offer —
+  00058 hunting-task slot) into `client/public/assets/store/products/
+  <symbol>.png`; the protocol's symbol enum split `prey` into `prey-wildcard`
+  and `prey-slot`; `StoreProductIcon` renders a symbol as that PNG via
+  `next/image` (pixelated at ≥64px). `tools/importCanaryStoreCatalog.mjs`
+  gained: an `OFFER_OVERRIDES` description for the Ultimate Mana Keg (sibling
+  kegs' text) and renames for the two typos; `HOUSE_ITEM_ID_CORRECTIONS` for
+  the oven and carpets (offer ids follow the corrected item id:
+  `house-item-34272-1`, and the two carpets' offer ids swapped); and
+  `withItemProse`, which gives a tag-only description an opening sentence —
+  the item's in-game description from the pinned item catalog when it has one
+  (47 items: "It depicts the two suns of Tibia…"), otherwise a templated line
+  from the store name and kind (279 items: seats "take a seat…", tables,
+  floor coverings, lights, wall art, furnishings, multi-part pieces naming
+  their part, and anything with `containerCapacity` stating its slot count).
+  Catalog and assets regenerated; regen was a verified no-op beforehand.
+- **Files:** `protocol/src/store.ts`, `tools/importCanaryStoreCatalog.mjs`,
+  `tools/importOtclientStoreAssets.mjs`, `server/src/store/storeCatalogData.ts`
+  (generated), `client/components/store/StoreProductIcon.tsx`,
+  `client/public/assets/store/products/*.png` (8 new),
+  `client/lib/store/storeProductArt.test.ts` (new: every protocol symbol has
+  a PNG), `gitworktree.md`.
+- **Verified:** every item/outfit/mount icon in the catalog resolves in
+  `objects.json`/atlas (script check, 631/631); protocol/server/client
+  typecheck; tools tests (126) + `parity:check`; server store suite (25);
+  client store suites (32 + 8 new); eslint on the icon component;
+  `assertStoreCatalog` booted against the real item catalog with 0 empty and
+  0 tag-only descriptions left; all 279 templated sentences read through by
+  hand; exported PNGs inspected visually.
+- **Residual risk:** the oven correction picks 34272 over the other kitchen
+  oven (34324) — both are `wrapableto` kits, the digit-transposition reading
+  is the likelier intent. Any historical purchase of the old
+  `house-item-37272-1` / swapped-carpet offer ids stays in `store_history`
+  under the old id (nothing is re-delivered). Templated lines are
+  deliberately plain; a hand-written line for any item goes in
+  `OFFER_OVERRIDES`.

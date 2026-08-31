@@ -39,3 +39,4 @@ worktree is created, merged, or removed.
 | `agents/fly-postgres`            | done        |
 | `agents/raid-pz-exclusion`       | done        |
 | `agents/landing-redesign`        | done        |
+| `agents/store-catalog-polish`    | done        |
