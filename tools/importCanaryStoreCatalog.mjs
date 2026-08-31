@@ -68,14 +68,26 @@ const ITEM_ID_CORRECTIONS = [
 ];
 
 /**
+ * House offers whose item id does not match their name in items.xml: "Oven"
+ * names 37272, a confetti cannon (the kitchen oven is 34272 — one digit
+ * off), and the two carpets point at each other's rolled-up kit.
+ */
+const HOUSE_ITEM_ID_CORRECTIONS = [
+  { name: "Oven", from: 37_272, to: 34_272 },
+  { name: "Colourful Carpet", from: 24_417, to: 24_416 },
+  { name: "Flowery Carpet", from: 24_416, to: 24_417 },
+];
+
+/**
  * Deliberate deviations from Canary's catalog, applied by offer name. This
  * server ships Canary's Gold Pouch as the Loot Pouch: a character-bound
  * container with slots that never run out that carried loot flows into (see
  * server/src/item/plan/planItemPouchPlacement.ts). It is renamed here so the
  * generated data matches the item, but it is NOT sold anymore — every
  * character owns one from creation, and storeCatalog.ts filters the product
- * out by its item type id. The description is stored post-`cleanDescription`,
- * already in the store's marker format.
+ * out by its item type id. The Ultimate Mana Keg is the one keg Canary ships
+ * without any description; it gets the sibling kegs' text. Descriptions are
+ * stored post-`cleanDescription`, already in the store's marker format.
  */
 const OFFER_OVERRIDES = [
   {
@@ -84,6 +96,21 @@ const OFFER_OVERRIDES = [
     description:
       "Carries as many items of any kind as your capacity allows — its slots never run out.\n\n{character}\n{once}\n{useicon} use it to open it\n{info} all looted items go straight into it",
   },
+  {
+    // Canary's own typo; the item is an "ice chandelier".
+    name: "Ice_Chandelier",
+    rename: "Ice Chandelier",
+  },
+  {
+    // Canary's own typo; items.xml calls the painting "arrival at Thais".
+    name: "Arrival The Thais Paint",
+    rename: "Arrival at Thais Painting",
+  },
+  {
+    name: "Ultimate Mana Keg",
+    description:
+      "Fill up potions to restore your mana no matter where you are!\n\n{character}\n{vocationlevelcheck}\n{storeinboxicon} potions created from this keg will be sent to your Store inbox and can only be stored there and in depot box\n{info} usable 500 times a piece\n{info} saves capacity because it's constant weight equals only 250 potions",
+  },
 ];
 
 const SYMBOL_BY_KIND = {
@@ -91,8 +118,8 @@ const SYMBOL_BY_KIND = {
   "name-change": "name-change",
   "sex-change": "sex-change",
   "exp-boost": "exp-boost",
-  "prey-slot": "prey",
-  "prey-wildcard": "prey",
+  "prey-slot": "prey-slot",
+  "prey-wildcard": "prey-wildcard",
   "hunting-slot": "hunting",
   "temple-teleport": "temple",
 };
@@ -162,6 +189,135 @@ function cleanDescription(value) {
     .join("\n")
     .trim()
     .slice(0, 2048);
+}
+
+const TAG_ONLY_LINE = /^\{[a-z0-9|]+\}$/i;
+
+/**
+ * Canary ships most house items with tag lines only ("{house}\n{box}…") and
+ * not one sentence of their own. When the pinned item catalog carries the
+ * item's in-game description ("It depicts the two suns of Tibia…"), that
+ * becomes the product's opening line; a house item without even that gets a
+ * templated line from its kind (see `houseItemProse`). Either way the detail
+ * pane reads like the rest of the store instead of a bare column of icons.
+ */
+function withItemProse(description, itemType, { name, kind }) {
+  const hasProse = description
+    .split("\n")
+    .some((line) => line.length > 0 && !TAG_ONLY_LINE.test(line));
+  if (hasProse) return description;
+  const prose =
+    itemType?.description?.trim() ||
+    (kind === "house-item" && itemType ? houseItemProse(name, itemType) : "");
+  if (!prose) return description;
+  const sentence = /[.!?]$/.test(prose) ? prose : `${prose}.`;
+  return description.length > 0 ? `${sentence}\n\n${description}` : sentence;
+}
+
+const HOUSE_ITEM_KINDS = [
+  {
+    test: /\b(chair|stool|bench|hassock|couch|cushion)$/i,
+    line: (subject) => `${subject} — take a seat and make yourself at home.`,
+  },
+  {
+    test: /\b(table|workbench)$/i,
+    line: (subject) => `${subject}, with room for whatever you set on it.`,
+  },
+  {
+    test: /\b(carpet|rug|mat|parquet|floor|tiles|planks|intarsia|grass)(?: \d+)?$/i,
+    primaryType: "floor decorations",
+    line: (subject) => `${subject} to lay over the floor of your house.`,
+  },
+  {
+    test: /\b(lamps?|candelabra|candle holder|chandelier|fire bowl|torch|light)(?: of change)?$/i,
+    primaryType: "light sources",
+    line: (subject) => `${subject} to light up a room of your house.`,
+  },
+  {
+    test: /\b(painting|portrait|drawing|tapestry|flag|panel|panel base)$|^painting of\b/i,
+    line: (subject) => `${subject} to adorn a wall of your house.`,
+  },
+  {
+    test: /\b(cabinet|cupboard|wallcupboard|chest|trunk|shelf|bookcase|book case|bookstand|item stand|spice rack|rack|display|shield|clock|mirror|basin|bulb|sphere)$/i,
+    primaryType: "furniture",
+    line: (subject) => `${subject} to furnish your house.`,
+  },
+];
+
+/** Words a store name keeps capitalised when it is lowered into a sentence. */
+const PROPER_NOUNS = new Set([
+  "Zaoan",
+  "Thais",
+  "Tibia",
+  "Ferumbras",
+  "King",
+  "Tibianus",
+  "Queen",
+  "Eloise",
+  "Tibiasula",
+  "Hrodmir",
+  "Venorean",
+  "Yalaharian",
+  "Owin",
+  "Hortensis",
+]);
+
+/** Store names that read as more than one thing, or as a mass noun. */
+const NO_ARTICLE_HEADS = /(?:[^s]s|fungi|grass)$/i;
+
+/**
+ * One templated sentence for a house item Canary describes with tags alone,
+ * in the voice of the store's other blurbs: the offer's own name lowered into
+ * a sentence (so the furniture set reads naturally — "a ferocious cabinet"),
+ * then what it is for. The store name is used rather than the item's catalog
+ * name because Canary's house offers point at kit variants ("rolled-up azure
+ * carpet") and painting titles ("the streets of Tibia"). Multi-part pieces
+ * name their part, and anything that opens says how many slots it holds —
+ * read from the pinned catalog rather than guessed.
+ */
+function houseItemProse(storeName, itemType) {
+  const part = /^(.*?)\s+(large\s+)?(left|middle|right)$/i.exec(storeName);
+  if (part) {
+    const piece = withArticle(
+      `${part[2] ? "large " : ""}${lowerName(part[1])}`,
+    );
+    return (
+      `The ${part[3].toLowerCase()} part of ${piece}. ` +
+      "Place the parts side by side for the full piece."
+    );
+  }
+  const subject = capitalize(withArticle(lowerName(storeName)));
+  if (itemType.containerCapacity > 0) {
+    return (
+      `${subject}. It opens as a container with ${itemType.containerCapacity} ` +
+      "slots, so it stores your belongings as well as it looks."
+    );
+  }
+  const primaryType = itemType.primaryType ?? "";
+  const kind = HOUSE_ITEM_KINDS.find(
+    (candidate) =>
+      candidate.test.test(storeName) || candidate.primaryType === primaryType,
+  );
+  return kind ? kind.line(subject) : `${subject} to decorate your house.`;
+}
+
+function lowerName(storeName) {
+  return storeName
+    .replace(/\s+\d+$/, "")
+    .split(" ")
+    .map((word) => (PROPER_NOUNS.has(word) ? word : word.toLowerCase()))
+    .join(" ");
+}
+
+function withArticle(name) {
+  // "pair of bellows" is one pair; "wooden sandals" are several.
+  const head = name.includes(" of ") ? name.slice(0, name.indexOf(" of ")) : name;
+  if (NO_ARTICLE_HEADS.test(head)) return name;
+  return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+}
+
+function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function integerOrNull(value) {
@@ -308,7 +464,17 @@ function toGrant(offer, context) {
   }
 
   if (type === "OFFER_TYPE_HOUSE") {
-    const itemTypeId = integerOrNull(offer.itemtype);
+    let itemTypeId = integerOrNull(offer.itemtype);
+    const correction = HOUSE_ITEM_ID_CORRECTIONS.find(
+      (candidate) => candidate.name === offer.name && candidate.from === itemTypeId,
+    );
+    if (correction) {
+      context.corrections.push(
+        `"${offer.name}" named item ${correction.from}; items.xml says ` +
+          `${correction.to}`,
+      );
+      itemTypeId = correction.to;
+    }
     const itemType = itemTypeId === null ? undefined : itemTypes.get(itemTypeId);
     if (!itemType) return { skip: `item ${offer.itemtype} is not in the catalog` };
     const count = integerOrNull(offer.count) ?? 1;
@@ -408,9 +574,13 @@ function importCatalog() {
       const override = OFFER_OVERRIDES.find(
         (candidate) => candidate.name === canaryName,
       );
-      if (override) {
+      if (override?.rename) {
         context.corrections.push(
           `"${canaryName}" sold as "${override.rename}" (deliberate deviation)`,
+        );
+      } else if (override) {
+        context.corrections.push(
+          `"${canaryName}" given a description (Canary ships none)`,
         );
       }
       const name = override?.rename ?? canaryName;
@@ -461,7 +631,14 @@ function importCatalog() {
         name: mapped.kind === "premium" ? "Premium Time" : name,
         kind: mapped.kind,
         description:
-          override?.description ?? cleanDescription(offer.description),
+          override?.description ??
+          withItemProse(
+            cleanDescription(offer.description),
+            "itemTypeId" in mapped.grant
+              ? itemTypes.get(mapped.grant.itemTypeId)
+              : undefined,
+            { name, kind: mapped.kind },
+          ),
         icon: mapped.icon ?? {
           kind: "symbol",
           symbol: SYMBOL_BY_KIND[mapped.kind] ?? "premium",

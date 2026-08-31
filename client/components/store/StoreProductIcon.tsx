@@ -1,22 +1,12 @@
 "use client";
 
 import type { StoreIcon } from "@tibia/protocol";
+import Image from "next/image";
 import { OutfitPortrait } from "../characters/OutfitPortrait";
 import { SpriteIcon } from "../inventory/SpriteIcon";
 
-/** Glyphs for products with no sprite of their own, keyed by the server's symbol. */
-const SYMBOL_GLYPHS: Record<
-  Extract<StoreIcon, { kind: "symbol" }>["symbol"],
-  string
-> = {
-  premium: "♛",
-  "name-change": "✎",
-  "sex-change": "⚥",
-  "exp-boost": "✦",
-  prey: "🜛",
-  hunting: "⚔",
-  temple: "⌂",
-};
+/** The 64px product art under /assets/store/products, keyed by symbol. */
+const PRODUCT_ART_SIZE = 64;
 
 interface StoreProductIconProps {
   icon: StoreIcon;
@@ -25,9 +15,11 @@ interface StoreProductIconProps {
 }
 
 /**
- * Draws a store product from the client's own sprite assets. The server picks
- * *what* to draw — an item sprite, a look type, a mount, or a symbol — so the
- * icon can never disagree with what the purchase delivers.
+ * Draws a store product from the client's own assets. The server picks *what*
+ * to draw — an item sprite, a look type, a mount, or a symbol — so the icon
+ * can never disagree with what the purchase delivers. A symbol names one of
+ * the service offers (Premium Time, XP Boost, name change…) and draws the
+ * official store art imported by tools/importOtclientStoreAssets.mjs.
  */
 export function StoreProductIcon({ icon, size }: StoreProductIconProps) {
   if (icon.kind === "item") {
@@ -67,12 +59,20 @@ export function StoreProductIcon({ icon, size }: StoreProductIconProps) {
   }
 
   return (
-    <span
+    <Image
       aria-hidden
-      className="flex items-center justify-center rounded-lg border border-ui-gold/25 bg-black/35 font-display text-ui-gold"
-      style={{ width: size, height: size, fontSize: size * 0.5 }}
-    >
-      {SYMBOL_GLYPHS[icon.symbol]}
-    </span>
+      alt=""
+      src={`/assets/store/products/${icon.symbol}.png`}
+      width={size}
+      height={size}
+      draggable={false}
+      // Pixel art scales up crisply; shrunk for a category button it reads
+      // better resampled.
+      className={
+        size >= PRODUCT_ART_SIZE
+          ? "block select-none [image-rendering:pixelated]"
+          : "block select-none"
+      }
+    />
   );
 }
