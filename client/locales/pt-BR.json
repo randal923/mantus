@@ -418,7 +418,7 @@
             }
           },
           "imageAlt": "Visão do jogo Mantus no navegador: um monge em um salão de pedra, com a barra de ações, o minimapa e os botões de bot do cliente na tela",
-          "tagline": "Beta em Setembro"
+          "tagline": "Jogue o beta agora"
         }
       },
       "expandImage": "Ver em tamanho maior",
@@ -525,7 +525,14 @@
     },
     "loading": "Carregando seus personagens…",
     "creating": "Criando",
-    "create": "Criar Personagem"
+    "create": "Criar Personagem",
+    "delete": "Excluir Personagem",
+    "deleteTitle": "Excluir Personagem",
+    "deleteWarning": "Tem certeza de que deseja excluir permanentemente o seu personagem?",
+    "deleteIrreversible": "{{name}} será removido para sempre, junto com tudo o que carrega, seu depot, caixa de entrada, stash e ouro no banco. Isso não pode ser desfeito.",
+    "deleteConfirm": "Deletar",
+    "deleteCancel": "Cancelar",
+    "deleting": "Excluindo"
   },
   "vocations": {
     "Knight": {
@@ -1858,6 +1865,12 @@
     "character-namelocked": "Este personagem teve o nome bloqueado. O nome precisa ser alterado antes de entrar no mundo.",
     "character-not-found": "Esse personagem não pertence a esta conta.",
     "character-operation-pending": "Aguarde a conclusão da solicitação de personagem atual.",
+    "character-delete-failed": "Não foi possível excluir esse personagem. Tente novamente.",
+    "character-delete-online": "Esse personagem ainda está no mundo. Desconecte-o primeiro.",
+    "character-delete-guild-leader": "Esse personagem lidera uma guilda. Transfira ou desfaça a guilda primeiro.",
+    "character-delete-house-owner": "Esse personagem possui uma casa. Venda ou deixe a casa primeiro.",
+    "character-delete-house-auction": "Esse personagem tem um lance em leilão de casa. Aguarde o fim do leilão primeiro.",
+    "character-delete-market-offers": "Esse personagem tem ofertas abertas no mercado. Cancele-as primeiro.",
     "invalid-message": "O servidor do jogo rejeitou uma solicitação inválida.",
     "combat-action-failed": "Não foi possível concluir essa ação de combate.",
     "spell-busy": "Você está ocupado com outra ação.",

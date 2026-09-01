@@ -13,7 +13,7 @@ import { Modal } from "../ui/Modal";
 import { CharacterListItem } from "./CharacterListItem";
 import { CreateCharacterForm } from "./CreateCharacterForm";
 
-type CharacterModalView = "select" | "create";
+type CharacterModalView = "select" | "create" | "delete";
 
 interface CharacterSelectModalProps {
   characters: ReadonlyArray<CharacterSummary>;
@@ -23,6 +23,7 @@ interface CharacterSelectModalProps {
   onClose: () => void;
   onSelectCharacter: (characterId: string) => void;
   onCreateCharacter: (input: CreateCharacterInput) => void;
+  onDeleteCharacter: (characterId: string) => void;
   busy?: boolean;
   error?: string | null;
   initialView?: CharacterModalView;
@@ -36,6 +37,7 @@ export function CharacterSelectModal({
   onClose,
   onSelectCharacter,
   onCreateCharacter,
+  onDeleteCharacter,
   busy = false,
   error,
   initialView,
@@ -49,18 +51,35 @@ export function CharacterSelectModal({
   );
 
   const atCapacity = characters.length >= creationOptions.maxCharacters;
+  const selected =
+    characters.find((character) => character.id === selectedId) ?? null;
 
   return (
     <Modal
       title={
         view === "select"
           ? t("characters.selectTitle")
-          : t("characters.createTitle")
+          : view === "delete"
+            ? t("characters.deleteTitle")
+            : t("characters.createTitle")
       }
       onClose={onClose}
       height="auto"
       footer={
-        view === "select" ? (
+        view === "delete" && selected ? (
+          <>
+            <Button disabled={busy} onClick={() => setView("select")}>
+              {t("characters.deleteCancel")}
+            </Button>
+            <Button
+              variant="danger"
+              busy={busy}
+              onClick={() => onDeleteCharacter(selected.id)}
+            >
+              {busy ? t("characters.deleting") : t("characters.deleteConfirm")}
+            </Button>
+          </>
+        ) : view === "select" ? (
           <>
             <Button
               disabled={busy || atCapacity}
@@ -71,17 +90,12 @@ export function CharacterSelectModal({
             </Button>
             <Button
               variant="primary"
-              disabled={busy || !selectedId}
+              busy={busy}
+              disabled={!selectedId}
               onClick={() => {
                 if (selectedId) onSelectCharacter(selectedId);
               }}
             >
-              {busy && (
-                <span
-                  aria-hidden
-                  className="size-3 rotate-45 border border-current border-t-transparent motion-safe:animate-spin"
-                />
-              )}
               {busy ? t("characters.entering") : t("characters.enterWorld")}
             </Button>
           </>
@@ -101,7 +115,37 @@ export function CharacterSelectModal({
             </span>
           )}
         </div>
-        {view === "select" ? (
+        {view === "delete" && selected ? (
+          <div className="flex flex-col gap-4">
+            <CharacterListItem
+              character={selected}
+              selected
+              disabled
+              onSelect={() => undefined}
+              onConfirm={() => undefined}
+            />
+            <p
+              role="alertdialog"
+              aria-live="assertive"
+              className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-3 text-sm text-red-200"
+            >
+              <span className="block font-semibold text-ui-text-bright">
+                {t("characters.deleteWarning")}
+              </span>
+              <span className="mt-1 block">
+                {t("characters.deleteIrreversible", { name: selected.name })}
+              </span>
+            </p>
+            {error && (
+              <p
+                role="alert"
+                className="border-l-2 border-ui-accent bg-ui-accent/10 px-3 py-2 text-sm text-red-200"
+              >
+                {error}
+              </p>
+            )}
+          </div>
+        ) : view === "select" ? (
           <>
             {characters.length === 0 ? (
               <p className="rounded-lg border border-ui-stone-light/15 bg-black/20 px-4 py-8 text-center text-ui-muted">
@@ -117,6 +161,10 @@ export function CharacterSelectModal({
                     disabled={busy}
                     onSelect={() => setSelectedId(character.id)}
                     onConfirm={() => onSelectCharacter(character.id)}
+                    onDelete={() => {
+                      setSelectedId(character.id);
+                      setView("delete");
+                    }}
                   />
                 ))}
               </div>

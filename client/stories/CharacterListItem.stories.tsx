@@ -28,6 +28,7 @@ const meta = {
     selected: false,
     onSelect: fn(),
     onConfirm: fn(),
+    onDelete: fn(),
   },
 } satisfies Meta<typeof CharacterListItem>;
 
@@ -38,6 +39,10 @@ export const Default: Story = {};
 
 export const Selected: Story = {
   args: { selected: true },
+};
+
+export const WithoutDeleteAction: Story = {
+  args: { onDelete: undefined },
 };
 
 export const Disabled: Story = {

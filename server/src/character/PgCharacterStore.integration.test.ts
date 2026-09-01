@@ -93,6 +93,10 @@ databaseDescribe("PgCharacterStore integration", () => {
   beforeEach(async () => {
     await pool.query("DELETE FROM audit_log");
     await pool.query("DELETE FROM items");
+    await pool.query("DELETE FROM bank_accounts");
+    await pool.query("DELETE FROM supply_stash");
+    await pool.query("DELETE FROM houses");
+    await pool.query("DELETE FROM guilds");
     await pool.query("DELETE FROM accounts");
   });
 
@@ -458,6 +462,113 @@ databaseDescribe("PgCharacterStore integration", () => {
       expect.arrayContaining([2854, 3066, 3043, 266]),
     );
     expect(Number(audits.rows[0]?.count)).toBe(items.rowCount);
+  });
+
+  it("deletes a character with its items, gold and audit trail, keeping the account", async () => {
+    const accountId = await createAccount("delete");
+    await service.create(accountId, {
+      displayName: "Keeper",
+      vocation: "Knight",
+      sex: "male",
+    });
+    const roster = await service.create(accountId, {
+      displayName: "Doomed",
+      vocation: "Sorcerer",
+      sex: "female",
+    });
+    const doomed = roster.find((character) => character.name === "Doomed");
+    if (!doomed) throw new Error("character was not created");
+    await pool.query(
+      "INSERT INTO bank_accounts (character_id, balance) VALUES ($1, 500)",
+      [doomed.id],
+    );
+    await pool.query(
+      "INSERT INTO supply_stash (character_id, item_type_id, count) VALUES ($1, 3031, 40)",
+      [doomed.id],
+    );
+    const ownedBefore = await pool.query<{ count: string }>(
+      `WITH RECURSIVE owned AS (
+         SELECT id FROM items WHERE character_id = $1
+         UNION ALL
+         SELECT child.id FROM items child JOIN owned ON child.container_id = owned.id
+       )
+       SELECT count(*)::text AS count FROM owned`,
+      [doomed.id],
+    );
+    const itemCount = Number(ownedBefore.rows[0]?.count);
+    expect(itemCount).toBeGreaterThan(10);
+
+    const remaining = await service.delete(accountId, doomed.id);
+
+    expect(remaining.map((character) => character.name)).toEqual(["Keeper"]);
+    const orphans = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM items
+       WHERE character_id = $1 OR container_id IN (SELECT id FROM items WHERE character_id = $1)`,
+      [doomed.id],
+    );
+    expect(Number(orphans.rows[0]?.count)).toBe(0);
+    const total = await pool.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM items",
+    );
+    const keeperItems = await pool.query<{ count: string }>(
+      `WITH RECURSIVE owned AS (
+         SELECT id FROM items WHERE character_id = (SELECT id FROM characters WHERE display_name = 'Keeper')
+         UNION ALL
+         SELECT child.id FROM items child JOIN owned ON child.container_id = owned.id
+       )
+       SELECT count(*)::text AS count FROM owned`,
+    );
+    expect(total.rows[0]?.count).toBe(keeperItems.rows[0]?.count);
+    const bank = await pool.query("SELECT 1 FROM bank_accounts WHERE character_id = $1", [doomed.id]);
+    expect(bank.rowCount).toBe(0);
+    const audits = await pool.query<{ event_type: string; count: string }>(
+      `SELECT event_type, count(*)::text AS count FROM audit_log
+       WHERE details->>'reason' = 'character-deleted'
+       GROUP BY event_type ORDER BY event_type`,
+    );
+    expect(audits.rows).toEqual([
+      { event_type: "bank-withdraw", count: "1" },
+      { event_type: "item-destroyed", count: String(itemCount + 1) },
+    ]);
+    const account = await pool.query("SELECT 1 FROM accounts WHERE id = $1", [accountId]);
+    expect(account.rowCount).toBe(1);
+  });
+
+  it("refuses to delete a guild leader, a house owner, or another account's character", async () => {
+    const accountId = await createAccount("delete-blocked");
+    const otherAccountId = await createAccount("delete-other");
+    const [hero] = await service.create(accountId, {
+      displayName: "Blocked Hero",
+      vocation: "Paladin",
+      sex: "male",
+    });
+    if (!hero) throw new Error("character was not created");
+
+    await expect(service.delete(otherAccountId, hero.id)).rejects.toMatchObject({
+      code: "not-found",
+    });
+
+    await pool.query(
+      "INSERT INTO guilds (name, owner_character_id) VALUES ('Blockers', $1)",
+      [hero.id],
+    );
+    await expect(service.delete(accountId, hero.id)).rejects.toMatchObject({
+      code: "guild-leader",
+    });
+    await pool.query("DELETE FROM guilds WHERE owner_character_id = $1", [hero.id]);
+
+    await pool.query(
+      `INSERT INTO houses (house_id, owner_character_id, paid_until)
+       VALUES (1, $1, now() + interval '30 days')`,
+      [hero.id],
+    );
+    await expect(service.delete(accountId, hero.id)).rejects.toMatchObject({
+      code: "house-owner",
+    });
+    await pool.query("DELETE FROM houses WHERE owner_character_id = $1", [hero.id]);
+
+    await expect(service.list(accountId)).resolves.toHaveLength(1);
+    await expect(service.delete(accountId, hero.id)).resolves.toHaveLength(0);
   });
 
   it("allows one winner when two characters pick up the same world item", async () => {

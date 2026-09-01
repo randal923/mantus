@@ -8,6 +8,11 @@ import type {
 import { CharacterError } from "./CharacterError";
 import { CharacterService } from "./CharacterService";
 import type { CharacterStore } from "./CharacterStore";
+import { STARTING_LEVEL } from "./startingLevel";
+import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import { getExperienceForLevel } from "../progression/getExperienceForLevel";
+import { getLevelForExperience } from "../progression/getLevelForExperience";
+import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
 
 class MemoryCharacterStore implements CharacterStore {
   private readonly characters = new Map<string, Character>();
@@ -50,6 +55,14 @@ class MemoryCharacterStore implements CharacterStore {
     const character = this.characters.get(characterId);
     if (!character || character.accountId !== accountId) return null;
     return character;
+  }
+
+  async delete(accountId: string, characterId: string): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character || character.accountId !== accountId) {
+      throw new CharacterError("not-found");
+    }
+    this.characters.delete(characterId);
   }
 
   async recordLogin(
@@ -210,6 +223,43 @@ describe("CharacterService", () => {
       enabled: false,
       pickupRules: [{ typeId: 3031 }, { typeId: 3035 }, { typeId: 3043 }],
     });
+  });
+
+  it("deletes an account's own character and returns the remaining roster", async () => {
+    const service = makeService();
+    await service.create("account-a", {
+      displayName: "Alice",
+      vocation: "Knight",
+      sex: "male",
+    });
+    const [, bianca] = await service.create("account-a", {
+      displayName: "Bianca",
+      vocation: "Druid",
+      sex: "female",
+    });
+    if (!bianca) throw new Error("second character missing");
+
+    const remaining = await service.delete("account-a", bianca.id);
+
+    expect(remaining.map((character) => character.name)).toEqual(["Alice"]);
+    await expect(service.findForSelection("account-a", bianca.id)).resolves.toBe(
+      null,
+    );
+  });
+
+  it("refuses to delete another account's character", async () => {
+    const service = makeService();
+    const [alice] = await service.create("account-a", {
+      displayName: "Alice",
+      vocation: "Knight",
+      sex: "male",
+    });
+    if (!alice) throw new Error("character missing");
+
+    await expect(service.delete("account-b", alice.id)).rejects.toMatchObject({
+      code: "not-found",
+    });
+    await expect(service.list("account-a")).resolves.toHaveLength(1);
   });
 
   it("rejects reserved staff names", async () => {

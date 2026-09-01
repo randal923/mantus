@@ -1106,6 +1106,10 @@ export class GameClient {
     return this.send({ type: "select-character", characterId });
   }
 
+  deleteCharacter(characterId: string): boolean {
+    return this.send({ type: "delete-character", characterId });
+  }
+
   updateLanguage(language: Language): boolean {
     return this.send({ type: "set-language", language });
   }

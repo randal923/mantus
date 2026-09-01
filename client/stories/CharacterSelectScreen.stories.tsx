@@ -45,6 +45,7 @@ const meta = {
     error: null,
     onCreate: fn(),
     onSelect: fn(),
+    onDelete: fn(),
     onReconnect: fn(),
     onLogout: fn(),
   },

@@ -223,6 +223,88 @@ describe("view-range broadcast", () => {
     return client;
   };
 
+  it("deletes a character from the select screen and answers with the shrunken roster", async () => {
+    startServer();
+    const raw = await openRaw(server.port);
+    sockets.push(raw.socket);
+    raw.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.Deleter", language: "en" }),
+    );
+    await waitFor(
+      () => raw.messages.some((m) => m.type === "auth-ok"),
+      "auth-ok",
+    );
+    raw.socket.send(
+      JSON.stringify({
+        type: "create-character",
+        name: "Deleter",
+        vocation: "Sorcerer",
+        sex: "female",
+      }),
+    );
+    await waitFor(
+      () =>
+        raw.messages.some(
+          (m) => m.type === "character-list" && m.characters.length === 1,
+        ),
+      "roster with the new character",
+    );
+    const roster = raw.messages.find((m) => m.type === "character-list");
+    if (roster?.type !== "character-list") throw new Error("unreachable");
+    const created = roster.characters[0];
+    if (!created) throw new Error("character was not created");
+
+    raw.socket.send(
+      JSON.stringify({ type: "delete-character", characterId: created.id }),
+    );
+    await waitFor(
+      () =>
+        raw.messages.some(
+          (m) => m.type === "character-list" && m.characters.length === 0,
+        ),
+      "roster without the deleted character",
+    );
+
+    expect(raw.messages.some((m) => m.type === "error")).toBe(false);
+    raw.socket.send(
+      JSON.stringify({ type: "delete-character", characterId: created.id }),
+    );
+    await waitFor(
+      () => sawError(raw.messages, "character-not-found"),
+      "second delete to be refused",
+    );
+  });
+
+  it("refuses to delete a character that is in the world", async () => {
+    startServer();
+    const alice = await join("Alice");
+    alice.socket.send(
+      JSON.stringify({ type: "delete-character", characterId: alice.playerId }),
+    );
+    await waitFor(
+      () => sawError(alice.messages, "already-joined"),
+      "own-session refusal",
+    );
+
+    const other = await openRaw(server.port);
+    sockets.push(other.socket);
+    other.socket.send(
+      JSON.stringify({ type: "auth", token: "tok.Other", language: "en" }),
+    );
+    await waitFor(
+      () => other.messages.some((m) => m.type === "auth-ok"),
+      "auth-ok",
+    );
+    other.socket.send(
+      JSON.stringify({ type: "delete-character", characterId: alice.playerId }),
+    );
+    await waitFor(
+      () => sawError(other.messages, "character-delete-online"),
+      "online refusal",
+    );
+    expect(alice.closed()).toBe(false);
+  });
+
   it("sends the current world light right after the welcome", async () => {
     startServer();
     const alice = await join("Alice");
@@ -1252,14 +1334,17 @@ describe("auth gate", () => {
     expect(second.spawn).toEqual({ x: first.spawn.x + 1, y: first.spawn.y });
     const welcome = second.messages.find((message) => message.type === "welcome");
     if (welcome?.type !== "welcome") throw new Error("missing reconnect welcome");
+    // Level-8 Knight (the starting level): 150 + 15·7 hp, 55 + 5·7 mana,
+    // 400 + 25·7 capacity.
     expect(welcome.character).toMatchObject({
       id: first.playerId,
       direction: "east",
-      health: 150,
-      maxHealth: 150,
-      mana: 55,
-      maxMana: 55,
-      capacity: 400,
+      level: 8,
+      health: 255,
+      maxHealth: 255,
+      mana: 90,
+      maxMana: 90,
+      capacity: 575,
       outfit: {
         lookType: 128,
         head: 78,

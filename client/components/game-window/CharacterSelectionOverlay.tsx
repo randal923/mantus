@@ -58,6 +58,14 @@ export function CharacterSelectionOverlay() {
         }
         setServerError("character-load-failed");
       }}
+      onDelete={(characterId) => {
+        setServerError(null);
+        if (runtime.clientRef.current?.deleteCharacter(characterId)) {
+          setBusy(true);
+          return;
+        }
+        setServerError("character-delete-failed");
+      }}
     />
   );
 }

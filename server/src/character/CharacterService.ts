@@ -21,6 +21,7 @@ import type { CharacterStore } from "./CharacterStore";
 import { getStarterSet } from "../item/getStarterSet";
 import { createInitialSkills } from "../progression/createInitialSkills";
 import { deriveCharacterStats } from "../progression/deriveCharacterStats";
+import { getExperienceForLevel } from "../progression/getExperienceForLevel";
 import { getVocation } from "../progression/getVocation";
 import { PROGRESSION_DEFINITION_VERSION } from "../progression/progressionDefinitionVersion";
 import {
@@ -28,6 +29,7 @@ import {
   type ExperienceRateConfig,
 } from "../progression/projectOwnProgression";
 import { normalizeCharacterName } from "./normalizeCharacterName";
+import { STARTING_LEVEL } from "./startingLevel";
 import { monotonicNow } from "../monotonicNow";
 
 interface StarterPosition extends Position {
@@ -95,7 +97,7 @@ export class CharacterService {
     const stats = deriveCharacterStats({
       vocation: input.vocation,
       definitionVersion: PROGRESSION_DEFINITION_VERSION,
-      level: 1,
+      level: STARTING_LEVEL,
     });
     const character: Character = {
       id: randomUUID(),
@@ -104,8 +106,8 @@ export class CharacterService {
       normalizedName: name.normalizedName,
       vocation: input.vocation,
       sex: input.sex,
-      level: 1,
-      experience: 0n,
+      level: STARTING_LEVEL,
+      experience: getExperienceForLevel(STARTING_LEVEL),
       magicLevel: 0,
       manaSpent: 0n,
       health: stats.maxHealth,
@@ -149,6 +151,14 @@ export class CharacterService {
       MAX_CHARACTERS_PER_ACCOUNT,
       getStarterSet(input.vocation),
     );
+    return this.list(accountId);
+  }
+
+  async delete(
+    accountId: string,
+    characterId: string,
+  ): Promise<PublicCharacterSummary[]> {
+    await this.store.delete(accountId, characterId);
     return this.list(accountId);
   }
 

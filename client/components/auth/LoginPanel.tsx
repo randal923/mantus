@@ -98,14 +98,8 @@ export function LoginPanel({
             type="submit"
             variant="primary"
             className="portal-cta"
-            disabled={busy}
+            busy={busy}
           >
-            {busy && (
-              <span
-                aria-hidden
-                className="size-3 rotate-45 border border-current border-t-transparent motion-safe:animate-spin"
-              />
-            )}
             {busy ? t("auth.entering") : t("auth.signIn")}
           </Button>
           <button

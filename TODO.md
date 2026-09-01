@@ -29,6 +29,26 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Character deletion is immediate and can race a same-account relogin**
+  (2026-08-31). `delete-character` hard-deletes after the client's
+  confirmation; Tibia instead schedules deletion with an undo window. The
+  handler checks "in world / lingering" in the tick, then the DB transaction
+  runs asynchronously; a second login on the same account evicts the
+  deleting session (newest login wins) and could select the character in
+  that window, entering the world on a row the transaction then removes
+  (its saves fail with `version-conflict`; nothing dupes). Fix: a
+  `deletion_scheduled_at` column + sweep (gives the undo window for free)
+  and a `FOR UPDATE` on the character row in the login load path.
+
+- **Rookgaard level-bridge bounce is untestable from a fresh character**
+  (2026-08-31). New characters start at level 8
+  (`server/src/character/startingLevel.ts`), above the level-2 bridge gate in
+  `playtest:rookgaard`, and `/level` only raises a level, so the scenario now
+  only checks the pass-through; the Canary "You need to be at least Level 2"
+  line is still produced by the movement gate but has no e2e assertion.
+  Fix: a GM `/level` that can lower a character (or a playtest-only
+  `experience` override at creation) and restore the bounce step.
+
 - **Map teleport audit: what is still dead after the 2026-08-11 sweep**
   (2026-08-11). Every teleport-type item placement in the OTBM (2,438 tiles)
   was cross-referenced against Canary `a879c931` (`startup/tables/teleport.lua`,

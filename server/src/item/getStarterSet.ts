@@ -4,9 +4,14 @@ import { BOUND_CONTAINER_TYPE_ID } from "./boundContainerTypeId";
 import { ITEM_POUCH_TYPE_ID } from "./itemPouchTypeId";
 import type { StarterSet } from "./StarterSet";
 
+// Canary's mainland level-8 loadout (data/scripts/creaturescripts/player/
+// send_first_items.lua), plus this game's bound container and common
+// supplies. Every vocation weapon is equipped from the start: the wands and
+// rods need level 6, which a level-8 character already meets.
+
 const COMMON_EQUIPMENT = [
-  { typeId: 3355, slot: "helmet" },
-  { typeId: 3552, slot: "boots" },
+  { typeId: 3572, slot: "amulet" }, // scarf
+  { typeId: 3552, slot: "boots" }, // leather boots
   { typeId: 2854, slot: "backpack" },
   { typeId: BOUND_CONTAINER_TYPE_ID, slot: "bound" },
 ] as const;
@@ -17,11 +22,26 @@ const COMMON_BOUND_CONTENTS = [
 ] as const;
 
 const COMMON_SUPPLIES = [
-  { typeId: 3043, count: 5 },
-  { typeId: 266, count: 5 },
-  { typeId: 3577, count: 3 },
-  { typeId: 3003, count: 1 },
-  { typeId: 3457, count: 1 },
+  { typeId: 3043, count: 5 }, // crystal coins
+  { typeId: 266, count: 5 }, // health potions
+  { typeId: 3577, count: 3 }, // meat
+  { typeId: 3003, count: 1 }, // rope
+  { typeId: 3457, count: 1 }, // shovel
+] as const;
+
+const MAGE_EQUIPMENT = [
+  ...COMMON_EQUIPMENT,
+  { typeId: 7992, slot: "helmet" }, // mage hat
+  { typeId: 7991, slot: "armor" }, // magician's robe
+  { typeId: 3362, slot: "legs" }, // studded legs
+  { typeId: 3059, slot: "shield" }, // spellbook
+] as const;
+
+const BRASS_EQUIPMENT = [
+  ...COMMON_EQUIPMENT,
+  { typeId: 3354, slot: "helmet" }, // brass helmet
+  { typeId: 3359, slot: "armor" }, // brass armor
+  { typeId: 3372, slot: "legs" }, // brass legs
 ] as const;
 
 const STARTER_SETS: Readonly<
@@ -29,63 +49,60 @@ const STARTER_SETS: Readonly<
 > = {
   Knight: {
     equipment: [
-      ...COMMON_EQUIPMENT,
-      { typeId: 3361, slot: "armor" },
-      { typeId: 3362, slot: "legs" },
-      { typeId: 3273, slot: "weapon" },
-      { typeId: 3412, slot: "shield" },
+      ...BRASS_EQUIPMENT,
+      { typeId: 7773, slot: "weapon" }, // steel axe
+      { typeId: 3425, slot: "shield" }, // dwarven shield
     ],
-    backpackContents: COMMON_SUPPLIES,
+    backpackContents: [
+      ...COMMON_SUPPLIES,
+      { typeId: 7774, count: 1 }, // jagged sword
+      { typeId: 3327, count: 1 }, // daramian mace
+    ],
   },
   Paladin: {
     equipment: [
       ...COMMON_EQUIPMENT,
-      { typeId: 3361, slot: "armor" },
-      { typeId: 3362, slot: "legs" },
-      { typeId: 3277, slot: "weapon", count: 5 },
-      { typeId: 3412, slot: "shield" },
+      { typeId: 3374, slot: "helmet" }, // legion helmet
+      { typeId: 3571, slot: "armor" }, // ranger's cloak
+      { typeId: 8095, slot: "legs" }, // ranger legs
+      { typeId: 3277, slot: "weapon", count: 5 }, // spears
+      { typeId: 3425, slot: "shield" }, // dwarven shield
     ],
     backpackContents: [
       ...COMMON_SUPPLIES,
-      { typeId: 268, count: 3 },
+      { typeId: 3350, count: 1 }, // bow
+      { typeId: 3447, count: 50 }, // arrows
     ],
   },
   Sorcerer: {
     equipment: [
-      ...COMMON_EQUIPMENT,
-      { typeId: 3562, slot: "armor" },
-      { typeId: 3559, slot: "legs" },
-      { typeId: 3292, slot: "weapon" },
-      { typeId: 3059, slot: "shield" },
+      ...MAGE_EQUIPMENT,
+      { typeId: 3074, slot: "weapon" }, // wand of vortex
     ],
     backpackContents: [
       ...COMMON_SUPPLIES,
-      { typeId: 268, count: 5 },
-      { typeId: 3074, count: 1 },
+      { typeId: 268, count: 10 }, // mana potions
     ],
   },
   Druid: {
     equipment: [
-      ...COMMON_EQUIPMENT,
-      { typeId: 3562, slot: "armor" },
-      { typeId: 3559, slot: "legs" },
-      { typeId: 3293, slot: "weapon" },
-      { typeId: 3059, slot: "shield" },
+      ...MAGE_EQUIPMENT,
+      { typeId: 3066, slot: "weapon" }, // snakebite rod
     ],
     backpackContents: [
       ...COMMON_SUPPLIES,
-      { typeId: 268, count: 5 },
-      { typeId: 3066, count: 1 },
+      { typeId: 268, count: 10 }, // mana potions
     ],
   },
   Monk: {
     equipment: [
-      ...COMMON_EQUIPMENT,
-      { typeId: 50257, slot: "armor" },
-      { typeId: 3362, slot: "legs" },
-      { typeId: 50166, slot: "weapon" },
+      ...BRASS_EQUIPMENT,
+      { typeId: 50171, slot: "weapon" }, // jo staff (two-handed)
     ],
-    backpackContents: COMMON_SUPPLIES,
+    backpackContents: [
+      ...COMMON_SUPPLIES,
+      { typeId: 3425, count: 1 }, // dwarven shield
+    ],
   },
 };
 

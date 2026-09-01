@@ -56,7 +56,7 @@ try {
   if (!gotoReply.ok) throw new Error(`/goto failed: ${gotoReply.text}`);
   ok(gotoReply.text);
 
-  step("using the gate at level 1 (must refuse)");
+  step("using the gate at the starting level (must refuse)");
   const beforeLowLevel = client.mark();
   client.send({ type: "use-map", position: GATE });
   const refusal = await client.waitFor(

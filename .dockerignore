@@ -13,3 +13,7 @@ client/tsconfig.tsbuildinfo
 docs
 map
 *.log
+.env
+**/.env
+**/.env.*
+!**/.env.example

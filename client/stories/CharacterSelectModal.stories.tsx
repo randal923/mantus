@@ -74,6 +74,7 @@ const meta = {
     onClose: fn(),
     onSelectCharacter: fn(),
     onCreateCharacter: fn(),
+    onDeleteCharacter: fn(),
   },
 } satisfies Meta<typeof CharacterSelectModal>;
 
@@ -85,6 +86,19 @@ export const SelectCharacter: Story = {};
 export const CreateCharacter: Story = {
   args: {
     initialView: "create",
+  },
+};
+
+export const DeleteCharacter: Story = {
+  args: {
+    initialView: "delete",
+  },
+};
+
+export const Deleting: Story = {
+  args: {
+    initialView: "delete",
+    busy: true,
   },
 };
 

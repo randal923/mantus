@@ -22,6 +22,7 @@ const makeStore = (
     return null;
   },
   async recordLogin(): Promise<void> {},
+  async delete(): Promise<void> {},
   async updateActionBar(): Promise<void> {},
   async updateActionBot(): Promise<void> {},
   async updateLootFilter(): Promise<void> {},

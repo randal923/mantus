@@ -3,6 +3,7 @@ import {
   DEFAULT_ACTION_BOT_SETTINGS,
   computeWheelBonuses,
   type CreateCharacterMessage,
+  type DeleteCharacterMessage,
   type ListCharactersMessage,
   type SelectCharacterMessage,
   type ServerErrorCode,
@@ -103,6 +104,9 @@ export class CharacterHandler {
       characterId: string,
       now: number,
     ) => CarriedCombatLocks | null = () => null,
+    /** Whether a disconnected character still lingers in the world. */
+    private readonly isLingering: (characterId: string) => boolean = () =>
+      false,
   ) {}
 
   handleList(session: Session, _intent: ListCharactersMessage): void {
@@ -125,6 +129,26 @@ export class CharacterHandler {
     const account = this.beginOperation(session);
     if (!account) return;
     void this.resolveSelection(session, account.id, intent.characterId);
+  }
+
+  handleDelete(session: Session, intent: DeleteCharacterMessage): void {
+    if (session.playerId) {
+      session.sendError("already-joined");
+      return;
+    }
+    const account = this.beginOperation(session);
+    if (!account) return;
+    // A character in the world (or lingering after an in-fight disconnect)
+    // is owned by memory and would be re-persisted over the deletion.
+    if (
+      this.registry.sessionFor(intent.characterId) ||
+      this.isLingering(intent.characterId)
+    ) {
+      session.characterOperationPending = false;
+      session.sendError("character-delete-online");
+      return;
+    }
+    void this.resolveDelete(session, account.id, intent.characterId);
   }
 
   applyResolvedOutcomes(): void {
@@ -187,6 +211,33 @@ export class CharacterHandler {
         cause instanceof CharacterError
           ? this.publicErrorFor(cause)
           : "character-list-failed";
+      this.queueFailure(session, accountId, code, cause);
+    }
+  }
+
+  private async resolveDelete(
+    session: Session,
+    accountId: string,
+    characterId: string,
+  ): Promise<void> {
+    try {
+      const characters = await this.service.delete(accountId, characterId);
+      this.outcomes.push(() => {
+        if (!this.finishOperation(session, accountId)) return;
+        const account = session.account;
+        if (!account) return;
+        session.send({
+          type: "character-list",
+          ...getAccountStatus(account, monotonicNow()),
+          characters,
+          creationOptions: this.service.creationOptions(),
+        });
+      });
+    } catch (cause) {
+      const code =
+        cause instanceof CharacterError
+          ? this.publicDeleteErrorFor(cause)
+          : "character-delete-failed";
       this.queueFailure(session, accountId, code, cause);
     }
   }
@@ -578,6 +629,15 @@ export class CharacterHandler {
       if (!this.finishOperation(session, accountId)) return;
       session.sendError(code);
     });
+  }
+
+  private publicDeleteErrorFor(error: CharacterError): ServerErrorCode {
+    if (error.code === "not-found") return "character-not-found";
+    if (error.code === "guild-leader") return "character-delete-guild-leader";
+    if (error.code === "house-owner") return "character-delete-house-owner";
+    if (error.code === "house-auction") return "character-delete-house-auction";
+    if (error.code === "market-offers") return "character-delete-market-offers";
+    return "character-delete-failed";
   }
 
   private publicErrorFor(error: CharacterError): ServerErrorCode {

@@ -27,6 +27,13 @@ export interface CharacterStore {
     characterId: string,
     loggedInAt: Date,
   ): Promise<void>;
+  /**
+   * Permanently deletes one of the account's characters with everything it
+   * owns. Rejects with `not-found` for another account's character and with
+   * `guild-leader` / `house-owner` / `house-auction` / `market-offers` while
+   * the character still holds something that must be handed over first.
+   */
+  delete(accountId: string, characterId: string): Promise<void>;
   saveSnapshot(snapshot: CharacterSaveSnapshot): Promise<number>;
   updateActionBar(characterId: string, actionBar: ActionBar): Promise<void>;
   updateActionBot(

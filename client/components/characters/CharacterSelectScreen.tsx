@@ -23,6 +23,7 @@ interface CharacterSelectScreenProps {
   loginQueue?: { readonly position: number; readonly total: number } | null;
   onCreate: (input: CreateCharacterInput) => void;
   onSelect: (characterId: string) => void;
+  onDelete: (characterId: string) => void;
   onReconnect: () => void;
   onLogout: () => void | Promise<void>;
 }
@@ -38,6 +39,7 @@ export function CharacterSelectScreen({
   loginQueue = null,
   onCreate,
   onSelect,
+  onDelete,
   onReconnect,
   onLogout,
 }: CharacterSelectScreenProps) {
@@ -96,6 +98,7 @@ export function CharacterSelectScreen({
       onClose={logout}
       onCreateCharacter={onCreate}
       onSelectCharacter={onSelect}
+      onDeleteCharacter={onDelete}
     />
   );
 }

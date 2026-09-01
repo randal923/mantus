@@ -814,6 +814,7 @@ export class GameServer {
       this.cooldownTracker,
       () => this.worldLightCycle.current(),
       (characterId, now) => this.reclaimLingeringPlayer(characterId, now),
+      (characterId) => this.lingering.has(characterId),
     );
     this.language = new LanguageHandler(this.registry, deps.accounts);
     this.uiSettings = new UiSettingsHandler(this.registry, deps.accounts);
@@ -1859,6 +1860,9 @@ export class GameServer {
         return;
       case "select-character":
         this.characters.handleSelect(session, intent);
+        return;
+      case "delete-character":
+        this.characters.handleDelete(session, intent);
         return;
       case "move":
         this.movement.handle(session, intent, now);

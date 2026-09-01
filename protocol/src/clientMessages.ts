@@ -242,6 +242,17 @@ export const selectCharacterMessageSchema = z
   })
   .strict();
 
+/**
+ * Permanently deletes one of the account's own characters; fixed-size, sent
+ * from the character-select screen after an explicit confirmation.
+ */
+export const deleteCharacterMessageSchema = z
+  .object({
+    type: z.literal("delete-character"),
+    characterId: z.string().uuid(),
+  })
+  .strict();
+
 /** Starts or redirects held movement and optionally buffers the pressed step. */
 export const moveMessageSchema = z
   .object({
@@ -710,6 +721,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   listCharactersMessageSchema,
   createCharacterMessageSchema,
   selectCharacterMessageSchema,
+  deleteCharacterMessageSchema,
   pingMessageSchema,
   moveMessageSchema,
   turnMessageSchema,
@@ -907,6 +919,9 @@ export type CreateCharacterMessage = z.infer<
 >;
 export type SelectCharacterMessage = z.infer<
   typeof selectCharacterMessageSchema
+>;
+export type DeleteCharacterMessage = z.infer<
+  typeof deleteCharacterMessageSchema
 >;
 export type MoveMessage = z.infer<typeof moveMessageSchema>;
 export type PingMessage = z.infer<typeof pingMessageSchema>;

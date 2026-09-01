@@ -1,5 +1,6 @@
 import { STARTER_VOCATIONS } from "@tibia/protocol";
 import { beforeAll, describe, expect, it } from "vitest";
+import { STARTING_LEVEL } from "../character/startingLevel";
 import type { ItemCatalog } from "./ItemCatalog";
 import { getStarterSet } from "./getStarterSet";
 import { loadItemCatalog } from "./loadItemCatalog";
@@ -21,8 +22,8 @@ describe("getStarterSet", () => {
 
       expect(slots).toEqual(
         vocation === "Monk"
-          ? new Set(["helmet", "backpack", "armor", "weapon", "legs", "boots", "bound"])
-          : new Set(["helmet", "backpack", "armor", "weapon", "shield", "legs", "boots", "bound"]),
+          ? new Set(["helmet", "amulet", "backpack", "armor", "weapon", "legs", "boots", "bound"])
+          : new Set(["helmet", "amulet", "backpack", "armor", "weapon", "shield", "legs", "boots", "bound"]),
       );
       expect(weapon).toBeDefined();
       expect(starterSet.backpackContents).toEqual(
@@ -39,7 +40,7 @@ describe("getStarterSet", () => {
     expect(weaponIds.size).toBe(STARTER_VOCATIONS.length);
   });
 
-  it("equips only items each level-one vocation can use", () => {
+  it("equips only items each vocation can use at the starting level", () => {
     for (const vocation of STARTER_VOCATIONS) {
       const equipment = getStarterSet(vocation).equipment;
 
@@ -52,7 +53,9 @@ describe("getStarterSet", () => {
           continue;
         }
         expect(itemType.equipmentSlot).toBe(starterItem.slot);
-        expect(itemType.requirements?.level ?? 0).toBeLessThanOrEqual(1);
+        expect(itemType.requirements?.level ?? 0).toBeLessThanOrEqual(
+          STARTING_LEVEL,
+        );
         if (itemType.requirements?.vocations) {
           expect(itemType.requirements.vocations).toContain(vocation);
         }
@@ -63,13 +66,14 @@ describe("getStarterSet", () => {
     }
   });
 
-  it("starts the Monk with a simple jo staff instead of level-ten fists", () => {
+  it("starts the Monk with a two-handed jo staff instead of level-ten fists", () => {
     const starterSet = getStarterSet("Monk");
 
     expect(starterSet.equipment).toContainEqual({
-      typeId: 50166,
+      typeId: 50171,
       slot: "weapon",
     });
+    expect(catalog.require(50171).name).toBe("jo staff");
     expect(starterSet.equipment.some((item) => item.slot === "shield")).toBe(
       false,
     );
@@ -96,13 +100,52 @@ describe("getStarterSet", () => {
     }
   });
 
-  it("keeps vocation wands and rods in the backpack until level requirements are met", () => {
-    expect(getStarterSet("Sorcerer").backpackContents).toContainEqual({
-      typeId: 3074,
-      count: 1,
+  it("equips Canary's mainland vocation weapon from the start", () => {
+    const expected = {
+      Knight: { typeId: 7773, name: "steel axe" },
+      Paladin: { typeId: 3277, name: "spear" },
+      Sorcerer: { typeId: 3074, name: "wand of vortex" },
+      Druid: { typeId: 3066, name: "snakebite rod" },
+      Monk: { typeId: 50171, name: "jo staff" },
+    } as const;
+
+    for (const vocation of STARTER_VOCATIONS) {
+      const weapon = getStarterSet(vocation).equipment.find(
+        (item) => item.slot === "weapon",
+      );
+
+      expect(weapon?.typeId).toBe(expected[vocation].typeId);
+      expect(catalog.require(expected[vocation].typeId).name).toBe(
+        expected[vocation].name,
+      );
+    }
+    expect(getStarterSet("Sorcerer").backpackContents).not.toContainEqual(
+      expect.objectContaining({ typeId: 3074 }),
+    );
+    expect(getStarterSet("Druid").backpackContents).not.toContainEqual(
+      expect.objectContaining({ typeId: 3066 }),
+    );
+  });
+
+  it("gives the mages a spellbook and the melee vocations a dwarven shield", () => {
+    expect(getStarterSet("Sorcerer").equipment).toContainEqual({
+      typeId: 3059,
+      slot: "shield",
     });
-    expect(getStarterSet("Druid").backpackContents).toContainEqual({
-      typeId: 3066,
+    expect(getStarterSet("Druid").equipment).toContainEqual({
+      typeId: 3059,
+      slot: "shield",
+    });
+    expect(getStarterSet("Knight").equipment).toContainEqual({
+      typeId: 3425,
+      slot: "shield",
+    });
+    expect(getStarterSet("Paladin").equipment).toContainEqual({
+      typeId: 3425,
+      slot: "shield",
+    });
+    expect(getStarterSet("Monk").backpackContents).toContainEqual({
+      typeId: 3425,
       count: 1,
     });
   });

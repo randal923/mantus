@@ -141,14 +141,9 @@ export function CreateCharacterForm({
           size="sm"
           type="submit"
           variant="primary"
-          disabled={busy || !vocation || !sex}
+          busy={busy}
+          disabled={!vocation || !sex}
         >
-          {busy && (
-            <span
-              aria-hidden
-              className="size-3 rotate-45 border border-current border-t-transparent motion-safe:animate-spin"
-            />
-          )}
           {busy ? t("characters.creating") : t("characters.create")}
         </Button>
       </div>

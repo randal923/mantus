@@ -20,6 +20,7 @@ import { skullToCode } from "../pvp/skullToCode";
 import { sexToCode } from "./sexToCode";
 import { insertCharacterSkills } from "./insertCharacterSkills";
 import { insertStarterSet } from "./insertStarterSet";
+import { deleteCharacterInTransaction } from "./deleteCharacterInTransaction";
 import { isNormalizedNameConflict } from "./isNormalizedNameConflict";
 import { lockAccount } from "./lockAccount";
 import { parseStorageValues } from "./parseStorageValues";
@@ -151,6 +152,21 @@ export class PgCharacterStore implements CharacterStore {
       if (isNormalizedNameConflict(cause)) {
         throw new CharacterError("name-taken");
       }
+      throw cause;
+    } finally {
+      client.release();
+    }
+  }
+
+  async delete(accountId: string, characterId: string): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await lockAccount(client, accountId);
+      await deleteCharacterInTransaction(client, accountId, characterId);
+      await client.query("COMMIT");
+    } catch (cause) {
+      await client.query("ROLLBACK");
       throw cause;
     } finally {
       client.release();

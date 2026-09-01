@@ -418,7 +418,7 @@
             }
           },
           "imageAlt": "In-game view of Mantus in the browser: a monk stands in a stone temple hall, with the action bar, minimap and the client&aposs bot buttons on screen",
-          "tagline": "Beta in September"
+          "tagline": "Play the beta now"
         }
       },
       "expandImage": "View full size",
@@ -525,7 +525,14 @@
     },
     "loading": "Loading your characters…",
     "creating": "Creating",
-    "create": "Create Character"
+    "create": "Create Character",
+    "delete": "Delete Character",
+    "deleteTitle": "Delete Character",
+    "deleteWarning": "Are you sure you want to permanently delete your character?",
+    "deleteIrreversible": "{{name}} will be removed for good, together with everything they carry, their depot, inbox, stash and bank gold. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel",
+    "deleting": "Deleting"
   },
   "vocations": {
     "Knight": {
@@ -1858,6 +1865,12 @@
     "character-namelocked": "This character is namelocked. Its name must be changed before it can enter the world.",
     "character-not-found": "That character does not belong to this account.",
     "character-operation-pending": "Wait for the current character request to finish.",
+    "character-delete-failed": "That character could not be deleted. Please try again.",
+    "character-delete-online": "That character is still in the world. Log it out first.",
+    "character-delete-guild-leader": "That character leads a guild. Hand over or disband the guild first.",
+    "character-delete-house-owner": "That character owns a house. Sell or leave the house first.",
+    "character-delete-house-auction": "That character holds a house auction bid. Wait for the auction to end first.",
+    "character-delete-market-offers": "That character has open market offers. Cancel them first.",
     "invalid-message": "The game server rejected an invalid request.",
     "combat-action-failed": "That combat action could not be completed.",
     "spell-busy": "You are busy with another action.",

@@ -6154,3 +6154,111 @@ reaches players once main is pushed and the Fly deploy runs.
   `client/locales/{en,pt-BR}.json`, `client/stories/StoreModal.stories.tsx`.
 - **Verified:** typecheck; server store suite (25); client store suites (40);
   eslint; boot assertion incl. the new page-budget check.
+
+## 2026-08-31 — New characters start at level 8 with Canary's mainland loadout (`agents/level-8-start`)
+
+- **Problem:** new characters were created at level 1 with a Rookgaard-style
+  kit (sabre / combat knife / sickle, leather armor) and the vocation wand
+  or rod sat in the backpack because it needs level 6; the DB also carried
+  a dozen pre-rework test characters.
+- **What changed:** `STARTING_LEVEL = 8` (`server/src/character/startingLevel.ts`);
+  `CharacterService.create` stores `level 8`, `experience 4200`
+  (`getExperienceForLevel(8)`, same as Canary's `schema.sql` samples) and
+  full health/mana derived for that level. `getStarterSet` now mirrors
+  Canary `send_first_items.lua` (mainland level-8 kit): mages get mage hat,
+  magician's robe, studded legs, spellbook and an **equipped** wand of vortex
+  / snakebite rod plus 10 mana potions; knight gets brass set, steel axe,
+  dwarven shield with a jagged sword + daramanian mace spare; paladin gets
+  legion helmet, ranger's cloak/legs, spears, dwarven shield, bow + 50 arrows;
+  monk gets brass set, two-handed jo staff and a dwarven shield in the bag.
+  Everyone gets a scarf (amulet), leather boots, backpack, bound container
+  (loot pouch + adventurer's stone) and the existing common supplies.
+  New admin script `yarn db:delete-all-characters [--commit]` wipes every
+  character (items, depot/inbox/stash, bank, market offers, house auctions;
+  houses/guilds cascade) in one SERIALIZABLE transaction, keeps every
+  account, audits `item-destroyed` / `bank-withdraw` /
+  `market-offer-cancelled` rows first, dry-runs (rollback) unless
+  `--commit`, and refuses while anyone is online when `PUBLIC_API_URL` is
+  set.
+- **Deviation from Tibia:** stats are derived from the chosen vocation from
+  level 1 (there is no vocationless Rookgaard phase here), so a fresh level-8
+  knight has 255/90/575 rather than the 185/90/470 a Rookgaard graduate
+  carries; identical to what a level-1-created character reaches at 8.
+- **Files:** `server/src/character/{startingLevel,CharacterService,
+  CharacterService.test}.ts`, `server/src/item/{getStarterSet,
+  getStarterSet.test}.ts`, `server/src/GameServer.test.ts`,
+  `server/src/playtest/scenarios/{rookgaardQuests,gateOfExpertise}.ts`,
+  `server/scripts/deleteAllCharacters.ts`, `server/package.json`.
+- **Verified:** server typecheck; `CharacterService`, `getStarterSet`,
+  `deriveCharacterStats`, `GameServer` suites; full server unit run
+  (4183 passed); wipe script typechecked and dry-run against the dev DB
+  (11 characters / 239 items reported, rolled back).
+- **Residual:** the Rookgaard level-2 bridge bounce line can no longer be
+  asserted from a fresh character (level 8 clears it and `/level` only
+  raises) — recorded under Accepted gaps in `TODO.md`.
+
+## 2026-08-31 — Players can permanently delete a character from the select screen
+
+- **Problem:** there was no way for a player to remove a character; unwanted
+  characters sat in the account's five slots forever.
+- **What changed:** new `delete-character { characterId }` client message
+  (`protocol/src/clientMessages.ts`). `CharacterHandler.handleDelete` refuses
+  while joined (`already-joined`), while the character is in the world or
+  lingering after an in-fight disconnect (`character-delete-online`, via
+  `registry.sessionFor` + a new `isLingering` hook from `GameServer`), and
+  otherwise runs `CharacterService.delete` under the per-session
+  `characterOperationPending` gate, answering with the shrunken
+  `character-list`. `PgCharacterStore.delete` →
+  `deleteCharacterInTransaction`: one transaction that locks the account and
+  the character row (`FOR UPDATE`, scoped to the session's account — never a
+  body-supplied account id), refuses guild leaders / house owners / top
+  house-auction bidders / open market offers (`character-delete-*` errors),
+  audits `item-destroyed` for the whole nested item closure (carried, depot,
+  inbox, trade/market escrow) plus `bank-withdraw` and stash rows with
+  `reason: character-deleted`, deletes the restrict-FK dependants and the
+  character; everything else cascades. Client: a trash icon button on each
+  roster row (`CharacterListItem`, right of the selection marker; the row is
+  now a div with two sibling buttons since buttons cannot nest) opens a
+  confirmation view showing the character and the warning "Are you sure you want to permanently delete
+  your character?" with "Cancel" / "Delete" ("Cancelar" / "Deletar"); en + pt-BR
+  copy for the view and the six new server errors; Storybook
+  `CharacterSelectModal › DeleteCharacter`.
+- **Files:** `protocol/src/{clientMessages,serverMessages}.ts`,
+  `server/src/{CharacterHandler,GameServer}.ts`,
+  `server/src/character/{CharacterError,CharacterStore,CharacterService,
+  PgCharacterStore,deleteCharacterInTransaction}.ts`,
+  `server/src/test/InMemoryCharacterStore.ts`, `client/lib/net/GameClient.ts`,
+  `client/components/characters/{CharacterListItem,CharacterSelectModal,CharacterSelectScreen}.tsx`,
+  `client/components/ui/TrashIcon.tsx`,
+  `client/components/game-window/CharacterSelectionOverlay.tsx`,
+  `client/locales/{en,pt-BR}.json`, `client/stories/CharacterSelect*.stories.tsx`.
+- **Verified:** protocol/server/client typecheck + eslint; new tests —
+  `CharacterService.test` (own delete, cross-account refusal),
+  `GameServer.test` (raw socket create → delete → empty roster → second
+  delete refused; in-world refusal from own and another session),
+  `PgCharacterStore.integration.test` (full closure + bank + stash + audit
+  counts with a sibling character untouched; guild-leader / house-owner /
+  other-account refusals) against embedded Postgres; full server (4187) and
+  client (487) unit runs.
+- **Residual:** no grace period / undo (Tibia schedules deletion); a relogin
+  on the same account evicts the deleting session but the in-flight delete
+  still commits — see Accepted gaps in `TODO.md`.
+
+## 2026-08-31 — Forged-iron loading spinner + `Button busy`
+
+- **Problem:** the "loading icon" on Enter World / Create / Delete / Sign in
+  was a spinning rotated square (`rotate-45 border-t-transparent`), and the
+  busy button was `disabled` so the whole thing faded to 40 %.
+- **What changed:** `client/components/ui/Spinner.tsx` — SVG spinner in
+  `currentColor`: sunken track, bright 255° arc with a fading tail and a
+  glowing ember at its head (0.9 s), plus a slow counter-rotating inner rune
+  ring; unique gradient/filter ids via `useId`; `label` prop for standalone
+  use, otherwise `aria-hidden`. `Button` gains `busy`: renders the spinner
+  before the label, sets `disabled` + `aria-busy`, and swaps the
+  `disabled:opacity-40` fade for `cursor-progress` so the busy plaque stays
+  legible (`buttonStyles.ts` now exports `BUTTON_DISABLED_CLASS` /
+  `BUTTON_BUSY_CLASS`). `CharacterSelectModal`, `CreateCharacterForm` and
+  `LoginPanel` use `busy={busy}` instead of hand-rolled spinners. Stories:
+  `Spinner` (Large / Sizes / InButtons), `CharacterSelectModal › Deleting`.
+- **Verified:** client typecheck + eslint; client unit suite; Storybook built
+  and screenshotted headlessly (spinner sizes, buttons, deleting modal).

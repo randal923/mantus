@@ -75,6 +75,14 @@ export class InMemoryCharacterStore implements CharacterStore {
     return character;
   }
 
+  async delete(accountId: string, characterId: string): Promise<void> {
+    const character = this.characters.get(characterId);
+    if (!character || character.accountId !== accountId) {
+      throw new CharacterError("not-found");
+    }
+    this.characters.delete(characterId);
+  }
+
   async recordLogin(
     accountId: string,
     characterId: string,
