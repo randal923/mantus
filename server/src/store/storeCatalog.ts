@@ -11,6 +11,7 @@ import { ITEM_POUCH_TYPE_ID } from "../item/itemPouchTypeId";
 import { EXERCISE_WEAPON_CATEGORY } from "./EXERCISE_WEAPON_CATEGORY";
 import { PORTABLE_SELLER_PRODUCT } from "./PORTABLE_SELLER_PRODUCT";
 import { STORE_CATALOG_CATEGORIES } from "./storeCatalogData";
+import { TEMPLE_TELEPORT_SCROLL_PRODUCT } from "./TEMPLE_TELEPORT_SCROLL_PRODUCT";
 
 /**
  * The catalog's own icon, which names an item *type*; the projection below
@@ -69,8 +70,7 @@ export type StoreGrant =
         | "sex-change"
         | "exp-boost"
         | "prey-slot"
-        | "hunting-slot"
-        | "temple-teleport";
+        | "hunting-slot";
     };
 
 /**
@@ -119,11 +119,14 @@ export const STORE_CATEGORIES: ReadonlyArray<StoreCatalogCategory> =
     }
     if (category.id === "useful-things") {
       // The loot pouch is no longer sold — every character owns one from
-      // creation — and this is where the Portable Seller shelf lives.
+      // creation — this is where the Portable Seller shelf lives, and the
+      // temple teleport scroll stands in for Canary's instant teleport
+      // service (which the importer leaves out).
       return {
         ...category,
         products: [
           PORTABLE_SELLER_PRODUCT,
+          TEMPLE_TELEPORT_SCROLL_PRODUCT,
           ...category.products.filter(
             (product) => !productSellsItemType(product, ITEM_POUCH_TYPE_ID),
           ),

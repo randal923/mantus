@@ -39,7 +39,4 @@ export interface StoreLiveHooks {
   injectDelivery(characterId: string, item: Item, nowMs: number): void;
   /** Applies a committed sex change to the live creature. */
   applySexChange(characterId: string, sex: CharacterSex, lookType: number): void;
-  /** Canary's temple teleport; refused while the player is fighting. */
-  canTempleTeleport(characterId: string): boolean;
-  templeTeleport(characterId: string): void;
 }

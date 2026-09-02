@@ -6412,3 +6412,59 @@ reaches players once main is pushed and the Fly deploy runs.
   browser-side crash or the silent socket terminate on outbound-buffer
   overflow / missed pong. Fly keeps only a small in-memory log buffer and no
   shipper is configured, so older server output is unrecoverable.
+
+## 2026-09-02 — Temple Teleport is an item: the temple teleport scroll (`agents/temple-teleport-scroll`)
+
+- **Problem:** the store's "Temple Teleport" (Canary's `OFFER_TYPE_TEMPLE`)
+  moved the buyer the instant the purchase committed; nothing was owned or
+  used, and the in-combat check lived only in the store. The player wanted
+  a real item they right-click to use, unusable while in a fight.
+- **What changed:** the offer now delivers Canary's temple teleport scroll
+  (item 25718, one charge) through the ordinary item-delivery path (bound
+  container), as the hand-authored `TEMPLE_TELEPORT_SCROLL_PRODUCT` spliced
+  into useful-things by `storeCatalog.ts` (same product/sub-offer ids as
+  before, so purchase history resolves). Using it (`use-item`; the client's
+  right-click on an `activate` item) runs the new
+  `TempleTeleportScrollService` ahead of the generic item path: it spends
+  the charge via `consumeCharges` and, on commit, teleports to the temple
+  of the character's home town (new `World.townTemple` → `MapData.getTownTemple`,
+  world spawn as fallback) with teleport effects at both ends. In a fight
+  (combat-lock or pz-lock, `isPlayerInFight`) it puffs and says Canary's
+  "You can't use this when you're in a fight." without touching the scroll;
+  the fight state is re-read when the charge write commits. **Deliberate
+  deviation:** Canary allows the scroll inside a protection zone even while
+  in fight; here a fight blocks it everywhere. The `temple-teleport` grant
+  kind, `StorePurchaseEffect`, `StoreLiveHooks.canTempleTeleport/templeTeleport`,
+  the store's `in-combat` failure reason and the client's "Transport" kind
+  label are gone; the importer now skips `OFFER_TYPE_TEMPLE` and
+  `storeCatalogData.ts` was regenerated (identical to the hand edit).
+  Side fix: `overrideMapData` never forwarded `getTownTemples`, so
+  `World.townTemplePositions` (wheel respec temple proximity) had silently
+  fallen back to the spawn temple only; both town lookups are forwarded now.
+- **Files:** `server/src/action/TempleTeleportScrollService.ts` (+test),
+  `server/src/combat/isPlayerInFight.ts`,
+  `server/src/item/templeTeleportScrollTypeId.ts`, `getItemUseKind.ts`,
+  `server/src/store/TEMPLE_TELEPORT_SCROLL_PRODUCT.ts`, `storeCatalog.ts`,
+  `storeCatalogData.ts`, `planStorePurchase.ts`, `PgMantusStore.ts`,
+  `MantusStoreService.ts` (+test), `StoreLiveHooks.ts`,
+  `StorePurchaseEffect.ts`, `delivery/persistStoreDelivery.ts`,
+  `server/src/GameServer.ts`, `World.ts`, `MapData.ts`, `loadMapData.ts`,
+  `gridMapData.ts`, `world/overrideMapData.ts`,
+  `server/src/playtest/scenarios/templeTeleportScroll.ts` (new,
+  `yarn playtest:temple-scroll`), `protocol/src/store.ts`,
+  `client/locales/{en,pt-BR}.json`, `tools/importCanaryStoreCatalog.mjs`,
+  `content/canary-world-action-parity.json` (templeScroll → implemented).
+- **Verified:** 8 new unit tests (spend + teleport, combat-lock and pz-lock
+  refusals keep the scroll, fight-at-commit refusal, one scroll one trip,
+  pending-op and no-free-tile failures); server suite 4207 passed, client
+  496 passed, server/protocol/client typechecks, `yarn parity:check`,
+  tools tests 126, importer regeneration diff-free;
+  `yarn playtest:temple-scroll` PASS against the embedded Postgres: street
+  → home temple (Dawnport Tutorial, town 1) with the scroll consumed; rat
+  fight → refused on the street and inside the Thais temple PZ, scroll kept.
+- **Residual:** the scroll is an ordinary carried item — it can be moved
+  out of the bound container, dropped and traded, though its Canary
+  description says it cannot be traded (TODO.md). A fight that begins in
+  the one DB round trip between the use and the charge commit refuses the
+  teleport but the scroll is already spent (charter rule 4 wins over the
+  refund).

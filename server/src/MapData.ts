@@ -45,6 +45,8 @@ export interface MapData {
   getTownName?(townId: number): string | undefined;
   /** Every town's temple position, for temple-proximity rules (wheel respec). */
   getTownTemples?(): ReadonlyArray<Position>;
+  /** One town's temple position, for home-temple teleports. */
+  getTownTemple?(townId: number): Position | undefined;
   /** House id owning this tile, when the map ships house metadata. */
   getHouseId?(position: Position): number | undefined;
   /** Every tile of one house, for eviction sweeps and occupant checks. */

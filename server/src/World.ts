@@ -88,6 +88,11 @@ export class World {
     return this.map.getTownName?.(townId);
   }
 
+  /** One town's temple; undefined when the map knows no such town. */
+  townTemple(townId: number): Position | undefined {
+    return this.map.getTownTemple?.(townId);
+  }
+
   /** Every town temple; the world spawn stands in when the map has none. */
   get townTemplePositions(): ReadonlyArray<Position> {
     const temples = this.map.getTownTemples?.();

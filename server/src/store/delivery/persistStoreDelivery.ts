@@ -58,7 +58,6 @@ export async function persistStoreDelivery(
 ): Promise<void> {
   if (
     grant.kind === "premium" ||
-    grant.kind === "temple-teleport" ||
     grant.kind === "name-change" ||
     grant.kind === "sex-change"
   ) {

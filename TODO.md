@@ -29,6 +29,20 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Temple teleport scroll is tradeable** (2026-09-02). Item 25718 is
+  delivered into the bound container like any store item but is not a
+  bound type, so it can be moved out, dropped, deposited and traded; its
+  Canary description promises "This item cannot be traded" (Canary marks
+  store deliveries with the store-item attribute). Fix: a store-origin flag
+  on delivered items honoured by `planTradeReservation` and the market, or
+  a per-type no-trade set checked in the same places as `isBoundLockedItem`.
+- **Temple scroll spent when a fight starts mid-write** (2026-09-02).
+  `TempleTeleportScrollService` re-checks the fight state when the charge
+  write commits; if a fight began in that round trip the teleport is
+  refused but the charge is already gone. Accepted: the window is one DB
+  round trip and the alternative is teleporting a fighting player. Fix if
+  it ever matters: fold the fight check into the `consumeCharges` store
+  operation and roll the charge back.
 - **`yarn playtest:weapons` flaked in 2 of 4 runs** (2026-09-01, while
   verifying the no-ammunition target fix). Run 1: `bow-no-ammo-keeps-target`
   saw the target dropped with one `error` right after selection, which never

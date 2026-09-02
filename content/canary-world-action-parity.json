@@ -3409,9 +3409,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
+   "status": "implemented",
    "owner": "todo-13 Feature 51",
-   "reason": "item-use effect not yet reproduced"
+   "reason": "TempleTeleportScrollService spends the scroll and teleports to the home temple; refused while in a fight everywhere, including protection zones (Canary exempts PZ tiles)"
   },
   {
    "sourcePath": "data-otservbr-global/scripts/actions/other/thais_exhibition.lua",

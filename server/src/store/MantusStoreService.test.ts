@@ -52,8 +52,6 @@ function hooksWith(overrides: Partial<StoreLiveHooks> = {}): StoreLiveHooks {
     applyXpBoost: vi.fn(),
     injectDelivery: vi.fn(),
     applySexChange: vi.fn(),
-    canTempleTeleport: () => true,
-    templeTeleport: vi.fn(),
     ...overrides,
   };
 }
@@ -350,29 +348,6 @@ describe("MantusStoreService", () => {
     expect(sent).toEqual([
       { type: "store-action-failed", reason: "name-required" },
     ]);
-  });
-
-  it("refuses a temple teleport in combat without charging", () => {
-    const { world } = makeWorld();
-    const sent: ServerMessage[] = [];
-    const session = makeSession(sent);
-    const purchase = vi.fn<MantusStoreStore["purchase"]>();
-    const service = new MantusStoreService(
-      world,
-      registryFor(session),
-      itemCatalog,
-      storeWith(purchase),
-      hooksWith({ canTempleTeleport: () => false }),
-    );
-
-    service.handle(
-      session,
-      { type: "store-purchase", offerId: "temple-teleport" },
-      0,
-    );
-
-    expect(purchase).not.toHaveBeenCalled();
-    expect(sent).toEqual([{ type: "store-action-failed", reason: "in-combat" }]);
   });
 
   it("greys out a mount the character already owns", () => {
