@@ -6412,3 +6412,32 @@ reaches players once main is pushed and the Fly deploy runs.
   browser-side crash or the silent socket terminate on outbound-buffer
   overflow / missed pong. Fly keeps only a small in-memory log buffer and no
   shipper is configured, so older server output is unrecoverable.
+
+## 2026-09-02 — Auto-loot sweep e2e suite (`agents/autoloot-e2e`)
+
+- **Problem:** players report auto-loot "not picking up items". A code read
+  found no defect in the sweep itself, so the question became which real
+  situations make it take nothing — and whether any of them is a bug.
+- **What changed:** new `server/src/playtest/scenarios/autoLootSweep.ts`
+  (`yarn playtest:autoloot`, `AUTOLOOT_SCENARIOS=cap,two` runs a subset):
+  real server, real kills over the wire, drops forced by a ×50 loot rate and
+  zero rarity chances. Twelve scenarios: melee baseline (drops land in the
+  Loot Pouch, corpse emptied), filter disabled, unlisted type stays, edit sent
+  in the same breath as the kill, two edits back to back, relog persistence +
+  DB rows under the pouch, one-tick AoE (exori on five rats) + persist burst,
+  grade-narrowed rules against common drops, sudden-death kill from three
+  tiles, weight-cap skip, most-damage vs last-hit duo, and a monster whose
+  corpse cannot hold loot.
+- **Verified:** 19/20 checks pass on the embedded Postgres; the one failure
+  is a real bug (second of two rapid `update-loot-filter` intents refused with
+  `loot-filter-update-pending`, the stale list governs the next sweep).
+  Confirmed by measurement and recorded in TODO.md: ranged kills never
+  sweep (Canary: any reachable corpse), the last hitter owns the corpse
+  (Canary: most damage), water elementals and 21 other types drop nothing
+  because their corpse is not a container, capacity skips are silent. Static
+  audit of the loot tables: 38 unresolvable entries (newer items), 147 tables
+  longer than their corpse capacity.
+- **Residual:** no fix applied on this branch — the reach rule and the
+  ownership rule are design calls, the double-edit coalescing is a small
+  server change; all four are itemised in TODO.md with a recommended fix.
+
