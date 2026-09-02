@@ -39,6 +39,8 @@ interface EquipmentPaperdollProps {
   onDrop?(slot: EquipmentSlotId): void;
   onDropInBackpack?(): void;
   onOpenBackpack?(): void;
+  /** Opens a container dressing a gear slot (a quiver); Canary's use action. */
+  onOpenContainer?(item: NonNullable<Equipment[EquipmentSlotId]>): void;
   onOpenBound?(): void;
   /** Whether the bound-items container is the window currently in view. */
   boundOpen?: boolean;
@@ -59,6 +61,7 @@ export function EquipmentPaperdoll({
   onDrop,
   onDropInBackpack,
   onOpenBackpack,
+  onOpenContainer,
   onOpenBound,
   boundOpen = false,
 }: EquipmentPaperdollProps) {
@@ -124,7 +127,9 @@ export function EquipmentPaperdoll({
                     key={slot}
                     item={equipment[slot]}
                     mirrorOf={
-                      slot === "shield" && equipment.weapon?.twoHanded
+                      slot === "shield" &&
+                      equipment.weapon?.twoHanded &&
+                      !equipment.weapon.distanceWeapon
                         ? equipment.weapon
                         : undefined
                     }
@@ -132,9 +137,12 @@ export function EquipmentPaperdoll({
                     onActivate={
                       slot === "backpack" && equipment.backpack
                         ? onOpenBackpack
-                        : equipment[slot] && onUnequip
-                        ? () => onUnequip(equipment[slot]!, slot)
-                        : undefined
+                        : equipment[slot]?.useKind === "container" &&
+                            onOpenContainer
+                          ? () => onOpenContainer(equipment[slot]!)
+                          : equipment[slot] && onUnequip
+                            ? () => onUnequip(equipment[slot]!, slot)
+                            : undefined
                     }
                     onDragStart={
                       slot !== "backpack" && equipment[slot] && onDragStart

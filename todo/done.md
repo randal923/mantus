@@ -6262,3 +6262,61 @@ reaches players once main is pushed and the Fly deploy runs.
   `Spinner` (Large / Sizes / InButtons), `CharacterSelectModal › Deleting`.
 - **Verified:** client typecheck + eslint; client unit suite; Storybook built
   and screenshotted headlessly (spinner sizes, buttons, deleting modal).
+
+## 2026-09-01 — Quivers: equip in the shield hand, feed the bow, +1 ML
+
+- **Problem:** players could not equip any quiver. Canary flags quivers
+  `slotType="right-hand"` and the catalog builder never mapped that to an
+  equipment slot, so every quiver shipped without `equipmentSlot` and
+  `planEquip` refused every slot. Even with a slot, the two-handed rule would
+  have blocked a bow next to it, auto-attack only drew ammunition from the
+  arrow slot, and the client had no way to open an equipped quiver or drop
+  arrows onto it (a drop on a gear slot always meant "equip").
+- **What changed (Canary parity, player.cpp CONST_SLOT_RIGHT/LEFT,
+  getQuiverAmmoOfType, container.cpp ONLYAMMOINQUIVER):**
+  `tools/buildItemCatalog.mjs` maps `right-hand` → `shield` (catalog +
+  wiki catalog regenerated, manifest hash re-pinned). `isQuiverType`
+  (`primaryType === "quivers"`). `planEquip`/`planPickup`/`PgItemGuards`
+  let a distance weapon share hands with a quiver and nothing else two-handed
+  (`lockConflictingShieldQuery` now returns the shield-hand type id).
+  `playerAttackPlan` reads the arrow slot first, then
+  `findQuiverAmmunition` (lowest slot of matching ammo inside the shield-hand
+  quiver) via `ItemIntentHandler.quiverAmmunition`; consumption goes through
+  the existing combat consume. `containerAcceptsItemType` refuses anything
+  but ammunition inside a quiver in `planMoveToContainer`/`planUnequip`/
+  `planPickup`/`planLoot`. Wire: `distanceWeapon` and `quiver` presentation
+  flags. Client: `validateItemOp` mirrors the hand rule; the paperdoll no
+  longer mirrors a bow into the shield hand; right-click on an equipped
+  container opens it in a floating `CarriedContainerPanel` docked beside the
+  inventory (loot-window column) instead of unequipping; ammunition dropped
+  on the quiver slot moves into it (`quiverDropDestination`: merge stack →
+  first free → front when unopened) for owned, equipped, loot and map
+  sources. The +1 magic level of the alicorn quiver needed no code: equipment
+  `magicLevelPoints` already feed `playerMagicLevel`/`equipmentBonuses`.
+- **Files:** `tools/buildItemCatalog.mjs`, `content/source-manifest.json`,
+  `server/data/item-catalog.json`, `client/public/assets/wiki-items.json`,
+  `protocol/src/item.ts`, `server/src/item/{isQuiverType,projectItem,
+  ItemIntentHandler,PgItemGuards,PgEquipmentOps,PgWorldItemOps}.ts`,
+  `server/src/item/sql/lockConflictingShieldQuery.ts`,
+  `server/src/item/plan/{planEquip,planPickup,planMoveToContainer,planUnequip,
+  planLoot,containerAcceptsItemType}.ts`,
+  `server/src/combat/{playerAttackPlan,findQuiverAmmunition}.ts`,
+  `server/src/playtest/scenarios/quiverEquip.ts` (`yarn playtest:quivers`),
+  `client/lib/inventory/{validateItemOp,quiverDropDestination}.ts`,
+  `client/components/inventory/{EquipmentPaperdoll,InventoryContainerView,
+  InventoryPanel,CarriedContainerPanel}.tsx`,
+  `client/components/game-window/GameInventoryOverlays.tsx`.
+- **Verified:** typecheck + eslint; unit tests `planEquip` (6 new),
+  `findQuiverAmmunition`, `containerAcceptsItemType`, `validateItemOp`
+  (4 new), `quiverDropDestination`; full server (4198) and client (496)
+  runs; `yarn playtest:quivers` against embedded Postgres: 15/17 pass —
+  level/vocation gates, weapon-hand refusal, shield-hand equip, open + hold
+  arrows, non-ammo refused, bow beside quiver, real shield refused beside
+  bow, relog keeps loadout, bow shoots and consumes from the quiver, halberd
+  refused beside quiver, alicorn +1 in `equipmentBonuses`/`boostedMagicLevel`.
+- **Residual:** the two exura heal-band checks in the scenario fail because
+  observed heals sit above the raw formula at both ML 0 and ML 1 — under
+  investigation, see Accepted gaps in `TODO.md`. Arrow slot still wins over
+  the quiver when both hold matching ammo (Canary reads only the quiver).
+  The DB persist lane does not re-check the ammo-only quiver rule (memory
+  plan is authoritative).

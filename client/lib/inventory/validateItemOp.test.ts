@@ -54,6 +54,16 @@ const TWO_HANDER = makeItem("00000000-0000-4000-8000-000000000003", {
 const SHIELD = makeItem("00000000-0000-4000-8000-000000000004", {
   equipmentSlot: "shield",
 });
+const BOW = makeItem("00000000-0000-4000-8000-000000000021", {
+  equipmentSlot: "weapon",
+  twoHanded: true,
+  distanceWeapon: true,
+});
+const QUIVER = makeItem("00000000-0000-4000-8000-000000000022", {
+  equipmentSlot: "shield",
+  quiver: true,
+  containerCapacity: 6,
+});
 const HELMET = makeItem("00000000-0000-4000-8000-000000000005", {
   equipmentSlot: "helmet",
 });
@@ -182,6 +192,58 @@ describe("validateItemOp", () => {
       validateItemOp(
         { kind: "equip", itemId: TWO_HANDER.id, slot: "weapon" },
         makeState({ equipment: { backpack: BACKPACK, shield: SHIELD } }),
+        KNIGHT,
+      ),
+    ).toBe("two-handed-conflict");
+  });
+
+  it("lets a quiver join an equipped bow", () => {
+    expect(
+      validateItemOp(
+        { kind: "equip", itemId: QUIVER.id, slot: "shield" },
+        makeState({
+          equipment: { backpack: BACKPACK, weapon: BOW },
+          items: [{ slot: 0, item: QUIVER }],
+        }),
+        KNIGHT,
+      ),
+    ).toBeNull();
+  });
+
+  it("lets a bow join an equipped quiver", () => {
+    expect(
+      validateItemOp(
+        { kind: "equip", itemId: BOW.id, slot: "weapon" },
+        makeState({
+          equipment: { backpack: BACKPACK, shield: QUIVER },
+          items: [{ slot: 0, item: BOW }],
+        }),
+        KNIGHT,
+      ),
+    ).toBeNull();
+  });
+
+  it("still rejects a quiver beside a two-handed melee weapon", () => {
+    expect(
+      validateItemOp(
+        { kind: "equip", itemId: QUIVER.id, slot: "shield" },
+        makeState({
+          equipment: { backpack: BACKPACK, weapon: TWO_HANDER },
+          items: [{ slot: 0, item: QUIVER }],
+        }),
+        KNIGHT,
+      ),
+    ).toBe("shield-conflict");
+  });
+
+  it("still rejects a bow beside a real shield", () => {
+    expect(
+      validateItemOp(
+        { kind: "equip", itemId: BOW.id, slot: "weapon" },
+        makeState({
+          equipment: { backpack: BACKPACK, shield: SHIELD },
+          items: [{ slot: 0, item: BOW }],
+        }),
         KNIGHT,
       ),
     ).toBe("two-handed-conflict");

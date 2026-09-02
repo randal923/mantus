@@ -29,6 +29,20 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Exura heals land above the raw formula band** (2026-09-01).
+  `yarn playtest:quivers` casts exura at level 400 to prove the alicorn
+  quiver's +1 magic level reaches combat: expected 88..91 (ML 0) and
+  89..92 (ML 1), observed 91..95 and 90..95. The panel bonus is correct; the
+  heal roll path (`SpellCaster` → `DamageResolver.normalInteger`) shows no
+  modifier for a fresh Paladin. Open question whether the formula reads a
+  different level/ML than the panel. Fix: probe heals at ML 0 vs ML 20 to
+  see whether ML shifts them, then correct either the plumbing or the
+  scenario's bounds. The two scenario checks stay failing until then.
+- **Arrow slot outranks the quiver** (2026-09-01). `playerAttackPlan` reads
+  the arrow slot first and the quiver second; Canary reads only the quiver.
+  Kept so existing arrow-slot play keeps working. Fix: drop the arrow-slot
+  read once the client stops offering arrows the arrow slot.
+
 - **Character deletion is immediate and can race a same-account relogin**
   (2026-08-31). `delete-character` hard-deletes after the client's
   confirmation; Tibia instead schedules deletion with an undo window. The

@@ -146,6 +146,10 @@ const APPEARANCE_ONLY_CORPSES = {
 function equipmentSlot(semantics) {
   if (semantics.weaponType === "shield") return "shield";
   if (semantics.weaponType === "ammunition") return "ammo";
+  // Canary's SLOTP_RIGHT items without a weapon type are the quivers; they
+  // dress the shield hand (player.cpp CONST_SLOT_RIGHT accepts shields and
+  // quivers only).
+  if (semantics.slotType === "right-hand") return "shield";
   const mapped = EQUIPMENT_SLOT_BY_SOURCE[semantics.equipmentSlot];
   if (mapped) return mapped;
   if (semantics.weaponType) return "weapon";

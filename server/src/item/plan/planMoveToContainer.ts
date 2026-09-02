@@ -5,6 +5,7 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { BOUND_ITEM_TYPE_IDS } from "../boundItemTypeIds";
 import { canMergeItems } from "./canMergeItems";
+import { containerAcceptsItemType } from "./containerAcceptsItemType";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
 import { findBoundRoot } from "./findBoundRoot";
 import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
@@ -55,9 +56,10 @@ export function planMoveToContainer(input: {
     }
   }
   const type = catalog.require(item.typeId);
-  const destinationCapacity =
-    catalog.require(destination.typeId).containerCapacity ?? 0;
+  const destinationType = catalog.require(destination.typeId);
+  const destinationCapacity = destinationType.containerCapacity ?? 0;
   if (destinationCapacity < 1) return null;
+  if (!containerAcceptsItemType(destinationType, type)) return null;
   if (
     !Number.isInteger(destinationSlot) ||
     destinationSlot < 0 ||

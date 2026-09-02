@@ -99,7 +99,7 @@ export class PgEquipmentOps {
         characterId,
         row.id,
         slot,
-        type.slotType,
+        type,
       );
       const updated = await client.query<ItemRow>(equipItemUpdate, [
         characterId,

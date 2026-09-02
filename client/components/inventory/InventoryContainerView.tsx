@@ -45,6 +45,8 @@ interface InventoryContainerViewProps {
   onUsePotion?: (item: InventoryItem) => void;
   onUseItemWith?: (item: InventoryItem) => void;
   onOpenContainer?: (item: InventoryItem) => void;
+  /** Opens a container dressing a gear slot (the quiver) in its own window. */
+  onOpenEquippedContainer?: (item: InventoryItem) => void;
   onCloseContainer?: (containerId: string) => void;
   onUseItem?: (item: InventoryItem) => void;
   onDragStart?: (source: ItemDragSource) => void;
@@ -73,6 +75,7 @@ export function InventoryContainerView({
   onUsePotion,
   onUseItemWith,
   onOpenContainer,
+  onOpenEquippedContainer,
   onCloseContainer,
   onUseItem,
   onDragStart,
@@ -210,6 +213,7 @@ export function InventoryContainerView({
         onDrop={onDropInEquipment}
         onDropInBackpack={dropInEquippedBackpack}
         onOpenBackpack={openEquippedBackpack}
+        onOpenContainer={onOpenEquippedContainer}
         onOpenBound={openBoundContainer}
         boundOpen={boundRootInView}
       />

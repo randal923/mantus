@@ -16,6 +16,7 @@ import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
 import { planItemPouchPlacement } from "./planItemPouchPlacement";
 import { subtreeHeight } from "./subtreeHeight";
 import type { WorldItemsView } from "./WorldItemsView";
+import { containerAcceptsItemType } from "./containerAcceptsItemType";
 
 const MAX_CARRIED_ITEMS = 500;
 
@@ -82,8 +83,10 @@ export function planLoot(input: {
     ) {
       return null;
     }
-    const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
+    const containerType = catalog.require(container.typeId);
+    const capacity = containerType.containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (!containerAcceptsItemType(containerType, type)) return null;
     // Loot may be aimed at the pouch inside the bound container, never at the
     // bound container itself — its direct children are character-bound.
     if (

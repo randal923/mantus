@@ -112,7 +112,7 @@ export class PgWorldItemOps {
           characterId,
           row.id,
           equipSlot,
-          type.slotType,
+          type,
         );
         const before = itemFromRow(row);
         const transformedTypeId = type.transformEquipTo ?? row.item_type_id;

@@ -8,8 +8,10 @@ import type {
 import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemLocation } from "../ItemLocation";
+import { isQuiverType } from "../isQuiverType";
 import { appendUnpersistedLootInserts } from "./appendUnpersistedLootInserts";
 import { canMergeItems } from "./canMergeItems";
+import { containerAcceptsItemType } from "./containerAcceptsItemType";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerAncestryChain } from "./containerAncestryChain";
 import { planBackpackPlacement } from "./planBackpackPlacement";
@@ -108,24 +110,35 @@ export function planPickup(input: {
     ) {
       return null;
     }
+    // Same hand rules as planEquip: a distance weapon may share hands with a
+    // quiver, nothing else two-handed may.
+    const shieldHand = carried.items.find(
+      (item) =>
+        item.location.kind === "equipment" &&
+        item.location.slot === "shield",
+    );
     if (
       type.slotType === "two-handed" &&
-      carried.items.some(
-        (item) =>
-          item.location.kind === "equipment" &&
-          item.location.slot === "shield",
+      shieldHand &&
+      !(
+        type.weaponType === "distance" &&
+        isQuiverType(catalog.require(shieldHand.typeId))
       )
     ) {
       return null;
     }
+    const weaponHand = carried.items.find(
+      (item) =>
+        item.location.kind === "equipment" &&
+        item.location.slot === "weapon",
+    );
+    const weaponHandType = weaponHand
+      ? catalog.require(weaponHand.typeId)
+      : undefined;
     if (
       input.equipSlot === "shield" &&
-      carried.items.some(
-        (item) =>
-          item.location.kind === "equipment" &&
-          item.location.slot === "weapon" &&
-          catalog.require(item.typeId).slotType === "two-handed",
-      )
+      weaponHandType?.slotType === "two-handed" &&
+      !(isQuiverType(type) && weaponHandType.weaponType === "distance")
     ) {
       return null;
     }
@@ -144,8 +157,10 @@ export function planPickup(input: {
     ) {
       return null;
     }
-    const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
+    const containerType = catalog.require(container.typeId);
+    const capacity = containerType.containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (!containerAcceptsItemType(containerType, type)) return null;
     // Ground pickups may aim at containers inside the bound container (the
     // pouch), never at the bound container itself.
     if (

@@ -29,6 +29,7 @@ import { isNear } from "./isNear";
 import { itemDisplayRarityOf } from "./itemDisplayRarityOf";
 import { lootFilterTakes } from "./lootFilterTakes";
 import type { Item } from "./Item";
+import { findQuiverAmmunition } from "../combat/findQuiverAmmunition";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemIntent } from "./ItemIntent";
 import type { ItemMutation } from "./ItemMutation";
@@ -332,6 +333,16 @@ export class ItemIntentHandler {
 
   itemTypesByName(query: string): ReadonlyArray<ItemType> {
     return this.catalog.searchByName(query);
+  }
+
+  /** Matching ammunition inside the equipped quiver, if any. */
+  quiverAmmunition(
+    characterId: string,
+    ammoType: string,
+  ): { item: Item; type: ItemType } | null {
+    const cache = this.inventories.get(characterId);
+    if (!cache) return null;
+    return findQuiverAmmunition(cache.items, this.catalog, ammoType);
   }
 
   combatItem(

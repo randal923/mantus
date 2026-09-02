@@ -6,6 +6,7 @@ import type { Item } from "../Item";
 import type { ItemCatalog } from "../ItemCatalog";
 import type { ItemLocation } from "../ItemLocation";
 import type { CarriedPlan } from "./CarriedPlan";
+import { containerAcceptsItemType } from "./containerAcceptsItemType";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
 import { firstFreeContainerSlot } from "./firstFreeContainerSlot";
 import { planContainerFrontInsertion } from "./planContainerFrontInsertion";
@@ -45,8 +46,10 @@ export function planUnequip(input: {
     ) {
       return null;
     }
-    const capacity = catalog.require(container.typeId).containerCapacity ?? 0;
+    const containerType = catalog.require(container.typeId);
+    const capacity = containerType.containerCapacity ?? 0;
     if (input.destination.slot >= capacity) return null;
+    if (!containerAcceptsItemType(containerType, type)) return null;
     if (
       container.location.kind === "equipment" &&
       container.location.slot === "bound"

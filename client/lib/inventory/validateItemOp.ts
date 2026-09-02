@@ -118,10 +118,18 @@ export function validateItemOp(
     ) {
       return "wrong-vocation";
     }
-    if (item.twoHanded && inventory.equipment.shield) {
+    // A bow or crossbow shares hands with a quiver; every other two-handed
+    // pairing needs the off-hand free.
+    const shield = inventory.equipment.shield;
+    if (item.twoHanded && shield && !(item.distanceWeapon && shield.quiver)) {
       return "two-handed-conflict";
     }
-    if (op.slot === "shield" && inventory.equipment.weapon?.twoHanded) {
+    const weapon = inventory.equipment.weapon;
+    if (
+      op.slot === "shield" &&
+      weapon?.twoHanded &&
+      !(item.quiver && weapon.distanceWeapon)
+    ) {
       return "shield-conflict";
     }
     return null;

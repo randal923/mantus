@@ -130,6 +130,10 @@ export const inventoryItemPresentationSchema = z
     maxCount: z.number().int().min(1).max(100),
     equipmentSlot: equipmentSlotSchema.optional(),
     twoHanded: z.boolean().optional(),
+    /** Bow/crossbow: two-handed, yet shares hands with a quiver. */
+    distanceWeapon: z.boolean().optional(),
+    /** Quiver container dressing the shield hand next to a distance weapon. */
+    quiver: z.boolean().optional(),
     containerCapacity: z
       .number()
       .int()

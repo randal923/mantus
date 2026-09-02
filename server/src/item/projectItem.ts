@@ -5,6 +5,7 @@ import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import { getItemUseKind } from "./getItemUseKind";
+import { isQuiverType } from "./isQuiverType";
 import { toItemTooltip } from "./toItemTooltip";
 
 export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
@@ -35,6 +36,8 @@ export function projectItem(item: Item, catalog: ItemCatalog): InventoryItem {
     revision: item.version,
     ...(type.equipmentSlot ? { equipmentSlot: type.equipmentSlot } : {}),
     ...(type.slotType === "two-handed" ? { twoHanded: true } : {}),
+    ...(type.weaponType === "distance" ? { distanceWeapon: true } : {}),
+    ...(isQuiverType(type) ? { quiver: true } : {}),
     ...(type.containerCapacity !== undefined
       ? { containerCapacity: type.containerCapacity }
       : {}),

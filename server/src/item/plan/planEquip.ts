@@ -6,6 +6,7 @@ import type { ItemCatalog } from "../ItemCatalog";
 import type { CarriedPlan } from "./CarriedPlan";
 import { containerPlacementAllowed } from "./containerPlacementAllowed";
 import { isBoundLockedItem } from "./isBoundLockedItem";
+import { isQuiverType } from "../isQuiverType";
 
 export function planEquip(input: {
   readonly characterId: string;
@@ -38,6 +39,9 @@ export function planEquip(input: {
   }
   const transformedTypeId = type.transformEquipTo ?? item.typeId;
   if (!catalog.get(transformedTypeId)) return null;
+  // Canary CONST_SLOT_RIGHT/LEFT: two hands must be free for a two-handed
+  // item, except a distance weapon paired with a quiver (player.cpp:4552,
+  // 4594).
   if (type.slotType === "two-handed") {
     const shield = items.find(
       (candidate) =>
@@ -45,7 +49,15 @@ export function planEquip(input: {
         candidate.location.slot === "shield" &&
         candidate.id !== item.id,
     );
-    if (shield) return null;
+    if (
+      shield &&
+      !(
+        type.weaponType === "distance" &&
+        isQuiverType(catalog.require(shield.typeId))
+      )
+    ) {
+      return null;
+    }
   }
   if (slot === "shield") {
     const weapon = items.find(
@@ -54,7 +66,11 @@ export function planEquip(input: {
         candidate.location.slot === "weapon" &&
         candidate.id !== item.id,
     );
-    if (weapon && catalog.require(weapon.typeId).slotType === "two-handed") {
+    const weaponType = weapon ? catalog.require(weapon.typeId) : undefined;
+    if (
+      weaponType?.slotType === "two-handed" &&
+      !(isQuiverType(type) && weaponType.weaponType === "distance")
+    ) {
       return null;
     }
   }

@@ -144,13 +144,16 @@ export function playerAttackPlan(
   let missileId = distance ? missileForItem(weapon?.type) : undefined;
   let consume: PlayerAttackPlan["consume"];
   if (distance && weapon?.type.ammoType) {
-    const ammunition = equipment.find(
-      (entry) =>
-        entry.item.location.kind === "equipment" &&
-        entry.item.location.slot === "ammo" &&
-        entry.type.weaponType === "ammunition" &&
-        entry.type.ammoType === weapon.type.ammoType,
-    );
+    // The arrow slot first, then the quiver in the shield hand (Canary reads
+    // only the quiver; the arrow slot stays usable here).
+    const ammunition =
+      equipment.find(
+        (entry) =>
+          entry.item.location.kind === "equipment" &&
+          entry.item.location.slot === "ammo" &&
+          entry.type.weaponType === "ammunition" &&
+          entry.type.ammoType === weapon.type.ammoType,
+      ) ?? items.quiverAmmunition(player.id, weapon.type.ammoType);
     if (!ammunition || !meetsItemRequirements(player, ammunition.type)) {
       return null;
     }

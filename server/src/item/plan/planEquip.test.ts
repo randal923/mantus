@@ -42,6 +42,8 @@ const GATED_SWORD = 101;
 const TWO_HANDER = 102;
 const SHIELD = 103;
 const BACKPACK = 104;
+const BOW = 105;
+const QUIVER = 106;
 const CARRIED_CONTAINER_ID = "44444444-4444-4444-8444-444444444444";
 
 const catalog = new ItemCatalog([
@@ -58,6 +60,20 @@ const catalog = new ItemCatalog([
   }),
   makeItemType({ id: SHIELD, equipmentSlot: "shield" }),
   makeItemType({ id: BACKPACK, equipmentSlot: "backpack", containerCapacity: 20 }),
+  makeItemType({
+    id: BOW,
+    equipmentSlot: "weapon",
+    slotType: "two-handed",
+    weaponType: "distance",
+    ammoType: "arrow",
+  }),
+  makeItemType({
+    id: QUIVER,
+    equipmentSlot: "shield",
+    slotType: "right-hand",
+    primaryType: "quivers",
+    containerCapacity: 6,
+  }),
 ]);
 
 const carried = (typeId: number, slot = 0): Item => ({
@@ -150,6 +166,109 @@ describe("planEquip", () => {
       itemId: shield.id,
       expectedVersion: 1,
       slot: "shield",
+    });
+    expect(plan).toBeNull();
+  });
+
+  it("equips a quiver into the shield hand beside a bow", () => {
+    const quiver = carried(QUIVER);
+    const bow = equipped(BOW, "weapon");
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [quiver, bow, sourceContainer],
+      level: 50,
+      vocation: "Paladin",
+      itemId: quiver.id,
+      expectedVersion: 1,
+      slot: "shield",
+    });
+    expect(plan?.mutation.after[0]?.location).toEqual({
+      kind: "equipment",
+      characterId: CHARACTER_ID,
+      slot: "shield",
+    });
+  });
+
+  it("equips a bow while a quiver dresses the shield hand", () => {
+    const bow = carried(BOW);
+    const quiver = equipped(QUIVER, "shield");
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [bow, quiver, sourceContainer],
+      level: 50,
+      vocation: "Paladin",
+      itemId: bow.id,
+      expectedVersion: 1,
+      slot: "weapon",
+    });
+    expect(plan?.mutation.after[0]?.location).toEqual({
+      kind: "equipment",
+      characterId: CHARACTER_ID,
+      slot: "weapon",
+    });
+  });
+
+  it("rejects a quiver beside a two-handed melee weapon", () => {
+    const quiver = carried(QUIVER);
+    const weapon = equipped(TWO_HANDER, "weapon");
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [quiver, weapon, sourceContainer],
+      level: 50,
+      vocation: "Knight",
+      itemId: quiver.id,
+      expectedVersion: 1,
+      slot: "shield",
+    });
+    expect(plan).toBeNull();
+  });
+
+  it("rejects a two-handed melee weapon beside a quiver", () => {
+    const weapon = carried(TWO_HANDER);
+    const quiver = equipped(QUIVER, "shield");
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [weapon, quiver, sourceContainer],
+      level: 50,
+      vocation: "Knight",
+      itemId: weapon.id,
+      expectedVersion: 1,
+      slot: "weapon",
+    });
+    expect(plan).toBeNull();
+  });
+
+  it("rejects a bow beside a real shield", () => {
+    const bow = carried(BOW);
+    const shield = equipped(SHIELD, "shield");
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [bow, shield, sourceContainer],
+      level: 50,
+      vocation: "Paladin",
+      itemId: bow.id,
+      expectedVersion: 1,
+      slot: "weapon",
+    });
+    expect(plan).toBeNull();
+  });
+
+  it("rejects a quiver in the weapon hand", () => {
+    const quiver = carried(QUIVER);
+    const plan = planEquip({
+      characterId: CHARACTER_ID,
+      catalog,
+      items: [quiver, sourceContainer],
+      level: 50,
+      vocation: "Paladin",
+      itemId: quiver.id,
+      expectedVersion: 1,
+      slot: "weapon",
     });
     expect(plan).toBeNull();
   });

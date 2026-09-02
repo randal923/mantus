@@ -2,6 +2,8 @@ import type { EquipmentSlot } from "@tibia/protocol";
 import type { PoolClient } from "pg";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { ItemRow } from "./ItemRow";
+import type { ItemType } from "./ItemType";
+import { isQuiverType } from "./isQuiverType";
 import { containerAncestryQuery } from "./sql/containerAncestryQuery";
 import { containerDescendantDepthQuery } from "./sql/containerDescendantDepthQuery";
 import { itemContentsQuery } from "./sql/itemContentsQuery";
@@ -37,14 +39,22 @@ export class PgItemGuards {
     characterId: string,
     itemId: string,
     slot: EquipmentSlot,
-    slotType?: string,
+    type: ItemType,
   ): Promise<void> {
-    if (slotType === "two-handed") {
-      const shield = await client.query(lockConflictingShieldQuery, [
-        characterId,
-        itemId,
-      ]);
-      if (shield.rowCount) {
+    // Mirrors planEquip: both hands free for a two-handed item, except a
+    // distance weapon sharing hands with a quiver (Canary player.cpp:4552).
+    if (type.slotType === "two-handed") {
+      const shield = await client.query<{ item_type_id: number }>(
+        lockConflictingShieldQuery,
+        [characterId, itemId],
+      );
+      const shieldType = shield.rows[0]
+        ? this.catalog.require(shield.rows[0].item_type_id)
+        : undefined;
+      if (
+        shieldType &&
+        !(type.weaponType === "distance" && isQuiverType(shieldType))
+      ) {
         throw new Error("two-handed weapon conflicts with shield");
       }
     }
@@ -53,10 +63,12 @@ export class PgItemGuards {
         lockConflictingWeaponQuery,
         [characterId, itemId],
       );
+      const weaponType = weapon.rows[0]
+        ? this.catalog.require(weapon.rows[0].item_type_id)
+        : undefined;
       if (
-        weapon.rows[0] &&
-        this.catalog.require(weapon.rows[0].item_type_id).slotType ===
-          "two-handed"
+        weaponType?.slotType === "two-handed" &&
+        !(isQuiverType(type) && weaponType.weaponType === "distance")
       ) {
         throw new Error("shield conflicts with two-handed weapon");
       }
