@@ -2610,6 +2610,59 @@ describe("Combat", () => {
     ).toBe(true);
   });
 
+  it("keeps the target when a bow has no ammunition so spells can still be aimed", async () => {
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(40, "Paladin", 5),
+      inventory: [
+        ownedItem(WEAPON_ID, 3349, {
+          kind: "equipment",
+          characterId: PLAYER_ID,
+          slot: "weapon",
+        }),
+      ],
+    });
+    const monster = makeMonster(
+      "monster-instance:no-ammo-target:0",
+      { x: 3, y: 1, z: 7 },
+      makeMonsterType({ health: 200, maxHealth: 200 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.selectTarget(harness.session, monster.id, 1_000);
+    harness.combat.tick(1_000);
+    harness.combat.tick(3_000);
+
+    // Canary Player::doAttacking: a distance weapon with nothing to shoot
+    // stands and waits, it neither drops the target nor punches.
+    expect(harness.session.attackTargetId).toBe(monster.id);
+    expect(monster.health).toBe(monster.maxHealth);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "attack-target-changed" &&
+          message.creatureId === null,
+      ),
+    ).toBe(false);
+    expect(
+      harness.sent.some(
+        (message) =>
+          message.type === "error" && message.code === "combat-action-failed",
+      ),
+    ).toBe(false);
+
+    harness.combat.castSpell(
+      harness.session,
+      {
+        type: "cast-spell",
+        spellId: "exori-san",
+        target: { kind: "creature", creatureId: monster.id },
+      },
+      3_000,
+    );
+    expect(monster.health).toBeLessThan(monster.maxHealth);
+    expect(harness.session.attackTargetId).toBe(monster.id);
+  });
+
   it("uses wand mana and server formulas without consuming the weapon", async () => {
     const harness = await makeHarness({
       character: makeLeveledCharacter(8, "Sorcerer", 1),

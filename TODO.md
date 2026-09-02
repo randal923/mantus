@@ -29,6 +29,17 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **`yarn playtest:weapons` flaked in 2 of 4 runs** (2026-09-01, while
+  verifying the no-ammunition target fix). Run 1: `bow-no-ammo-keeps-target`
+  saw the target dropped with one `error` right after selection, which never
+  recurred in three later runs (and the unit test proves the no-ammo path
+  keeps the target); run 3: the playtest server refused connections
+  (`ECONNREFUSED 127.0.0.1:4123`) between the knight and paladin phases,
+  before any distance code ran. Neither reproduced with `PLAYTEST_LOG=1`.
+  `melee-kill-experience` fails in every run (rotworm reports 2400 xp, the
+  check expects 40) and predates this work. Fix: rerun the scenario with
+  server logs a few times to catch the crash, and print the error code in
+  every target check so a repeat of run 1 is diagnosable.
 - **Exura heals land above the raw formula band** (2026-09-01).
   `yarn playtest:quivers` casts exura at level 400 to prove the alicorn
   quiver's +1 magic level reaches combat: expected 88..91 (ML 0) and

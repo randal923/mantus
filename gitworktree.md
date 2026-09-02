@@ -44,3 +44,4 @@ worktree is created, merged, or removed.
 | `agents/store-pt-br`             | done        |
 | `agents/store-premium-copy`      | done        |
 | `agents/store-row-description`   | done        |
+| `agents/paladin-no-ammo-target` | in progress |
