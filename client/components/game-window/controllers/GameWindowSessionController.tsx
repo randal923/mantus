@@ -89,20 +89,21 @@ export function GameWindowSessionController() {
   const sendDepotAction = useCallback(
     (action: DepotAction, state: DepotStateMessage): boolean => {
       const client = store.getState().runtime.clientRef.current;
+      // The depot window lists items inside containers the client has not
+      // opened (the loot pouch, a bag in the backpack); those are absent from
+      // the confirmed inventory, so the depot's own listing stands in. Its
+      // revision is fresh as of the last depot state; a drifted one comes
+      // back as "stale" with a refresh.
       if (action.kind === "deposit") {
-        const item = getConfirmedItem(action.item.id);
-        return item
-          ? (client?.depositInDepot(state, item) ?? false)
-          : false;
+        const item = getConfirmedItem(action.item.id) ?? action.item;
+        return client?.depositInDepot(state, item) ?? false;
       }
       if (action.kind === "withdraw") {
         return client?.withdrawFromDepot(state, action.entry) ?? false;
       }
       if (action.kind === "stash-deposit") {
-        const item = getConfirmedItem(action.item.id);
-        return item
-          ? (client?.depositInStash(state, item, action.count) ?? false)
-          : false;
+        const item = getConfirmedItem(action.item.id) ?? action.item;
+        return client?.depositInStash(state, item, action.count) ?? false;
       }
       return (
         client?.withdrawFromStash(
