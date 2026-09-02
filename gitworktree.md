@@ -45,3 +45,4 @@ worktree is created, merged, or removed.
 | `agents/store-premium-copy`      | done        |
 | `agents/store-row-description`   | done        |
 | `agents/paladin-no-ammo-target` | done        |
+| `agents/depot-closed-container-deposit` | done        |

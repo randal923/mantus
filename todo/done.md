@@ -6381,3 +6381,34 @@ reaches players once main is pushed and the Fly deploy runs.
   `bow-no-ammo-keeps-target` and `bow-ammo-resumes-attack` (arrows equipped
   mid-fight kill the still-selected target) pass; the pre-existing
   `melee-kill-experience` failure (rotworm reports 2400 xp) is unrelated.
+
+## 2026-09-01 — Depot "Store" for items in closed containers
+
+- **Problem:** a player reported being unable to put potions into the depot
+  ("não consigo colocar items no dp"). The depot window lists every carried
+  item, including the contents of containers the client has not opened (the
+  loot pouch after a hunt, a bag inside the backpack), but the deposit path
+  in `GameWindowSessionController.tsx` looked the item up with
+  `getConfirmedItem`, which only sees equipment, the backpack grid, and open
+  containers. For anything else the lookup missed, no `depot-deposit` intent
+  was sent, and the modal showed "The depot could not complete that action."
+  every time. The server never heard about it, which is why the prod logs
+  were empty for the session.
+- **What changed:** `client/components/game-window/controllers/GameWindowSessionController.tsx`
+  — deposit and stash-deposit fall back to the depot state's own carried
+  entry when the confirmed lookup misses (same `InventoryItem` shape, id +
+  revision fresh as of the last depot state; a drifted revision comes back
+  as "stale" with a refresh). New browser e2e
+  `client/e2e/depotClosedContainerDeposit.e2e.test.tsx`: real GameWindow
+  against the real server, potions moved over the wire into the closed loot
+  pouch / a closed bag, depot opened by right-click, "Store" clicked; plus an
+  open-backpack control.
+- **Verified:** the e2e file failed 2/3 before the fix (alert shown, zero
+  deposit intents sent, no server failure) and passes 3/3 after; client
+  eslint + typecheck; client unit suite. Run from `client/` with
+  `PLAYTEST_ADMIN_URL=<local pg admin url> yarn vitest run --project e2e e2e/depotClosedContainerDeposit.e2e.test.tsx`.
+- **Residual:** the "crashou tudo" part of the same report is unexplained —
+  no server log line and no machine restart at the time; candidates are a
+  browser-side crash or the silent socket terminate on outbound-buffer
+  overflow / missed pong. Fly keeps only a small in-memory log buffer and no
+  shipper is configured, so older server output is unrecoverable.
