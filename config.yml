@@ -189,8 +189,10 @@ creatures:
     # Chase leash around the spawn point; spawn radius bounds idle wandering.
     despawnRadius: 50
     # One whole ±12 chase search box (25 x 25 = 625 tiles, see
-    # chaseSearchDistance.ts) with slack for the unboxed walk-home search, so
-    # any target a monster can see is reachable whenever a path exists.
+    # chaseSearchDistance.ts), so any target a monster can see is reachable
+    # whenever a path exists. The walk home after a lure is a guided (A*)
+    # search that keeps a partial path when this runs out, so it covers the
+    # whole despawn radius in legs rather than needing a bigger budget.
     maxPathNodes: 640
     wanderChance: 0.2
     seed: 1296125524

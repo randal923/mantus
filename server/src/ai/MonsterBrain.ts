@@ -14,12 +14,24 @@ import type { MoveResult, World } from "../World";
 
 const DIRECTIONS: Direction[] = ["north", "east", "south", "west"];
 
+/**
+ * How long a monster may walk home without ever getting closer before it is
+ * put back at its spawn. Canary never walks a monster home at all and
+ * teleports one that leaves its spawn range (`Monster::onThink`,
+ * monster.cpp:1622); this is the same safety net for a walk that cannot
+ * succeed — a long wall between the lure and home that no single search
+ * budget can round.
+ */
+const RETURN_HOME_STALL_MS = 30_000;
+
 export class MonsterBrain {
   private nextThinkAt: number;
   private randomState: number;
   private targetId: string | null = null;
   private cachedGoal = "";
   private cachedPath: Direction[] = [];
+  /** Whether the cached path ends at its goal rather than part-way there. */
+  private cachedPathComplete = false;
   private readonly nextAbilityAt = new Map<MonsterAbility, number>();
   private readonly nextSummonAt = new Map<MonsterSummon, number>();
   private nextVoiceAt: number | null;
@@ -29,6 +41,9 @@ export class MonsterBrain {
   /** Temporary melee pull from chivalrous challenge (Canary targetDistance). */
   private meleePullUntil = 0;
   private meleePullDistance = 0;
+  /** Closest the walk home has come, and when it last got closer. */
+  private returnBestDistance = Number.POSITIVE_INFINITY;
+  private returnProgressAt = 0;
   private brainState:
     | "idle"
     | "wander"
@@ -57,6 +72,8 @@ export class MonsterBrain {
         now: number,
       ) => boolean;
       speak?: (monster: Monster, text: string, yell: boolean) => void;
+      /** Put the monster back at its spawn; false when no tile there is free. */
+      returnHome?: (monster: Monster) => boolean;
     },
   ) {
     this.randomState = this.seedFor(seed, monster.id);
@@ -182,6 +199,7 @@ export class MonsterBrain {
       : 0;
     work += summons;
     if (target) {
+      this.returnBestDistance = Number.POSITIVE_INFINITY;
       const attacks = this.useAbilities(
         this.monster.type.attacks,
         target,
@@ -231,7 +249,7 @@ export class MonsterBrain {
         availableWork - work,
         // Canary parity: chasing searches a ±12 box around the monster, so
         // everything inside its view range is reachable if a path exists.
-        CHASE_SEARCH_DISTANCE,
+        { searchDistance: CHASE_SEARCH_DISTANCE },
       );
       work += result.work;
       return { work, movement: result.movement };
@@ -246,38 +264,80 @@ export class MonsterBrain {
       (homeDistance > 0 && this.random() < 0.25)
     ) {
       this.brainState = "return-home";
+      // Progress is measured in steps, not the chase range: a straight leg
+      // of the walk that shortens only one axis is still progress.
+      const stepsHome =
+        Math.abs(this.monster.position.x - this.monster.home.x) +
+        Math.abs(this.monster.position.y - this.monster.home.y);
+      if (stepsHome < this.returnBestDistance) {
+        this.returnBestDistance = stepsHome;
+        this.returnProgressAt = now;
+      }
+      if (now - this.returnProgressAt >= RETURN_HOME_STALL_MS) {
+        this.returnProgressAt = now;
+        if (this.services?.returnHome?.(this.monster)) {
+          this.clearPath();
+          this.returnBestDistance = Number.POSITIVE_INFINITY;
+          this.brainState = "idle";
+          return { work, movement: null };
+        }
+      }
       const result = this.moveToward(
         world,
         this.monster.home,
         0,
         now,
         availableWork - work,
+        // A lured monster may be the whole despawn radius from home, far
+        // beyond one search budget: the guided search still hands back a
+        // partial path toward home and the walk resumes from its end.
+        { guided: true },
       );
       work += result.work;
-      return { work, movement: result.movement };
+      // A whole path home is progress even while a detour leads away.
+      if (result.pathComplete) this.returnProgressAt = now;
+      if (result.movement || availableWork - work <= 0) {
+        return { work, movement: result.movement };
+      }
+      // Nothing visited gets closer to home (a dead-end pocket, a creature
+      // in the only gap): shuffle one tile so the next search starts
+      // elsewhere instead of standing on the same failure forever.
+      return {
+        work,
+        movement: this.wanderStep(world, now, this.chaseLeash()),
+      };
     }
     this.clearPath();
+    this.returnBestDistance = Number.POSITIVE_INFINITY;
     if (this.monster.spawnRadius === 0 || this.random() >= this.config.wanderChance) {
       this.brainState = "idle";
       return { work, movement: null };
     }
     this.brainState = "wander";
+    return {
+      work,
+      movement: this.wanderStep(world, now, {
+        home: this.monster.home,
+        radius: this.monster.spawnRadius,
+      }),
+    };
+  }
+
+  private wanderStep(
+    world: World,
+    now: number,
+    leash: { home: Position; radius: number },
+  ): MoveResult | null {
     const first = Math.floor(this.random() * DIRECTIONS.length);
     let lastMovement: MoveResult | null = null;
     for (let offset = 0; offset < DIRECTIONS.length; offset++) {
       const direction = DIRECTIONS[(first + offset) % DIRECTIONS.length];
       if (!direction) continue;
-      const movement = world.tryMoveCreature(this.monster, direction, now, {
-        home: this.monster.home,
-        radius: this.monster.spawnRadius,
-      });
-      if (movement.moved) return { work, movement };
+      const movement = world.tryMoveCreature(this.monster, direction, now, leash);
+      if (movement.moved) return movement;
       lastMovement = movement;
     }
-    return {
-      work,
-      movement: lastMovement?.turned ? lastMovement : null,
-    };
+    return lastMovement?.turned ? lastMovement : null;
   }
 
   private acquireTarget(
@@ -515,15 +575,23 @@ export class MonsterBrain {
     );
   }
 
+  /**
+   * `searchDistance` boxes the search around the monster (chasing);
+   * `guided` runs it as A* toward the goal and accepts a partial path when
+   * the budget runs out (walking home from wherever a lure ended).
+   */
   private moveToward(
     world: World,
     goal: Position,
     goalDistance: number,
     now: number,
     availableWork: number,
-    searchDistance: number | null = null,
-  ): { work: number; movement: MoveResult | null } {
-    if (availableWork <= 0) return { work: 0, movement: null };
+    options: { searchDistance?: number; guided?: boolean } = {},
+  ): { work: number; movement: MoveResult | null; pathComplete: boolean } {
+    if (availableWork <= 0) {
+      return { work: 0, movement: null, pathComplete: false };
+    }
+    const { searchDistance, guided = false } = options;
     const goalKey = `${goal.x},${goal.y},${goal.z}:${goalDistance}`;
     if (this.cachedGoal !== goalKey || this.cachedPath.length === 0) {
       const start = this.monster.position;
@@ -532,23 +600,35 @@ export class MonsterBrain {
         isGoal: (position) => this.distance(position, goal) <= goalDistance,
         canStep: (position) =>
           position.z === this.monster.home.z &&
-          (searchDistance === null ||
+          (searchDistance === undefined ||
             this.distance(position, start) <= searchDistance) &&
           this.distance(position, this.monster.home) <=
             this.config.despawnRadius &&
           world.canCreaturePathTo(this.monster, position, now) &&
           !world.isOccupied(position),
         maxVisited: Math.min(this.config.maxPathNodes, availableWork),
+        // Fewest steps that could still reach the goal's reach box: never
+        // an overestimate, so the guided search stays shortest-path.
+        ...(guided && {
+          heuristic: (position: Position) =>
+            Math.max(0, Math.abs(position.x - goal.x) - goalDistance) +
+            Math.max(0, Math.abs(position.y - goal.y) - goalDistance),
+        }),
       });
       this.cachedGoal = goalKey;
       this.cachedPath = result.directions;
-      if (this.cachedPath.length === 0) return { work: result.visited, movement: null };
+      this.cachedPathComplete = result.complete;
+      if (this.cachedPath.length === 0) {
+        return { work: result.visited, movement: null, pathComplete: false };
+      }
       return {
         work: result.visited,
         movement: this.takeCachedStep(world, now),
+        pathComplete: result.complete,
       };
     }
-    return { work: 0, movement: this.takeCachedStep(world, now) };
+    const pathComplete = this.cachedPathComplete;
+    return { work: 0, movement: this.takeCachedStep(world, now), pathComplete };
   }
 
   private takeCachedStep(world: World, now: number): MoveResult | null {
@@ -576,6 +656,7 @@ export class MonsterBrain {
   private clearPath(): void {
     this.cachedGoal = "";
     this.cachedPath = [];
+    this.cachedPathComplete = false;
   }
 
   private distance(left: Position, right: Position): number {
