@@ -6320,3 +6320,36 @@ reaches players once main is pushed and the Fly deploy runs.
   the quiver when both hold matching ammo (Canary reads only the quiver).
   The DB persist lane does not re-check the ammo-only quiver rule (memory
   plan is authoritative).
+
+## 2026-09-01 — Quiver scenario heal band + raw `/magic` and `/skill` awards
+
+- **Problem:** the two exura checks in `yarn playtest:quivers` failed although
+  the +1 magic level plumbing was correct: casting exura trains magic level,
+  and `config.yml` multiplies magic training ×10 below magic level 61
+  (`progression.stages`), so the Paladin's base magic level climbed 0 → 2
+  during the 40 test casts and the formula bounds moved under the test. The
+  same multiplier made `/magic 20` land on 26 (and `/skill` overshoot in
+  banded skill ranges) because the dev commands summed the raw curve and then
+  awarded it through the rate-scaled path.
+- **What changed:** `ProgressionSystem.awardMagicProgress`/`awardSkillTries`
+  take a `raw` flag that skips rate and stage multipliers; `/magic` and
+  `/skill` pass it, so they land exactly on the requested level.
+  `startPlaytestServer({ disableStages })` turns `progression.stages` off
+  for a scenario. `quiverEquip.ts` runs with stages off, samples the base
+  magic level per cast, checks every heal against the band for that level
+  (+1 with the alicorn), and asserts the mean heal shifts by ≈ +1 between the
+  equipped and unequipped phases; arrow consumption is counted inside the
+  open quiver (the Paladin starter set already carries a bow and 50 arrows,
+  which had made the carried-summary count read as a duplicate).
+- **Files:** `server/src/progression/ProgressionSystem.ts` (+ test),
+  `server/src/gm/GmCommandHandler.ts`,
+  `server/src/playtest/startPlaytestServer.ts`,
+  `server/src/playtest/scenarios/quiverEquip.ts`, `TODO.md`.
+- **Verified:** server typecheck; `ProgressionSystem.test` (raw award case),
+  `GmCommands.test`; `yarn playtest:quivers` 18/18 against embedded Postgres
+  (heals 89..92 with the alicorn at base ml 0, 89..90 without, mean shift
+  +1.07); the server-side roll was traced with a temporary log and matched
+  the formula exactly at every magic level.
+- **Residual:** other parity scenarios still run with stages on; their
+  `/skill`/`/magic` setups now land exactly, which may change numbers that
+  previously depended on the overshoot (none observed in this session).

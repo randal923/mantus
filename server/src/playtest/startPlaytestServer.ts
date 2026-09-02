@@ -45,6 +45,13 @@ export async function startPlaytestServer(
      * monster on the same tile every time.
      */
     disableCreatures?: boolean;
+    /**
+     * Turns the config's level-banded training stages off, so a scenario that
+     * asserts formula bounds while casting does not watch its own magic level
+     * climb between casts (config.yml multiplies magic training ×10 below
+     * magic level 61).
+     */
+    disableStages?: boolean;
   } = {},
 ): Promise<PlaytestServer> {
   const log = process.env.PLAYTEST_LOG === "1" || (options.log ?? false);
@@ -107,6 +114,7 @@ function writeParityConfig(
     rarityChances?: Record<string, number>;
     lootRate?: number;
     disableCreatures?: boolean;
+    disableStages?: boolean;
   } = {},
 ): string {
   const config = parse(
@@ -115,6 +123,7 @@ function writeParityConfig(
     rates?: Record<string, number>;
     rarity?: unknown;
     creatures?: { enabled?: boolean };
+    progression?: { stages?: { enabled?: boolean } };
   };
   config.rates = {
     ...config.rates,
@@ -134,6 +143,12 @@ function writeParityConfig(
   }
   if (options.disableCreatures && config.creatures) {
     config.creatures = { ...config.creatures, enabled: false };
+  }
+  if (options.disableStages && config.progression?.stages) {
+    config.progression = {
+      ...config.progression,
+      stages: { ...config.progression.stages, enabled: false },
+    };
   }
   const directory = mkdtempSync(join(tmpdir(), "tibia-playtest-"));
   const path = join(directory, "config.yml");

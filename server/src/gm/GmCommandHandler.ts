@@ -710,6 +710,7 @@ export class GmCommandHandler {
         `gm:magic:${randomUUID()}`,
         Math.min(remaining, 1_000_000_000),
         now,
+        true,
       );
     }
     this.reply(
@@ -767,6 +768,7 @@ export class GmCommandHandler {
         skill,
         Math.min(remaining, 1_000_000_000),
         now,
+        true,
       );
     }
     this.reply(session, true, `Skill ${skill} set to ${currentLevel()}.`);

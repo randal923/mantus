@@ -50,10 +50,15 @@ export class ProgressionSystem {
     eventId: string,
     manaSpent: number,
     now: number,
+    /** Skip the rate and stage multipliers — dev commands that target a level. */
+    raw = false,
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
-    const progress = this.scaledProgress(manaSpent, this.magicRate(player));
+    const progress = this.scaledProgress(
+      manaSpent,
+      raw ? 1 : this.magicRate(player),
+    );
     if (progress < 1) {
       this.syncPlayer(player, now, true);
       return true;
@@ -81,12 +86,14 @@ export class ProgressionSystem {
     skill: Skill,
     tries: number,
     now: number,
+    /** Skip the rate and stage multipliers — dev commands that target a level. */
+    raw = false,
   ): boolean {
     const player = this.world.getPlayer(playerId);
     if (!player) return false;
     const progress = this.scaledProgress(
       tries,
-      this.skillRate(player, skill),
+      raw ? 1 : this.skillRate(player, skill),
     );
     if (progress < 1) return false;
     const levelBefore = this.skillLevel(player, skill);

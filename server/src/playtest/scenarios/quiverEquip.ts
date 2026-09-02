@@ -10,7 +10,9 @@ import { startPlaytestServer } from "../startPlaytestServer";
  * with a bow but not with a two-handed melee weapon, opens as a container
  * that holds arrows, feeds the bow those arrows, survives a relog, obeys its
  * level and vocation gates, and the alicorn quiver's +1 magic level reaches
- * both the character panel and the healing formula.
+ * both the character panel and the healing formula. Training stages are off
+ * for the run: casting exura trains magic level, and config.yml's ×10 band
+ * would move the formula bounds under the test.
  * Run with: yarn playtest:quivers
  */
 
@@ -137,9 +139,6 @@ async function openEquippedContainer(rig: ParityRig, slot: EquipmentSlot) {
   )!;
 }
 
-const arrowsCarried = (rig: ParityRig): number =>
-  rig.inventory.carried?.find((entry) => entry.typeId === ARROW)?.count ?? 0;
-
 const quiverContents = (rig: ParityRig) => {
   const quiver = rig.equippedItem("shield");
   return (rig.inventory.containers ?? []).find(
@@ -147,12 +146,28 @@ const quiverContents = (rig: ParityRig) => {
   );
 };
 
+/** Arrows inside the open equipped quiver (the starter set carries 50 more). */
+const arrowsInQuiver = (rig: ParityRig): number =>
+  quiverContents(rig)
+    ?.items.filter((entry) => entry.item.typeId === ARROW)
+    .reduce((total, entry) => total + entry.item.count, 0) ?? 0;
+
+interface HealSample {
+  readonly value: number;
+  /** Base magic level the panel showed when the cast went out. */
+  readonly magicLevel: number;
+}
+
 /** Casts exura repeatedly from a low-health floor; returns each heal amount. */
-async function observeHeals(rig: ParityRig, casts: number): Promise<number[]> {
-  const heals: number[] = [];
+async function observeHeals(
+  rig: ParityRig,
+  casts: number,
+): Promise<HealSample[]> {
+  const heals: HealSample[] = [];
   for (let i = 0; i < casts; i++) {
     await rig.waitForCooldowns(["spell:exura", "group:healing"]);
     await rig.setHealth(Math.max(1, rig.progression.maxHealth - 1_000));
+    const magicLevel = rig.progression.magicLevel;
     const outcome = await rig.cast("exura", { kind: "self" });
     if (outcome.errorCode) {
       throw new Error(`${rig.name}: exura rejected with ${outcome.errorCode}`);
@@ -164,13 +179,20 @@ async function observeHeals(rig: ParityRig, casts: number): Promise<number[]> {
         text.position.x === position.x &&
         text.position.y === position.y,
     );
-    if (heal) heals.push(heal.value);
+    if (heal) heals.push({ value: heal.value, magicLevel });
   }
   return heals;
 }
 
+const mean = (values: ReadonlyArray<number>): number =>
+  values.length === 0
+    ? 0
+    : values.reduce((total, value) => total + value, 0) / values.length;
+
 const externalUrl = process.env.PLAYTEST_SERVER_URL;
-const server = externalUrl ? null : await startPlaytestServer({ log: false });
+const server = externalUrl
+  ? null
+  : await startPlaytestServer({ log: false, disableStages: true });
 const url = externalUrl ?? server!.url;
 let crashed = false;
 
@@ -323,7 +345,7 @@ try {
     type: "set-fight-mode",
     mode: { attack: "offensive", chase: true, secure: true },
   });
-  const arrowsBefore = arrowsCarried(paladin);
+  const arrowsBefore = arrowsInQuiver(paladin);
   const target = await paladin.spawnMonster("rotworm", "Rotworm");
   const combatMark = paladin.mark();
   await paladin.attackTarget(target.id);
@@ -337,7 +359,7 @@ try {
   const hits = combatLines.filter((text) => /^Rotworm: \d+ /.test(text)).length;
   const misses = combatLines.filter((text) => text === "You missed Rotworm.").length;
   const missiles = paladin.messagesSince(combatMark).filter(isType("distance-missile"));
-  const arrowsAfter = arrowsCarried(paladin);
+  const arrowsAfter = arrowsInQuiver(paladin);
   check(
     "bow-shoots-from-quiver",
     hits + misses > 0 && missiles.length > 0,
@@ -345,8 +367,8 @@ try {
   );
   check(
     "quiver-arrows-consumed",
-    arrowsAfter < arrowsBefore,
-    `${arrowsBefore} -> ${arrowsAfter} arrows carried (${hits + misses} shots)`,
+    arrowsBefore === ARROWS_GIVEN && arrowsAfter === ARROWS_GIVEN - (hits + misses),
+    `${arrowsBefore} -> ${arrowsAfter} arrows in the quiver (${hits + misses} shots)`,
   );
   await paladin.heal();
 
@@ -401,21 +423,33 @@ try {
 
   const level = paladin.progression.level;
   const bounds = (magicLevel: number) => ({
-    minimum: Math.floor(exura.formula.minimum({ level, magicLevel, skill: 0, attack: 0 })),
-    maximum: Math.floor(exura.formula.maximum({ level, magicLevel, skill: 0, attack: 0 })),
+    minimum: Math.floor(
+      exura.formula.minimum({ level, magicLevel, skill: 0, attack: 0 }),
+    ),
+    maximum: Math.floor(
+      exura.formula.maximum({ level, magicLevel, skill: 0, attack: 0 }),
+    ),
   });
-  const base = bounds(baseMagicLevel);
-  const boosted = bounds(baseMagicLevel + 1);
+  const withinBand = (sample: HealSample, bonus: number) => {
+    const band = bounds(sample.magicLevel + bonus);
+    return sample.value >= band.minimum && sample.value <= band.maximum;
+  };
+  const describeBand = (samples: HealSample[], bonus: number) => {
+    const values = samples.map((sample) => sample.value);
+    const levels = [...new Set(samples.map((sample) => sample.magicLevel))];
+    return `${samples.length} casts healed ${Math.min(...values, Number.MAX_SAFE_INTEGER)}..${Math.max(...values, 0)} at base ml ${levels.join("/")} (${levels
+      .map((magicLevel) => {
+        const band = bounds(magicLevel + bonus);
+        return `${band.minimum}..${band.maximum}`;
+      })
+      .join("/")} expected)`;
+  };
   const healsWithBonus = await observeHeals(paladin, HEAL_CASTS_WITH_BONUS);
-  const maxWithBonus = Math.max(...healsWithBonus, 0);
-  const minWithBonus = Math.min(...healsWithBonus, Number.MAX_SAFE_INTEGER);
   check(
-    "alicorn-heals-use-plus-one-ml",
+    "alicorn-heals-fit-plus-one-ml-band",
     healsWithBonus.length === HEAL_CASTS_WITH_BONUS &&
-      minWithBonus >= boosted.minimum &&
-      maxWithBonus <= boosted.maximum &&
-      maxWithBonus > base.maximum,
-    `${healsWithBonus.length} exura casts healed ${minWithBonus}..${maxWithBonus}; expected ${boosted.minimum}..${boosted.maximum} with +1 ml (base ${base.minimum}..${base.maximum})`,
+      healsWithBonus.every((sample) => withinBand(sample, 1)),
+    describeBand(healsWithBonus, 1),
   );
 
   await unequip(paladin, "shield");
@@ -430,16 +464,28 @@ try {
     )
     .catch(() => undefined);
   const healsWithout = await observeHeals(paladin, HEAL_CASTS_WITHOUT_BONUS);
-  const maxWithout = Math.max(...healsWithout, 0);
-  const minWithout = Math.min(...healsWithout, Number.MAX_SAFE_INTEGER);
   check(
     "alicorn-bonus-gone-after-unequip",
     paladin.progression.equipmentBonuses.magicLevel === 0 &&
       paladin.progression.boostedMagicLevel === baseMagicLevel &&
       healsWithout.length === HEAL_CASTS_WITHOUT_BONUS &&
-      minWithout >= base.minimum &&
-      maxWithout <= base.maximum,
-    `bonus ${paladin.progression.equipmentBonuses.magicLevel}, heals ${minWithout}..${maxWithout} (base ${base.minimum}..${base.maximum})`,
+      healsWithout.every((sample) => withinBand(sample, 0)),
+    `bonus ${paladin.progression.equipmentBonuses.magicLevel}; ${describeBand(healsWithout, 0)}`,
+  );
+  // With the base magic level pinned (stages off, 40 casts spend 800 of the
+  // 1600 mana the first level needs), +1 magic level shifts exura's whole
+  // band up by one: the mean of thirty rolls moves by ~1.0 against a
+  // standard error near 0.15.
+  const shift =
+    mean(healsWithBonus.map((sample) => sample.value)) -
+    mean(healsWithout.map((sample) => sample.value));
+  const sameBase =
+    new Set([...healsWithBonus, ...healsWithout].map((s) => s.magicLevel))
+      .size === 1;
+  check(
+    "alicorn-heals-shift-up-with-plus-one-ml",
+    sameBase && shift >= 0.5,
+    `mean heal shift with alicorn ${shift.toFixed(2)} (expected ≈ +1.0), base ml stable: ${sameBase}`,
   );
   paladin.client.terminate();
 } catch (cause) {

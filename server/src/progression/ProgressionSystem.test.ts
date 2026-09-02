@@ -246,6 +246,32 @@ describe("ProgressionSystem stages", () => {
     ).toBe(30);
     expect(harness.player.progression.manaSpent).toBe(30);
   });
+
+  it("raw awards skip the rate and stage multipliers", () => {
+    const harness = makeHarness({ skill: 3, magic: 3 }, [], STAGES);
+
+    harness.progression.awardSkillTries(
+      PLAYER_ID,
+      "raw:sword:1",
+      "sword",
+      2,
+      1_000,
+      true,
+    );
+    harness.progression.awardMagicProgress(
+      PLAYER_ID,
+      "raw:spell:1",
+      3,
+      1_000,
+      true,
+    );
+
+    expect(
+      harness.player.progression.skills.find(({ skill }) => skill === "sword")
+        ?.tries,
+    ).toBe(2);
+    expect(harness.player.progression.manaSpent).toBe(3);
+  });
 });
 
 function makeHarness(
