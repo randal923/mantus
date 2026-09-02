@@ -239,6 +239,105 @@ describe("MonsterBrain", () => {
     }
   });
 
+  it("walks home after being lured far beyond the path-search budget", () => {
+    // Open 64x64 floor, home in one corner, the monster left near the
+    // opposite one (~48 tiles away, well inside the 50-tile despawn leash
+    // but far beyond what one 32-node search can reach).
+    const world = new World(
+      gridMapData({ name: "field", width: 64, height: 64, blocked: [] }),
+      25,
+    );
+    const monster = new Monster({
+      id: "monster-instance:test:0",
+      type: baseType,
+      position: { x: 53, y: 53, z: 7 },
+      direction: "south",
+      home: { x: 5, y: 5, z: 7 },
+      spawnRadius: 3,
+    });
+    world.addCreature(monster);
+    const brain = new MonsterBrain(monster, 0, 7, config);
+
+    let arrivedAt: number | null = null;
+    for (let now = 1_000; now <= 400_000 && arrivedAt === null; now += 100) {
+      brain.tick(world, now, 32);
+      if (monster.position.x === 5 && monster.position.y === 5) arrivedAt = now;
+    }
+
+    expect(arrivedAt).not.toBeNull();
+  });
+
+  it("walks home around a wall it cannot see past in one search", () => {
+    // A long east-west wall between the monster and home with a gap only at
+    // the far east end: the way home first leads away from home.
+    const blocked: Array<readonly [number, number]> = [];
+    for (let x = 0; x < 60; x++) blocked.push([x, 30]);
+    const world = new World(
+      gridMapData({ name: "wall", width: 64, height: 64, blocked }),
+      25,
+    );
+    const monster = new Monster({
+      id: "monster-instance:test:0",
+      type: baseType,
+      position: { x: 10, y: 45, z: 7 },
+      direction: "south",
+      home: { x: 10, y: 15, z: 7 },
+      spawnRadius: 3,
+    });
+    world.addCreature(monster);
+    const returnHome = vi.fn((lost: Monster) => {
+      world.relocateCreature(lost, lost.home);
+      return true;
+    });
+    const brain = new MonsterBrain(monster, 0, 7, config, { returnHome });
+
+    let arrivedAt: number | null = null;
+    let closest = Number.POSITIVE_INFINITY;
+    for (let now = 1_000; now <= 120_000 && arrivedAt === null; now += 100) {
+      brain.tick(world, now, 640);
+      if (returnHome.mock.calls.length === 0) {
+        closest = Math.min(closest, Math.abs(monster.position.y - 15));
+      }
+      if (monster.position.x === 10 && monster.position.y === 15) arrivedAt = now;
+    }
+
+    // It walks up to the wall on its own, then — after 30s without getting
+    // any closer — the spawn puts it back home rather than leaving it there.
+    expect(closest).toBe(16);
+    expect(returnHome).toHaveBeenCalledTimes(1);
+    expect(arrivedAt).not.toBeNull();
+    expect(arrivedAt).toBeGreaterThan(30_000);
+    expect(brain.state).toBe("idle");
+  });
+
+  it("does not teleport a monster home while its walk keeps making progress", () => {
+    const world = new World(
+      gridMapData({ name: "field", width: 64, height: 64, blocked: [] }),
+      25,
+    );
+    const monster = new Monster({
+      id: "monster-instance:test:0",
+      type: baseType,
+      position: { x: 53, y: 53, z: 7 },
+      direction: "south",
+      home: { x: 5, y: 5, z: 7 },
+      spawnRadius: 3,
+    });
+    world.addCreature(monster);
+    const returnHome = vi.fn(() => true);
+    const brain = new MonsterBrain(monster, 0, 7, config, { returnHome });
+
+    for (let now = 1_000; now <= 200_000; now += 100) brain.tick(world, now, 32);
+
+    expect(
+      Math.max(
+        Math.abs(monster.position.x - monster.home.x),
+        Math.abs(monster.position.y - monster.home.y),
+      ),
+    ).toBeLessThanOrEqual(monster.spawnRadius);
+    expect(returnHome).not.toHaveBeenCalled();
+  });
+
   it("never consumes more than the work granted by the tick", () => {
     const world = makeWorld([[3, 2], [2, 1], [2, 3], [1, 2]]);
     const monster = makeMonster();

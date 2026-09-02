@@ -6412,3 +6412,51 @@ reaches players once main is pushed and the Fly deploy runs.
   browser-side crash or the silent socket terminate on outbound-buffer
   overflow / missed pong. Fly keeps only a small in-memory log buffer and no
   shipper is configured, so older server output is unrecoverable.
+
+## 2026-09-02 — Lured monsters walk back to their spawn
+
+- **Problem:** lure a monster far enough and it froze where the chase ended
+  instead of walking home. `MonsterBrain.moveToward` ran a plain
+  breadth-first search capped at `maxPathNodes` (640): on open ground that
+  reaches only ~18 tiles of Manhattan distance, while the chase leash
+  (`despawnRadius`) lets a monster be pulled 50 tiles out. Every think
+  (250 ms) the walk-home search came back empty, the monster stood still
+  forever, and it re-burned the whole 640-node budget each time.
+- **What changed:** `server/src/pathfinding/findPath.ts` takes an optional
+  `heuristic` (A* on a new `PathFrontier` heap, deeper-first tie-break so open
+  ground is walked in a straight line) and, when the budget runs out, hands
+  back the path to the visited tile closest to the goal plus a `complete`
+  flag; the breadth-first behaviour without a heuristic is unchanged, so
+  chasing still matches Canary's boxed search. `server/src/ai/MonsterBrain.ts`
+  walks home with the guided search in legs, shuffles one tile when no
+  visited tile beats where it stands, and tracks progress in steps
+  (Manhattan — a straight leg that shortens one axis is progress; a complete
+  path counts too). After 30 s without progress (`RETURN_HOME_STALL_MS`) it
+  asks the new `SpawnManager.returnHome`, which places it on its home tile
+  or a free neighbour with the teleport effect at both ends — Canary's
+  `Monster::onThink` out-of-range teleport is the precedent; Canary never
+  walks a monster home at all. `config.yml` comment on `maxPathNodes`
+  corrected (it never covered the walk home).
+- **Verified:** new unit tests — `findPath.test.ts` (guided long-distance
+  reach within a 100-node budget, partial path, no-progress empty result,
+  shortest path around a blocker), `MonsterBrain.test.ts` (48-tile open-field
+  walk home with a 32-node budget that failed before the fix; the long-wall
+  case walks to the wall then teleports after 30 s; no teleport while the
+  walk progresses), `SpawnManager.test.ts` (a monster walled off from home is
+  put back on it with two teleport effects and one zero-duration step).
+  Server unit suite 4208/4208. Real map: new `yarn playtest:monster-lure`
+  (`server/src/playtest/scenarios/monsterLure.ts`) spawns a wasp on the open
+  field south-west of Thais (row 32402), lures it 41 tiles east one step at a
+  time, breaks line of acquisition from a parking tile that stays inside the
+  spawn activation box, and finds it back on its spawn tile — 3/3 on the
+  branch; the same run against unfixed `main` fails `returned-home` (the
+  wasp never comes back into view around its spawn, 2/3). A first version
+  on the walled street north of Thais passed on both branches: buildings keep
+  the breadth-first frontier small, so it reached home from 28 tiles — the
+  bug needs open ground.
+- **Residual:** a detour longer than one search can round (a long wall, a
+  lake, a player in the only gap) ends in the 30 s teleport rather than a
+  walk — TODO.md "Accepted gaps" carries the breadcrumb-trail fix. Also
+  found on the way, not fixed here: monsters step once per two thinks
+  because the think fires 25 ms before the step cooldown ends and the cached
+  path is dropped on the `cooldown` refusal (TODO.md).

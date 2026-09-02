@@ -3,6 +3,7 @@ import { NpcBrain } from "../ai/NpcBrain";
 import type { Combat } from "../combat/Combat";
 import type { Creature } from "../creature/Creature";
 import { PROTOCOL_LIMITS, type Position } from "@tibia/protocol";
+import { getMagicEffectId } from "../combat/getMagicEffectId";
 import { Monster } from "../creature/Monster";
 import type { MonsterType } from "../creature/MonsterType";
 import { Npc } from "../creature/Npc";
@@ -19,6 +20,7 @@ const GM_SPAWN_OWNER_ID = "gm:spawns";
 const EVENT_SPAWN_OWNER_ID = "event:spawns";
 /** Canary's summon_creature.lua cap: at most two player summons at a time. */
 const PLAYER_MAX_SUMMONS = 2;
+const TELEPORT_EFFECT_ID = getMagicEffectId("CONST_ME_TELEPORT");
 
 interface SlotState {
   definition: SpawnSlotDefinition;
@@ -692,6 +694,7 @@ export class SpawnManager {
                   text,
                   yell ? "yell" : "say",
                 ),
+              returnHome: (monster) => this.returnHome(monster),
               ...(this.combat
                 ? {
                     combat: this.combat,
@@ -705,6 +708,37 @@ export class SpawnManager {
     this.brains.set(creature.id, brain);
     this.aiIndices.set(creature.id, this.aiOrder.length);
     this.aiOrder.push(creature.id);
+  }
+
+  /**
+   * Canary parity for a monster that cannot walk back (`Monster::onThink`
+   * teleports one outside its spawn range to `masterPos`): place it on its
+   * home tile, or the nearest free tile beside it, with the teleport effect
+   * at both ends.
+   */
+  private returnHome(monster: Monster): boolean {
+    if (this.world.getCreature(monster.id) !== monster) return false;
+    const { home } = monster;
+    const candidates = [
+      home,
+      { x: home.x, y: home.y - 1, z: home.z },
+      { x: home.x + 1, y: home.y, z: home.z },
+      { x: home.x, y: home.y + 1, z: home.z },
+      { x: home.x - 1, y: home.y, z: home.z },
+    ];
+    const destination = candidates.find((candidate) =>
+      this.canPlaceAt(candidate, "monster"),
+    );
+    if (!destination) return false;
+    const from = this.world.relocateCreature(monster, destination);
+    this.visibility.broadcastMagicEffect(from, TELEPORT_EFFECT_ID, monster.id);
+    this.visibility.onCreatureStepped(monster, from, 0);
+    this.visibility.broadcastMagicEffect(
+      monster.position,
+      TELEPORT_EFFECT_ID,
+      monster.id,
+    );
+    return true;
   }
 
   private summon(

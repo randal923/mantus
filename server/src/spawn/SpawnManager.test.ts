@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { Position } from "@tibia/protocol";
 import type { Combat } from "../combat/Combat";
+import type { Creature } from "../creature/Creature";
 import { Monster } from "../creature/Monster";
 import type { MonsterType } from "../creature/MonsterType";
 import { gridMapData } from "../gridMapData";
@@ -67,6 +69,7 @@ const visibility = {
   onCreatureStepped: () => undefined,
   broadcastPose: () => undefined,
   broadcastCreatureSpeech: () => undefined,
+  broadcastMagicEffect: () => undefined,
 } as unknown as Visibility;
 
 const config = {
@@ -266,6 +269,52 @@ describe("SpawnManager", () => {
 
     expect(manager.activeCreatureId("monster:slot-1")).toBe(first);
     expect(world.getCreature(first)?.health).toBe(7);
+  });
+
+  it("puts a lured monster back home when it cannot walk there", () => {
+    // Home (3,3) is walled off from the rest of the floor: a monster left
+    // outside the ring has no route back, so after 30s without progress the
+    // spawn teleports it onto its home tile.
+    const ring: Array<readonly [number, number]> = [];
+    for (let x = 2; x <= 4; x++) ring.push([x, 2], [x, 4]);
+    ring.push([2, 3], [4, 3]);
+    const world = makeWorld(ring);
+    const effects: Array<{ x: number; y: number; effectId: number }> = [];
+    const steps: Array<{ from: { x: number; y: number }; durationMs: number }> =
+      [];
+    const manager = new SpawnManager(
+      world,
+      {
+        ...visibility,
+        broadcastMagicEffect: (position: Position, effectId: number) =>
+          effects.push({ x: position.x, y: position.y, effectId }),
+        onCreatureStepped: (
+          _creature: Creature,
+          from: Position,
+          durationMs: number,
+        ) => steps.push({ from: { x: from.x, y: from.y }, durationMs }),
+      } as unknown as Visibility,
+      makeContent(),
+      config,
+    );
+    manager.tick(1_000);
+    const id = manager.activeCreatureId("monster:slot-1");
+    if (!id) throw new Error("expected initial creature");
+    const monster = world.getCreature(id);
+    if (!monster) throw new Error("expected creature in world");
+    world.relocateCreature(monster, { x: 6, y: 6, z: 7 });
+
+    for (let now = 1_250; now <= 20_000; now += 250) manager.tick(now);
+    expect(monster.position).not.toEqual({ x: 3, y: 3, z: 7 });
+    expect(steps.filter((step) => step.durationMs === 0)).toHaveLength(0);
+
+    for (let now = 20_250; now <= 40_000; now += 250) manager.tick(now);
+
+    expect(monster.position).toEqual({ x: 3, y: 3, z: 7 });
+    expect(manager.activeCreatureId("monster:slot-1")).toBe(id);
+    expect(steps.filter((step) => step.durationMs === 0)).toHaveLength(1);
+    expect(effects.map((effect) => effect.effectId)).toEqual([11, 11]);
+    expect(effects[1]).toEqual({ x: 3, y: 3, effectId: 11 });
   });
 
   it("restores a creature that went dormant on a blockpath tile", () => {

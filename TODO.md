@@ -29,6 +29,32 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Monsters walk at half their speed: the think fires 25 ms before the step
+  cooldown ends** (2026-09-02, found while verifying the walk-home fix with
+  a wasp on the real map). `MonsterBrain.tick` sets `nextThinkAt = max(now +
+  thinkIntervalMs, nextStepAt)` *before* the step it is about to take, so with
+  a 275 ms step the next think lands at +250 ms, `takeCachedStep` gets a
+  `cooldown` refusal, drops the whole cached path, and the following think
+  at +500 ms searches again and steps. Every monster therefore moves once
+  per two thinks and re-runs its path search per tile (a chasing monster
+  burns a fresh ±12-box BFS per step). Fix: after a step that moved, raise
+  `nextThinkAt` to the new `nextStepAt`, and keep the cached path on a
+  `cooldown` refusal (only a `blocked` refusal should clear it). Verify with
+  the `[dbg]` pattern from that session: think timestamps against
+  `nextStepAt` for a GM-spawned monster. Owner: `server/src/ai/MonsterBrain.ts`.
+- **A lured monster that cannot walk home is teleported there after 30 s**
+  (2026-09-02). The walk home is a guided (A*) search with a partial-path
+  fallback, so open ground and ordinary detours are walked; a detour longer
+  than one 640-node search can round (a long wall, a lake, a player standing
+  in the only gap) leaves the monster shuffling at the closest point until
+  `RETURN_HOME_STALL_MS` passes and `SpawnManager.returnHome` places it on
+  its home tile with the teleport effect (Canary's `Monster::onThink`
+  out-of-range teleport is the precedent; Canary never walks home at all).
+  Fix if the teleport is ever seen in normal play: remember the tiles walked
+  during the chase (a bounded breadcrumb trail, loops trimmed) and retrace
+  it before searching, which is a guaranteed walk whenever the corridor is
+  still free. Owner: `server/src/ai/MonsterBrain.ts`.
+
 - **`yarn playtest:weapons` flaked in 2 of 4 runs** (2026-09-01, while
   verifying the no-ammunition target fix). Run 1: `bow-no-ammo-keeps-target`
   saw the target dropped with one `error` right after selection, which never
