@@ -187,11 +187,44 @@ try {
   await paladin.goto(32_339, SPOT.y, SPOT.z);
   await paladin.setupStats({ level: 100, skills: { distance: 60 } });
   await paladin.giveAndEquip(BOW, "weapon");
-  await paladin.giveAndEquip(ARROW, "ammo", 90);
   paladin.client.send({
     type: "set-fight-mode",
     mode: { attack: "offensive", chase: true, secure: true },
   });
+  // Canary Player::doAttacking: a bow with nothing to shoot keeps the target
+  // and never swings, so spells still have an aim point.
+  const unarmedTarget = await paladin.spawnMonster("rotworm", "Rotworm");
+  const noAmmoMark = paladin.mark();
+  await paladin.attackTarget(unarmedTarget.id);
+  await sleep(2_500);
+  const noAmmoMessages = paladin.messagesSince(noAmmoMark);
+  check(
+    "bow-no-ammo-keeps-target",
+    !noAmmoMessages.some(
+      (m) => m.type === "attack-target-changed" && m.creatureId === null,
+    ) &&
+      !noAmmoMessages.some(
+        (m) => m.type === "error" && m.code === "combat-action-failed",
+      ) &&
+      paladin.creatureAlive(unarmedTarget.id),
+    `target alive ${paladin.creatureAlive(unarmedTarget.id)}; ${noAmmoMessages
+      .filter((m) => m.type === "attack-target-changed" || m.type === "error")
+      .map((m) =>
+        m.type === "error" ? `error:${m.code}` : `target:${m.creatureId}`,
+      )
+      .join(" ")}`,
+  );
+  // Arrows arriving mid-fight: the still-selected target starts taking hits.
+  await paladin.giveAndEquip(ARROW, "ammo", 90);
+  for (let i = 0; i < 20 && paladin.creatureAlive(unarmedTarget.id); i++) {
+    await sleep(700);
+  }
+  check(
+    "bow-ammo-resumes-attack",
+    !paladin.creatureAlive(unarmedTarget.id),
+    `target alive after arrows equipped: ${paladin.creatureAlive(unarmedTarget.id)}`,
+  );
+  await paladin.cancelAttack();
   const arrowsBefore = paladin.equippedItem("ammo")?.count ?? 0;
   const bowMark = paladin.mark();
   const bow = await observeAttacks(paladin, "rotworm", "Rotworm", 8);

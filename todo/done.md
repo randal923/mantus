@@ -6353,3 +6353,31 @@ reaches players once main is pushed and the Fly deploy runs.
 - **Residual:** other parity scenarios still run with stages on; their
   `/skill`/`/magic` setups now land exactly, which may change numbers that
   previously depended on the overshoot (none observed in this session).
+
+## 2026-09-01 — A bow with no ammunition keeps its target (`agents/paladin-no-ammo-target`)
+
+- **Problem:** a paladin whose bow or crossbow had no matching ammunition
+  could not target monsters at all. `playerAttackPlan` returned `null` for
+  the missing ammunition and `PlayerAutoAttack.tickPlayerAttack` treated
+  every null plan as "cannot attack": it sent `combat-action-failed` and
+  cleared the attack target on the very tick it was selected. Aimed spells
+  (Divine Missile, Ethereal Spear) lost their aim point, so an out-of-arrows
+  paladin could not fight with spells either.
+- **What changed:** the plan now returns a distinct `OutOfAmmunition` result
+  (with the weapon's range) when the arrow slot and quiver hold nothing the
+  weapon can fire, or the ammunition fails its level requirement. The
+  auto-attack tick keeps the target, still chases to shooting range, and
+  simply never swings until ammunition turns up — Canary
+  `Player::doAttacking`, which returns early for `hasWeaponDistanceEquipped`
+  instead of falling back to fists. Unmet weapon requirements still drop the
+  target as before.
+- **Files:** `server/src/combat/{playerAttackPlan,PlayerAutoAttack}.ts`,
+  `server/src/combat/Combat.test.ts`,
+  `server/src/playtest/scenarios/weaponParity.ts`.
+- **Verified:** new unit test (target retained across ticks, no error, no
+  null target change, `exori san` then lands on the still-selected target;
+  fails on the old code); all 83 `Combat.test.ts` cases; server typecheck;
+  `yarn playtest:weapons` against embedded Postgres — new checks
+  `bow-no-ammo-keeps-target` and `bow-ammo-resumes-attack` (arrows equipped
+  mid-fight kill the still-selected target) pass; the pre-existing
+  `melee-kill-experience` failure (rotworm reports 2400 xp) is unrelated.

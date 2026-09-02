@@ -58,6 +58,22 @@ export class PlayerAutoAttack {
       this.feedback.setTarget(session, null, now);
       return;
     }
+    if ("outOfAmmunition" in plan) {
+      // No arrows is not "cannot attack": the target stays selected so
+      // spells keep an aim point, chase still closes in, and the bow simply
+      // never swings until ammunition turns up (Canary Player::doAttacking).
+      if (!isInRange(player.position, target.position, plan.range)) {
+        this.chase.chaseTarget(
+          session,
+          player,
+          target,
+          now,
+          plan.range,
+          session.huntingBotEnabled,
+        );
+      }
+      return;
+    }
     if (
       !isInRange(player.position, target.position, plan.range) ||
       (plan.lineOfSight &&

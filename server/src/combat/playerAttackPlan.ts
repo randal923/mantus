@@ -56,6 +56,17 @@ export interface PlayerAttackPlan {
   };
 }
 
+/**
+ * A bow or crossbow with nothing to shoot. Canary keeps the target and skips
+ * the swing (player.cpp `doAttacking`: `hasWeaponDistanceEquipped` returns
+ * before the fist fallback), so the paladin still has something to aim
+ * spells at. `range` lets chase mode keep closing to shooting distance.
+ */
+export interface OutOfAmmunition {
+  readonly outOfAmmunition: true;
+  readonly range: number;
+}
+
 export function playerAttackPlan(
   items: ItemIntentHandler,
   formula: CombatFormula,
@@ -64,7 +75,7 @@ export function playerAttackPlan(
   target: Creature,
   proficiency: ProficiencyPerkEffects = EMPTY_PROFICIENCY_EFFECTS,
   now?: number,
-): PlayerAttackPlan | null {
+): PlayerAttackPlan | OutOfAmmunition | null {
   const equipment = items.combatEquipment(player.id);
   const weapon = equipment.find(
     (entry) =>
@@ -155,7 +166,7 @@ export function playerAttackPlan(
           entry.type.ammoType === weapon.type.ammoType,
       ) ?? items.quiverAmmunition(player.id, weapon.type.ammoType);
     if (!ammunition || !meetsItemRequirements(player, ammunition.type)) {
-      return null;
+      return { outOfAmmunition: true, range };
     }
     attack += ammunition.type.attack ?? 0;
     hitChanceType = ammunition.type;
