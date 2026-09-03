@@ -42,20 +42,23 @@ export class LootFilterHandler {
       session.sendError("join-required");
       return;
     }
-    if (session.lootFilterUpdatePending) {
-      session.sendError("loot-filter-update-pending");
-      return;
-    }
     const filter = this.sanitize(intent.filter);
     if (!filter) {
       session.sendError("loot-filter-invalid");
       return;
     }
-    session.lootFilterUpdatePending = true;
     // Applied in memory immediately so the very next corpse honours the edit;
     // the durable write trails behind and rolls the session back if it fails.
     const previous = session.lootFilter;
     session.lootFilter = filter;
+    if (session.lootFilterUpdatePending) {
+      // A durable write is still in flight. The newest edit wins once it
+      // settles — refusing it would leave the sweep on a list the player no
+      // longer sees (two cells ticked inside one slow round-trip).
+      session.lootFilterDeferred = filter;
+      return;
+    }
+    session.lootFilterUpdatePending = true;
     void this.persist(session, playerId, filter, previous);
   }
 
@@ -146,43 +149,54 @@ export class LootFilterHandler {
     return { enabled: filter.enabled, pickupRules };
   }
 
+  /**
+   * Writes `filter` durably. `durable` is the last filter known to be on
+   * disk: the rollback target while nothing newer is waiting. Settling
+   * happens on the tick (outcomes), where a deferred edit — already live in
+   * memory — starts the next write of the chain; only a committed write is
+   * echoed, and only when nothing newer is queued behind it, so the client
+   * never flashes back to a list it has already replaced.
+   */
   private async persist(
     session: Session,
     characterId: string,
     filter: LootFilter,
-    previous: LootFilter,
+    durable: LootFilter,
   ): Promise<void> {
+    let committed = false;
     try {
       await this.characters.updateLootFilter(characterId, filter);
-      this.outcomes.push(() => {
-        session.lootFilterUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        session.send({ type: "loot-filter-updated", filter });
-      });
+      committed = true;
     } catch (cause) {
       const reason = cause instanceof Error ? cause.message : "unknown";
       console.warn(
         `loot filter update failed for character ${characterId}: ${reason}`,
       );
-      this.outcomes.push(() => {
-        session.lootFilterUpdatePending = false;
-        if (
-          !this.registry.contains(session) ||
-          session.playerId !== characterId
-        ) {
-          return;
-        }
-        // The optimistic in-memory copy is rolled back so the live sweep and
-        // the durable row agree again.
-        session.lootFilter = previous;
-        session.send({ type: "loot-filter-updated", filter: previous });
-        session.sendError("loot-filter-update-failed");
-      });
     }
+    this.outcomes.push(() => {
+      const next = session.lootFilterDeferred;
+      const stillDurable = committed ? filter : durable;
+      if (next) {
+        session.lootFilterDeferred = null;
+        void this.persist(session, characterId, next, stillDurable);
+        return;
+      }
+      session.lootFilterUpdatePending = false;
+      if (
+        !this.registry.contains(session) ||
+        session.playerId !== characterId
+      ) {
+        return;
+      }
+      if (committed) {
+        session.send({ type: "loot-filter-updated", filter });
+        return;
+      }
+      // The optimistic in-memory copy is rolled back so the live sweep and
+      // the durable row agree again.
+      session.lootFilter = stillDurable;
+      session.send({ type: "loot-filter-updated", filter: stillDurable });
+      session.sendError("loot-filter-update-failed");
+    });
   }
 }

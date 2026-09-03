@@ -6488,3 +6488,63 @@ reaches players once main is pushed and the Fly deploy runs.
   ownership rule are design calls, the double-edit coalescing is a small
   server change; all four are itemised in TODO.md with a recommended fix.
 
+## 2026-09-02 — Auto-loot reaches every corpse in view; corpses sized to their loot (`agents/autoloot-reach-corpses`)
+
+- **Problem:** the `yarn playtest:autoloot` findings merged the same day:
+  ranged kills never swept (one-tile `isNear` reach), a capacity skip was
+  silent, 22 loot-bearing monster types dropped nothing because their corpse
+  was not a container, the loot roll stopped at the corpse's slot count (147
+  tables longer than their corpse), and a second `update-loot-filter` inside
+  one slow write was refused with `loot-filter-update-pending` and lost.
+- **What changed (server-enforced, all re-checked at execution time):**
+  `server/src/item/isCorpseReachable.ts` replaces `isNear` in
+  `ItemIntentHandler.autoLoot` — same floor, inside the killer's own view
+  range, and a guided `findPath` to a tile next to the corpse (Canary
+  `Creature::onDeath` → `getPathMatching` gates `playerQuickLootCorpse`);
+  hand looting keeps one-tile reach. The sweep sends one `combat-log` of the
+  new kind `warning` ("Attention! The loot you are trying to pick up is too
+  heavy for you to carry.", Canary's text) when a listed drop was skipped for
+  weight; the client draws `warning` red centre-screen
+  (`ScreenMessageState`, `GameNotifications`). `rollMonsterLoot` no longer
+  takes a capacity; `createMonsterCorpse` rolls every entry (extra prey /
+  boosted passes too), only an unopenable corpse type is left empty, and the
+  roll is trimmed at `MAX_CORPSE_LOOT_ITEMS` (100, the `items` corpse slot
+  bound); `CorpseCreator` accepts any loot count up to that; the corpse
+  window (`projectWorldContainer`) grows to the highest occupied slot; decay
+  keeps every item across container stages via the shared
+  `decayKeepSlots` (tick runner, memory store and `PgDecayOps` had three
+  copies of the slot pruning). Corpses: ten ids absent from Canary's
+  items.xml are `APPEARANCE_ONLY_CORPSES` in `tools/buildItemCatalog.mjs`
+  (regenerated `server/data/item-catalog.json`, hash re-pinned) and the
+  zero-slot / non-container ones (water elemental remains, dead gaffir, blob,
+  lava lurker's corpse, misguided bully/thief's tile, wooden trash, mortal
+  essence, dead schiach, dead insane siren) get Canary's default eight slots
+  in `server/src/item/overrides/corpses/lootable-corpses.ts`;
+  `monsterLootParity` now pins "every loot table has an openable corpse"
+  (lost gnome excepted, `corpse = 0` upstream too). Loot filter:
+  `Session.lootFilterDeferred` + `LootFilterHandler.persist` chain — an edit
+  during a write is applied in memory at once and written when the in-flight
+  write settles; only the newest committed write is echoed, a failed write
+  with a newer edit queued never rolls the session back.
+- **Verified:** unit — `rollMonsterLoot` (40-entry table drops in full),
+  `createMonsterCorpse` (9 drops into a 4-slot corpse, 130 → 100, non-container
+  corpse stays empty), `ItemIntentHandler.autoLoot` (six tiles away over open
+  ground sweeps; walled-in corpse, out-of-view corpse and other floor do not;
+  one red warning when the axe is too heavy, none otherwise), decay (seven
+  drops survive 6042 → 4330), `LootFilterHandler` (three rapid edits → one
+  echo of the last, row holds the last; a failed first write keeps the
+  deferred newer edit). Server suite 4216/4216, client unit suite green,
+  `yarn typecheck`, `yarn test:tools` + `parity:check` green. Real server:
+  `yarn playtest:autoloot` 22/22 on the embedded Postgres — sudden-death kill
+  from three tiles sweeps the meat, the capacity scenario sees exactly one
+  warning on the wire, the two-edit scenario echoes only the second, a troll
+  (7-slot corpse, 12-entry table) shows 10–11 drops in a window sized to them,
+  the death blob (corpse a container only by override) drops and sweeps its
+  glob of tar.
+- **Residual:** reach ignores creatures standing in the way (TODO.md);
+  container-flagged items without an items.xml size still get capacity 0
+  outside the corpse overrides (TODO.md); the last-hitter-owns-the-corpse
+  deviation is unchanged and still pinned by scenario `two`; the playtest
+  rig cannot kill monsters that turn invisible (TODO.md — why the original
+  scenario blamed the water elemental's corpse).
+

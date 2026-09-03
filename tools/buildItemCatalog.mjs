@@ -141,6 +141,18 @@ const APPEARANCE_ONLY_CORPSES = {
   43762: { name: "dead white weretiger", containerSize: 8 },
   43959: { name: "dead cunning werepanther", containerSize: 8 },
   44447: { name: "dead iks yapunac", containerSize: 8 },
+  // Loot-bearing monsters whose corpse id items.xml leaves out entirely
+  // (monsterLootParity pins that every loot table has a container corpse).
+  21887: { name: "remains of a glooth bomb", containerSize: 8 },
+  35384: { name: "dead pirat bombardier", containerSize: 8 },
+  35388: { name: "dead pirat mate", containerSize: 8 },
+  48112: { name: "remains of a honey elemental", containerSize: 8 },
+  48259: { name: "dead nibblemaw", containerSize: 8 },
+  48271: { name: "dead goggle cake", containerSize: 8 },
+  48340: { name: "dead angry sugar fairy", containerSize: 8 },
+  48416: { name: "dead sugar daddy", containerSize: 8 },
+  49990: { name: "dead spellreaper inferniarch", containerSize: 8 },
+  49994: { name: "dead hellhunter inferniarch", containerSize: 8 },
 };
 
 function equipmentSlot(semantics) {

@@ -79,7 +79,6 @@ describe("rollMonsterLoot", () => {
     expect(
       rollMonsterLoot(
         [entry({ minCount: 3, maxCount: 40 })],
-        10,
         1,
         context,
       ),
@@ -87,7 +86,6 @@ describe("rollMonsterLoot", () => {
     expect(
       rollMonsterLoot(
         [entry({ minCount: 3, maxCount: 40 })],
-        10,
         1,
         roll([GOLD], { pick: "minimum" }),
       ),
@@ -96,7 +94,6 @@ describe("rollMonsterLoot", () => {
     expect(
       rollMonsterLoot(
         [entry({ minCount: 1, maxCount: 1_000 })],
-        10,
         1,
         context,
       ),
@@ -107,7 +104,6 @@ describe("rollMonsterLoot", () => {
     expect(
       rollMonsterLoot(
         [entry({ itemTypeId: SWORD.id, minCount: 2, maxCount: 9 })],
-        10,
         1,
         roll([SWORD]),
       ),
@@ -117,8 +113,8 @@ describe("rollMonsterLoot", () => {
   it("scales the entry chance by the server loot rate", () => {
     const context = roll([GOLD], { rolls: [100, 100] });
 
-    rollMonsterLoot([entry({ chance: 5_000 })], 10, 1, context);
-    rollMonsterLoot([entry({ chance: 5_000 })], 10, 3, context);
+    rollMonsterLoot([entry({ chance: 5_000 })], 1, context);
+    rollMonsterLoot([entry({ chance: 5_000 })], 3, context);
 
     expect(context.percents).toEqual([5, 15]);
   });
@@ -126,22 +122,22 @@ describe("rollMonsterLoot", () => {
   it("never exceeds 100% however high the chance or rate", () => {
     const context = roll([GOLD], { rolls: [100] });
 
-    rollMonsterLoot([entry({ chance: 100_000 })], 10, 50, context);
+    rollMonsterLoot([entry({ chance: 100_000 })], 50, context);
 
     expect(context.percents).toEqual([100]);
   });
 
-  it("stops filling once the corpse container is full", () => {
-    const entries = [entry(), entry(), entry()];
+  it("rolls every entry of a table longer than any corpse slot count", () => {
+    const entries = Array.from({ length: 40 }, () => entry());
 
-    expect(rollMonsterLoot(entries, 2, 1, roll([GOLD]))).toHaveLength(2);
-    expect(rollMonsterLoot(entries, 0, 1, roll([GOLD]))).toEqual([]);
+    // Canary adds loot with FLAG_NOLIMIT: the corpse grows to fit the roll.
+    expect(rollMonsterLoot(entries, 1, roll([GOLD]))).toHaveLength(40);
   });
 
   it("skips an entry naming an item this catalog does not carry", () => {
     const entries = [entry({ itemTypeId: 65_000 }), entry()];
 
-    expect(rollMonsterLoot(entries, 10, 1, roll([GOLD]))).toEqual([
+    expect(rollMonsterLoot(entries, 1, roll([GOLD]))).toEqual([
       { typeId: GOLD.id, count: 1 },
     ]);
   });
@@ -149,7 +145,7 @@ describe("rollMonsterLoot", () => {
   it("drops nothing from a zero-chance entry", () => {
     const context = roll([GOLD], { rolls: [1] });
 
-    expect(rollMonsterLoot([entry({ chance: 0 })], 10, 1, context)).toEqual([]);
+    expect(rollMonsterLoot([entry({ chance: 0 })], 1, context)).toEqual([]);
   });
 
   it("rolls rarity attributes onto eligible gear only", () => {
@@ -162,7 +158,6 @@ describe("rollMonsterLoot", () => {
     // at its range minimum.
     const [drop] = rollMonsterLoot(
       [entry({ itemTypeId: BLADE.id })],
-      10,
       1,
       roll([BLADE], { pick: "minimum" }),
       chances,
@@ -173,13 +168,12 @@ describe("rollMonsterLoot", () => {
     });
 
     // Stackables never roll, however certain the chance.
-    const [gold] = rollMonsterLoot([entry()], 10, 1, roll([GOLD]), chances);
+    const [gold] = rollMonsterLoot([entry()], 1, roll([GOLD]), chances);
     expect(gold?.attributes).toBeUndefined();
 
     // A losing roll leaves the drop common with no attribute bag at all.
     const [common] = rollMonsterLoot(
       [entry({ itemTypeId: BLADE.id })],
-      10,
       1,
       roll([BLADE], { pick: "maximum" }),
       { ...chances, chances: { ...chances.chances, uncommon: 50 } },

@@ -143,9 +143,10 @@ export class DeathHandler {
         this.rarityConfig,
       );
       // Auto-loot sweeps the corpse for the killer in this same tick, before
-      // any other intent can touch it. Reach, ownership and the blacklist are
-      // all re-checked inside; a killer who is offline, dead or out of range
-      // simply gets nothing.
+      // any other intent can touch it. Reach (same floor, in view, a pathable
+      // route next to the corpse), ownership and the pick-up list are all
+      // re-checked inside; a killer who is offline, dead or cut off from the
+      // corpse simply gets nothing.
       const killerSession = killerId ? this.registry.sessionFor(killerId) : null;
       if (corpseId && killerId && killerSession) {
         this.items.autoLoot(killerSession, killerId, corpseId, now);

@@ -11,9 +11,9 @@ import { startPlaytestServer } from "../startPlaytestServer";
 /**
  * Auto-loot sweep e2e: drives real kills over the wire against the real
  * server and checks, per scenario, whether the corpse's drops end up carried.
- * Every scenario reports what the sweep did, and the ones that document an
- * accepted limitation (one-tile reach, silent capacity skip, last-hit
- * ownership) say so in their detail rather than passing quietly.
+ * Every scenario reports what the sweep did, and the one that documents an
+ * accepted limitation (last-hit ownership) says so in its detail rather than
+ * passing quietly.
  *
  *   PLAYTEST_ADMIN_URL=postgres://tibia:tibia_dev_only@127.0.0.1:54329/postgres \
  *     yarn playtest:autoloot
@@ -33,8 +33,16 @@ const SUDDEN_DEATH_RUNE = 3_155;
 const LOOT_POUCH = 23_721;
 const RAT_CORPSE = 5_964;
 const CYCLOPS_CORPSE = 5_962;
-/** The water elemental's corpse type: not a container in this catalog. */
-const WATER_ELEMENTAL_CORPSE = 9_582;
+/**
+ * The death blob's corpse ("blob", 11317): a container only through the
+ * `overrides/corpses` entry, like the water elemental's remains — but the
+ * blob never turns invisible, which the harness reads as `creature-left`.
+ */
+const DEATH_BLOB_CORPSE = 11_317;
+const GLOB_OF_TAR = 9055;
+/** Dead troll: seven slots for a twelve-entry table. */
+const TROLL_CORPSE = 5_960;
+const TROLL_CORPSE_CAPACITY = 7;
 /**
  * The minotaur drops that can roll a grade (bronze amulet, sword, axe, mace,
  * brass helmet, chain armor, plate shield).
@@ -206,11 +214,41 @@ function corpseOn(
   return found;
 }
 
+/** Where a corpse of that type last appeared in the tile pushes since `since`. */
+function corpseTileSince(
+  rig: ParityRig,
+  corpseTypeId: number,
+  since: number,
+): Position | null {
+  let found: Position | null = null;
+  for (const m of rig.messagesSince(since)) {
+    if (m.type !== "tile-states") continue;
+    for (const tile of m.visible) {
+      if (tile.items.some((item) => item.itemId === corpseTypeId)) {
+        found = tile.position;
+      }
+    }
+  }
+  return found;
+}
+
 /** Opens the corpse on the tile (walking next to it first) and lists it. */
 async function corpseContents(
   rig: ParityRig,
   position: Position,
 ): Promise<Array<{ typeId: number; count: number }> | null> {
+  const state = await corpseState(rig, position);
+  return state?.contents ?? null;
+}
+
+/** The corpse window as the server projects it: slot count and contents. */
+async function corpseState(
+  rig: ParityRig,
+  position: Position,
+): Promise<{
+  capacity: number;
+  contents: Array<{ typeId: number; count: number }>;
+} | null> {
   if (chebyshev(rig.position, position) > 1) {
     await rig.goto(position.x + 1, position.y, position.z);
     if (chebyshev(rig.position, position) > 1) {
@@ -243,7 +281,7 @@ async function corpseContents(
     type: "close-world-container",
     containerId: state.container.id,
   });
-  return contents;
+  return { capacity: state.capacity, contents };
 }
 
 const summarize = (
@@ -655,7 +693,11 @@ try {
   if (wanted("ranged")) {
     console.log("▶ scenario: sudden death rune kill from range");
     const mage = await ParityRig.create(url, TOKEN, randomName("Mage"), "Sorcerer");
-    await mage.goto(SPOT.x + 3, SPOT.y + 2, SPOT.z);
+    // Open ground west of the spawn spot: the row south of SPOT is clear for
+    // fifteen tiles, so the retreat tile has a walkable route to the corpse.
+    // (SPOT + (3, 3) sits in a walled street: unreachable, and rightly not
+    // swept.)
+    await mage.goto(SPOT.x - 4, SPOT.y + 1, SPOT.z);
     await mage.setupStats({ level: 100, magicLevel: 30 });
     await mage.give(String(SUDDEN_DEATH_RUNE), 10);
     await setFilter(mage, rules([GOLD, MEAT]));
@@ -663,7 +705,11 @@ try {
     const dromedary = await mage.spawnMonster("dromedary", "Dromedary");
     // Step back so the killing blow lands from at least two tiles away.
     const from = mage.position;
-    const away = await mage.goto(dromedary.position.x + 3, dromedary.position.y + 3, SPOT.z);
+    const away = await mage.goto(
+      Math.min(dromedary.position.x + 3, SPOT.x + 2),
+      SPOT.y + 1,
+      SPOT.z,
+    );
     let victimAt = mage.creaturePosition(dromedary.id) ?? dromedary.position;
     const distanceAtCast = chebyshev(away, victimAt);
     const since = mage.mark();
@@ -678,14 +724,13 @@ try {
     await sleep(600);
     const sweptMeat = carried(mage, MEAT) - meat0;
     const leftover = dead ? await corpseContents(mage, victimAt) : null;
+    // Canary `Creature::onDeath`: any corpse the killer can path to is
+    // quick-looted, and since 2026-09-02 so is ours — same floor, in view,
+    // with a walkable route next to it.
     check(
-      "ranged-kill-out-of-reach-sweeps-nothing (accepted TODO.md limitation)",
-      dead && distanceAtDeath >= 2 && sweptMeat === 0 && (leftover?.length ?? 0) > 0,
+      "ranged-kill-in-view-is-swept",
+      dead && distanceAtDeath >= 2 && sweptMeat > 0 && (leftover?.length ?? 0) === 0,
       `rune error ${outcome.errorCode ?? "none"}; dead=${dead}; distance at cast ${distanceAtCast}, at death ${distanceAtDeath} (started ${JSON.stringify(from)}); meat ${meat0}→${carried(mage, MEAT)}; corpse: ${summarize(leftover)} (since ${since})`,
-    );
-    note(
-      "ranged-kill",
-      "Canary auto-loots any corpse the killer can path to; here a paladin/mage kill from range is never swept until the player walks over and loots by hand.",
     );
     await mage.gm("/despawn");
     mage.client.terminate();
@@ -693,7 +738,7 @@ try {
 
   // ── 10. capacity: heavy drop skipped silently, light one taken ───────
   if (wanted("cap")) {
-    console.log("▶ scenario: near the weight cap the heavy drop is skipped silently");
+    console.log("▶ scenario: near the weight cap the heavy drop is skipped with a red warning");
     const light = await ParityRig.create(url, TOKEN, randomName("Cap"), "Knight");
     await light.goto(SPOT.x - 2, SPOT.y + 1, SPOT.z);
     // Level 8 keeps the cap small enough that a few plate armors fill it.
@@ -723,6 +768,11 @@ try {
       .messagesSince(since)
       .filter(isType("error"))
       .map((m) => m.code);
+    const warnings = light
+      .messagesSince(since)
+      .filter(isType("combat-log"))
+      .filter((m) => m.kind === "warning")
+      .map((m) => m.text);
     check(
       "weight-cap-skips-heavy-drop-takes-light-one",
       freeBefore < 800 &&
@@ -732,9 +782,14 @@ try {
         leftover.some((e) => e.typeId === CHEESE),
       `free room ${freeBefore}/100 oz before kill; gold ${gold0}→${carried(light, GOLD)}, cheese ${cheese0}→${carried(light, CHEESE)}; corpse: ${summarize(leftover)}; errors on the wire: ${JSON.stringify(errorsSeen)}`,
     );
-    note(
-      "weight-cap",
-      "The skip is silent: no message tells the player the sweep left the cheese for lack of capacity.",
+    // Canary `playerQuickLootCorpse`: one "Attention!" line per sweep that
+    // skipped something for weight; the client draws it red centre-screen.
+    check(
+      "weight-cap-skip-warns-once-in-red",
+      warnings.length === 1 &&
+        warnings[0] ===
+          "Attention! The loot you are trying to pick up is too heavy for you to carry.",
+      `warnings on the wire: ${JSON.stringify(warnings)}`,
     );
     light.client.terminate();
   }
@@ -802,28 +857,57 @@ try {
   }
 
   // ── 12. monster whose corpse cannot hold loot ─────────────────────────
-  if (wanted("nocorpse")) {
-    console.log("▶ scenario: water elemental (corpse type is not a container)");
+  // ── 13. a table longer than the corpse: every drop lands ─────────────
+  if (wanted("overflow")) {
+    console.log("▶ scenario: troll (twelve-entry table, seven-slot corpse)");
     const rig = await ParityRig.create(url, TOKEN, knightName, "Knight");
     await rig.goto(SPOT.x, SPOT.y, SPOT.z);
     await rig.setupStats({ skills: { axe: 60 } });
-    await setFilter(rig, rules([GOLD]));
-    const gold0 = carried(rig, GOLD);
+    // Sweep off so the corpse keeps everything it rolled.
+    await setFilter(rig, { enabled: false, pickupRules: [] });
     const since = rig.mark();
-    const elemental = await rig.spawnMonster("water-elemental", "Water Elemental");
-    const { victimAt } = await killAdjacent(rig, elemental.id, 240);
+    const troll = await rig.spawnMonster("troll", "Troll");
+    const { victimAt } = await killAdjacent(rig, troll.id, 240);
     await sleep(800);
-    const tile = victimAt ?? elemental.position;
-    const corpse = corpseOn(rig, tile, WATER_ELEMENTAL_CORPSE, since);
-    const leftover = corpse ? await corpseContents(rig, tile) : null;
+    // The troll keeps moving while it dies; trust the tile push that shows
+    // the corpse over the last position the kill loop saw.
+    const tile = corpseTileSince(rig, TROLL_CORPSE, since) ?? victimAt ?? troll.position;
+    const view = await corpseState(rig, tile);
+    // Nine of the troll's twelve entries are certain at the ×50 rate, so the
+    // roll must exceed the seven slots; the window is sized to the contents.
     check(
-      "non-container-corpse-drops-nothing (catalog gap: 22 monster types)",
-      corpse === null && carried(rig, GOLD) === gold0,
-      `corpse item on tile: ${corpse ? "yes" : "no"}; gold ${gold0}→${carried(rig, GOLD)} (its table has a 100% gold drop); corpse view: ${summarize(leftover)}`,
+      "loot-table-longer-than-corpse-drops-in-full",
+      view !== null &&
+        view.contents.length > TROLL_CORPSE_CAPACITY &&
+        view.capacity >= view.contents.length,
+      `corpse ${TROLL_CORPSE} (${TROLL_CORPSE_CAPACITY} slots): ${view?.contents.length ?? "?"} drops, window ${view?.capacity ?? "?"} slots — ${summarize(view?.contents ?? null)}`,
     );
-    note(
-      "non-container-corpse",
-      "createMonsterCorpse returns null when the corpse type has no container capacity, so the whole loot roll is discarded — nothing to sweep, nothing to loot by hand.",
+    await rig.gm("/despawn");
+    rig.client.terminate();
+  }
+
+  if (wanted("nocorpse")) {
+    console.log("▶ scenario: death blob (corpse type is a container only by override)");
+    const rig = await ParityRig.create(url, TOKEN, knightName, "Knight");
+    await rig.goto(SPOT.x, SPOT.y, SPOT.z);
+    await rig.setupStats({ skills: { axe: 60 } });
+    await setFilter(rig, rules([GLOB_OF_TAR]));
+    const tar0 = carried(rig, GLOB_OF_TAR);
+    const since = rig.mark();
+    const blob = await rig.spawnMonster("death-blob", "Death Blob");
+    const { victimAt } = await killAdjacent(rig, blob.id, 240);
+    await sleep(800);
+    const tile = victimAt ?? blob.position;
+    const corpse = corpseOn(rig, tile, DEATH_BLOB_CORPSE, since);
+    const leftover = corpse ? await corpseContents(rig, tile) : null;
+    // 11317 carries the DAT container flag with no items.xml size (capacity 0
+    // in the generated catalog); `overrides/corpses` gives it Canary's default
+    // eight slots, and the corpse grows to its loot anyway. Its one entry
+    // (glob of tar, 18.47%) is certain at the ×50 rate.
+    check(
+      "override-container-corpse-holds-and-sweeps-loot",
+      corpse !== null && carried(rig, GLOB_OF_TAR) > tar0 && leftover !== null,
+      `corpse item on tile: ${corpse ? "yes" : "no"}; glob of tar ${tar0}→${carried(rig, GLOB_OF_TAR)}; corpse view: ${summarize(leftover)}`,
     );
     await rig.gm("/despawn");
     rig.client.terminate();

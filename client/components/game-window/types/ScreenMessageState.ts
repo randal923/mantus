@@ -1,6 +1,6 @@
-/** Tibia-style centered on-screen text: yellow look lines, white status. */
+/** Tibia-style centred on-screen text: yellow look, white status, red warning. */
 export interface ScreenMessageState {
   readonly id: number;
   readonly text: string;
-  readonly tone: "look" | "status";
+  readonly tone: "look" | "status" | "warning";
 }

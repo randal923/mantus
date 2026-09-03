@@ -174,7 +174,11 @@ export function GameNotifications() {
         >
           <span
             className={`max-w-lg px-4 text-center font-tibia text-base font-bold whitespace-pre-line sm:text-lg [text-shadow:-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000,0_2px_4px_rgba(0,0,0,0.9)] ${
-              screenMessage.tone === "look" ? "text-yellow-300" : "text-white"
+              screenMessage.tone === "look"
+                ? "text-yellow-300"
+                : screenMessage.tone === "warning"
+                  ? "text-red-500"
+                  : "text-white"
             }`}
           >
             {screenMessage.text}

@@ -13,10 +13,16 @@ export function projectWorldContainer(
     item.location.kind === "container" || item.location.kind === "corpse"
       ? item.location.slot
       : 0;
+  // A corpse holds every drop it rolled, so the window grows past the type's
+  // slot count whenever the contents need it (Canary FLAG_NOLIMIT loot).
+  const capacity = Math.max(
+    catalog.require(root.typeId).containerCapacity ?? 0,
+    ...children.map((item) => slotOf(item) + 1),
+  );
   return {
     container: projectItem(root, catalog),
     parentContainerId: null,
-    capacity: catalog.require(root.typeId).containerCapacity ?? 0,
+    capacity,
     items: [...children]
       .sort((left, right) => slotOf(left) - slotOf(right))
       .map((item) => ({ slot: slotOf(item), item: projectItem(item, catalog) })),

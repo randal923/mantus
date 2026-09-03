@@ -166,7 +166,7 @@
   },
   {
    "path": "tools/buildItemCatalog.mjs",
-   "sha256": "3fa42f00a557b16086975f1255ad071cb2092d925fc3b3718c75d85fccec48c6"
+   "sha256": "a5a2c106356611d2a5c71bb0d23f715fb99b79bf86ed5b42a42f7257dc3d68d5"
   },
   {
    "path": "tools/buildProficiencySprites.mjs",

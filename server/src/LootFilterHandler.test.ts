@@ -76,6 +76,7 @@ function makeSession(playerId: string | null, filter?: LootFilter) {
   const session = {
     playerId,
     lootFilterUpdatePending: false,
+    lootFilterDeferred: null,
     lootFilterItemsReadyAt: 0,
     lootFilter: filter ?? { ...DEFAULT_LOOT_FILTER, pickupRules: [] },
     send: (message: ServerMessage) => sent.push(message),
@@ -177,21 +178,86 @@ describe("LootFilterHandler", () => {
     expect(session.lootFilter.pickupRules).toEqual([{ typeId: AXE }]);
   });
 
-  it("refuses a second update while one is still in flight", () => {
-    const handler = makeHandler(seededStore());
-    const { session, errors } = makeSession("char-1");
+  it("coalesces edits sent while a write is in flight: the newest wins, none is refused", async () => {
+    const store = seededStore();
+    const handler = makeHandler(store);
+    const { session, sent, errors } = makeSession("char-1");
 
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: true, pickupRules: [] },
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD }] },
     });
     handler.handleUpdate(session, {
       type: "update-loot-filter",
-      filter: { enabled: false, pickupRules: [] },
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD }, { typeId: AXE }] },
+    });
+    handler.handleUpdate(session, {
+      type: "update-loot-filter",
+      filter: { enabled: false, pickupRules: [{ typeId: AXE }] },
     });
 
-    expect(errors).toEqual(["loot-filter-update-pending"]);
-    expect(session.lootFilter.enabled).toBe(true);
+    // The very next corpse already sweeps against the latest list.
+    expect(errors).toEqual([]);
+    expect(session.lootFilter).toEqual({
+      enabled: false,
+      pickupRules: [{ typeId: AXE }],
+    });
+
+    await settle(handler);
+    await settle(handler);
+    await settle(handler);
+
+    expect(session.lootFilterUpdatePending).toBe(false);
+    expect(session.lootFilterDeferred).toBeNull();
+    expect(store.get("char-1")?.lootFilter).toEqual({
+      enabled: false,
+      pickupRules: [{ typeId: AXE }],
+    });
+    // One echo per committed write that is still current: the first write
+    // lands while a newer edit waits, so echoing it would flash a stale list.
+    expect(sent.filter((m) => m.type === "loot-filter-updated")).toEqual([
+      {
+        type: "loot-filter-updated",
+        filter: { enabled: false, pickupRules: [{ typeId: AXE }] },
+      },
+    ]);
+  });
+
+  it("keeps a newer deferred edit when the write in front of it fails", async () => {
+    const store = seededStore();
+    let failures = 1;
+    const flaky = {
+      ...store,
+      updateLootFilter: (characterId: string, filter: LootFilter) =>
+        failures-- > 0
+          ? Promise.reject(new Error("db hiccup"))
+          : store.updateLootFilter(characterId, filter),
+    } as unknown as CharacterStore;
+    const handler = makeHandler(flaky);
+    const { session, sent, errors } = makeSession("char-1");
+
+    handler.handleUpdate(session, {
+      type: "update-loot-filter",
+      filter: { enabled: true, pickupRules: [{ typeId: GOLD }] },
+    });
+    handler.handleUpdate(session, {
+      type: "update-loot-filter",
+      filter: { enabled: true, pickupRules: [{ typeId: AXE }] },
+    });
+    await settle(handler);
+    await settle(handler);
+
+    // No rollback to the failed edit's baseline: the deferred one is newer,
+    // and it is the one that reaches the row.
+    expect(errors).toEqual([]);
+    expect(session.lootFilter.pickupRules).toEqual([{ typeId: AXE }]);
+    expect(store.get("char-1")?.lootFilter.pickupRules).toEqual([
+      { typeId: AXE },
+    ]);
+    expect(sent.at(-1)).toMatchObject({
+      type: "loot-filter-updated",
+      filter: { enabled: true, pickupRules: [{ typeId: AXE }] },
+    });
   });
 
   it("rolls the session back when the durable write fails", async () => {

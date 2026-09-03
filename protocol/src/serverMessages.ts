@@ -482,6 +482,8 @@ export const combatLogMessageSchema = z.object({
     "death",
     "miss",
     "condition",
+    /** Red centre-screen notice (a capacity skip on the auto-loot sweep). */
+    "warning",
   ]),
   text: z.string().min(1).max(160),
 });

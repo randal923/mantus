@@ -221,4 +221,108 @@ describe("createMonsterCorpse loot rate", () => {
     expect(makeHarness(false, true)).toBe(2);
     expect(makeHarness(true, true)).toBe(1);
   });
+
+  it("drops a table longer than the corpse's slot count in full, up to the hard ceiling", () => {
+    const makeHarness = (entries: number) => {
+      const createCorpse = vi.fn();
+      const items = {
+        itemType: (typeId: number) =>
+          typeId === 100
+            ? { id: 100, containerCapacity: 4 }
+            : { id: typeId, maxCount: 1, stackable: false },
+        itemTypeByName: () => undefined,
+        createCorpse,
+      } as unknown as ItemIntentHandler;
+      const formula = {
+        chance: vi.fn(() => true),
+        integer: vi.fn(() => 1),
+      } as unknown as CombatFormula;
+      const monster = {
+        position: { x: 5, y: 6, z: 7 },
+        type: {
+          corpseItemTypeId: 100,
+          flags: { rewardBoss: false },
+          loot: Array.from({ length: entries }, (_, index) => ({
+            itemTypeId: 200 + index,
+            chance: 100_000,
+            minCount: 1,
+            maxCount: 1,
+            unique: false,
+          })),
+        },
+      } as unknown as Monster;
+      createMonsterCorpse(
+        { getMapItems: () => [] } as unknown as World,
+        items,
+        formula,
+        monster,
+        "killer",
+        "death:test",
+        1_000,
+        1,
+      );
+      return (createCorpse.mock.calls[0]?.[5] as Array<unknown>).length;
+    };
+
+    // Canary `Container:addLoot` adds with FLAG_NOLIMIT: the corpse grows.
+    expect(makeHarness(9)).toBe(9);
+    // The `items` table allows corpse slots 0..99; nothing real gets near.
+    expect(makeHarness(130)).toBe(100);
+  });
+
+  it("leaves a corpse that is not a container empty instead of dropping it", () => {
+    const createCorpse = vi.fn();
+    const items = {
+      itemType: (typeId: number) =>
+        typeId === 100
+          ? { id: 100 }
+          : { id: 200, maxCount: 100, stackable: true },
+      itemTypeByName: () => undefined,
+      createCorpse,
+    } as unknown as ItemIntentHandler;
+    const formula = {
+      chance: vi.fn(() => true),
+      integer: vi.fn(() => 4),
+    } as unknown as CombatFormula;
+    const monster = {
+      position: { x: 5, y: 6, z: 7 },
+      type: {
+        corpseItemTypeId: 100,
+        flags: { rewardBoss: false },
+        loot: [
+          {
+            itemTypeId: 200,
+            chance: 100_000,
+            minCount: 1,
+            maxCount: 4,
+            unique: false,
+          },
+        ],
+      },
+    } as unknown as Monster;
+
+    createMonsterCorpse(
+      { getMapItems: () => [] } as unknown as World,
+      items,
+      formula,
+      monster,
+      "killer",
+      "death:test",
+      1_000,
+      1,
+    );
+
+    // Canary `Creature::onDeath` fills only `corpse->getContainer()`; the
+    // corpse itself still lands on the tile.
+    expect(formula.chance).not.toHaveBeenCalled();
+    expect(createCorpse).toHaveBeenCalledWith(
+      "killer",
+      "death:test",
+      monster.position,
+      0,
+      100,
+      [],
+      1_000,
+    );
+  });
 });

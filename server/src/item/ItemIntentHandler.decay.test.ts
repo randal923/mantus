@@ -229,6 +229,37 @@ describe("world item decay", () => {
     expect(harness.world.getWorldItem(corpse.id)).toBeUndefined();
   });
 
+  it("keeps every drop across container stages however many slots the next one has", async () => {
+    const store = new MemoryItemStore(catalog);
+    const corpse: Item = {
+      id: "00000000-0000-4000-8000-00000000d104",
+      typeId: CORPSE_TYPE,
+      count: 1,
+      attributes: { ownerCharacterId: "killer-1" },
+      version: 1,
+      location: { kind: "world", position: POSITION, stackIndex: 0 },
+    };
+    store.seed(corpse);
+    // A dead chicken has five slots; a corpse is sized to its loot, so seven
+    // drops sit in slots 0..6 and every one of them survives 6042 -> 4330.
+    for (let slot = 0; slot < 7; slot++) {
+      store.seed({
+        id: `00000000-0000-4000-8000-0000000000${String(slot + 10)}`,
+        typeId: GOLD_TYPE,
+        count: 1,
+        attributes: {},
+        version: 1,
+        location: { kind: "corpse", containerId: corpse.id, slot },
+      });
+    }
+
+    const mutation = await store.decayWorldItem(corpse.id, corpse.version);
+    expect(mutation.after).toMatchObject([
+      { id: corpse.id, typeId: CORPSE_STAGE_TWO },
+    ]);
+    expect(mutation.removedItemIds).toEqual([]);
+  });
+
   it("destroys contents the next stage cannot hold and clears loot ownership", async () => {
     const store = new MemoryItemStore(catalog);
     const corpse: Item = {
@@ -257,7 +288,7 @@ describe("world item decay", () => {
       location: { kind: "corpse", containerId: corpse.id, slot: 1 },
     });
 
-    // 4330 -> 4331 drops container capacity to zero: contents must go with it.
+    // 4330 -> 4331 is no longer a container: contents must go with it.
     const mutation = await store.decayWorldItem(corpse.id, corpse.version);
     expect(mutation.after).toMatchObject([
       { id: corpse.id, typeId: CORPSE_STAGE_THREE, attributes: {} },

@@ -24,17 +24,17 @@ export interface MonsterLootRoll {
  * scaled by the server's loot rate, a stackable drop takes a count inside the
  * entry's `[minCount, maxCount]` band clamped to the type's stack limit, and a
  * non-stackable drop is always a single item however large `maxCount` is.
- * Entries beyond the corpse container's capacity simply do not fit.
+ * The corpse is sized to the loot afterwards (Canary `Container:addLoot`
+ * adds with FLAG_NOLIMIT), so a table longer than the corpse's slot count
+ * still drops in full; the caller applies the hard per-corpse ceiling.
  */
 export function rollMonsterLoot(
   entries: ReadonlyArray<MonsterLoot>,
-  capacity: number,
   lootRate: number,
   roll: MonsterLootRoll,
   rarityConfig?: RarityConfig,
 ): LootItemCreation[] {
   const loot: LootItemCreation[] = [];
-  if (capacity < 1) return loot;
   for (const entry of entries) {
     const percent = Math.min(
       100,
@@ -55,7 +55,6 @@ export function rollMonsterLoot(
       ? rollRarityAttributes(type, roll, rarityConfig)
       : undefined;
     loot.push({ typeId: type.id, count, ...(attributes ? { attributes } : {}) });
-    if (loot.length >= capacity) break;
   }
   return loot;
 }

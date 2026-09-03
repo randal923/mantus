@@ -6,6 +6,7 @@ import type { DecayManager } from "./DecayManager";
 import type { Item } from "./Item";
 import type { ItemCatalog } from "./ItemCatalog";
 import type { LootItemCreation } from "./LootItemCreation";
+import { MAX_CORPSE_LOOT_ITEMS } from "./maxCorpseLootItems";
 
 /**
  * Creates corpses with loot as memory-only world items, synchronously on the
@@ -41,7 +42,13 @@ export class CorpseCreator {
       return null;
     }
     const corpseType = this.catalog.require(corpseTypeId);
-    if ((corpseType.containerCapacity ?? 0) < loot.length) {
+    // The corpse is sized to its loot, not the other way round; the only
+    // ceilings are "a container at all" and the persisted slot bound.
+    if (loot.length > 0 && corpseType.containerCapacity === undefined) {
+      console.warn(`corpse creation skipped for ${eventId}: not a container`);
+      return null;
+    }
+    if (loot.length > MAX_CORPSE_LOOT_ITEMS) {
       console.warn(`corpse creation skipped for ${eventId}: loot overflow`);
       return null;
     }

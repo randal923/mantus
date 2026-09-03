@@ -55,41 +55,20 @@ describe("monster loot parity", () => {
     ]);
   });
 
-  it("pins the monsters whose corpse cannot hold their loot", () => {
+  it("gives every loot table a corpse that can be opened", () => {
     const report = buildMonsterLootReport(
       content.monsterTypes.values(),
       catalog,
     );
 
-    // Canary behaves the same way: `Game::internalCreateCorpse` only fills a
-    // corpse that is a container, so these tables never drop anything.
+    // The lost gnome has `corpse = 0` in Canary too: it leaves nothing.
     expect(report.monstersWithoutCorpse).toEqual(["lost-gnome"]);
-    expect(report.monstersWithUncontainableCorpse).toEqual([
-      "angry-sugar-fairy",
-      "death-blob",
-      "gaffir",
-      "glooth-bomb",
-      "goggle-cake",
-      "hellhunter-inferniarch",
-      "honey-elemental",
-      "lava-lurker",
-      "massive-water-elemental",
-      "mechanical-fighter",
-      "misguided-bully",
-      "misguided-thief",
-      "nibblemaw",
-      "pirat-bombardier",
-      "pirat-mate",
-      "poor-soul",
-      "schiach",
-      "soul-broken-harbinger",
-      "spellreaper-inferniarch",
-      "sugar-daddy",
-      "water-elemental",
-    ]);
-    // Tables longer than the corpse's capacity are normal — Canary fills the
-    // container until it is full and the rest simply does not fit.
-    expect(report.monstersWithOverflowingTable).toHaveLength(147);
+    // Everything else drops into a container corpse (2026-09-02): ten corpse
+    // ids missing from items.xml are APPEARANCE_ONLY_CORPSES in
+    // buildItemCatalog, and the container-less or zero-slot ones carry an
+    // override in `item/overrides/corpses`. A corpse grows to the size of its
+    // loot, so no table is "too long" for its corpse any more.
+    expect(report.monstersWithUncontainableCorpse).toEqual([]);
   });
 
   it("keeps every loot entry inside its declared bands", () => {

@@ -21,6 +21,7 @@ import { requireOwnedMemoryItem } from "./requireOwnedMemoryItem";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
 import type { WorldItemDeltas } from "./WorldItemDeltas";
 import type { WorldItemSource } from "./WorldItemSource";
+import { decayKeepSlots } from "./decayKeepSlots";
 
 export class MemoryItemStore implements ItemStore {
   private readonly items = new Map<string, Item>();
@@ -843,8 +844,8 @@ export class MemoryItemStore implements ItemStore {
       for (const id of removedItemIds) this.items.delete(id);
       return { before, after: [], removedItemIds };
     }
-    const capacity = this.catalog.require(targetTypeId).containerCapacity ?? 0;
-    const removedItemIds = collectMemoryDescendantIds(this.items, before.id, capacity);
+    const keepSlots = decayKeepSlots(this.catalog, targetTypeId);
+    const removedItemIds = collectMemoryDescendantIds(this.items, before.id, keepSlots);
     for (const id of removedItemIds) this.items.delete(id);
     const after = {
       ...before,

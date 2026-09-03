@@ -29,8 +29,14 @@ const GOLD_TYPE = 3031;
 const AXE_TYPE = 3274;
 const BACKPACK_TYPE = 2854;
 const CORPSE_POSITION = { x: 1, y: 2, z: 7 };
-/** Same floor, six tiles away — well outside the one-tile reach check. */
+/** Same floor, six tiles away over open ground: in view and walkable to. */
 const FAR_POSITION = { x: 8, y: 8, z: 7 };
+/** Same floor, ten tiles east — outside the test session's 9-wide view. */
+const OUT_OF_VIEW_POSITION = { x: 11, y: 2, z: 7 };
+/** Every tile next to CORPSE_POSITION, so no path can end beside it. */
+const WALL_AROUND_CORPSE: ReadonlyArray<readonly [number, number]> = [
+  [0, 1], [1, 1], [2, 1], [0, 2], [2, 2], [0, 3], [1, 3], [2, 3],
+];
 
 let catalog: ItemCatalog;
 
@@ -78,6 +84,8 @@ async function makeHarness(input: {
   filter: LootFilter;
   corpseOwnerId?: string | null;
   killerPosition?: { x: number; y: number; z: number };
+  /** Blocked tiles on the 12×12 grid, as [x, y]. */
+  blocked?: ReadonlyArray<readonly [number, number]>;
   carriedItems?: ReadonlyArray<Item>;
   /** Oz of capacity; raise it when the filler items would hit the cap first. */
   capacityMax?: number;
@@ -85,7 +93,12 @@ async function makeHarness(input: {
   loot?: ReadonlyArray<LootItemCreation>;
 }) {
   const world = new World(
-    gridMapData({ name: "auto-loot-test", width: 12, height: 12, blocked: [] }),
+    gridMapData({
+      name: "auto-loot-test",
+      width: 12,
+      height: 12,
+      blocked: input.blocked ?? [],
+    }),
     25,
   );
   const registry = {
@@ -222,6 +235,9 @@ describe("auto loot", () => {
     expect(carriedTypeIds(harness.items, KILLER_ID)).toEqual(
       expect.arrayContaining([GOLD_TYPE, AXE_TYPE]),
     );
+    expect(
+      harness.killer.sent.filter((m) => m.type === "combat-log"),
+    ).toEqual([]);
   });
 
   it("leaves an unlisted type in the corpse and takes the rest", async () => {
@@ -338,7 +354,9 @@ describe("auto loot", () => {
     expect(carriedTypeIds(harness.items, KILLER_ID)).not.toContain(GOLD_TYPE);
   });
 
-  it("takes nothing when the killer is out of reach of the corpse", async () => {
+  it("sweeps a corpse the killer can see and walk to, however far the kill was", async () => {
+    // Canary `Creature::onDeath`: any corpse the killer can path to is
+    // quick-looted, so a rune or bow kill from range is swept too.
     const harness = await makeHarness({
       filter: {
         enabled: true,
@@ -355,7 +373,102 @@ describe("auto loot", () => {
     );
     await settle(harness.items, 0);
 
+    expect(corpseChildren(harness.world, harness.corpseId)).toEqual([]);
+  });
+
+  it("takes nothing from a corpse no walkable path leads next to", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+      killerPosition: FAR_POSITION,
+      blocked: WALL_AROUND_CORPSE,
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
     expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
+  });
+
+  it("takes nothing from a corpse outside the killer's view", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+      killerPosition: OUT_OF_VIEW_POSITION,
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
+  });
+
+  it("takes nothing from a corpse on another floor", async () => {
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+      killerPosition: { ...CORPSE_POSITION, z: 6 },
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(corpseChildren(harness.world, harness.corpseId)).toHaveLength(2);
+  });
+
+  it("warns once, in red, when a listed drop is too heavy to carry", async () => {
+    const oz = (typeId: number) => catalog.require(typeId).weight;
+    // Room for the backpack and the ten coins, not for the axe.
+    const capacityMax = Math.ceil((oz(BACKPACK_TYPE) + oz(GOLD_TYPE) * 10) / 100) + 1;
+    const harness = await makeHarness({
+      filter: {
+        enabled: true,
+        pickupRules: [{ typeId: GOLD_TYPE }, { typeId: AXE_TYPE }],
+      },
+      capacityMax,
+    });
+
+    harness.items.autoLoot(
+      harness.killer.session,
+      KILLER_ID,
+      harness.corpseId,
+      0,
+    );
+    await settle(harness.items, 0);
+
+    expect(carriedTypeIds(harness.items, KILLER_ID)).toContain(GOLD_TYPE);
+    expect(corpseChildren(harness.world, harness.corpseId)).toMatchObject([
+      { typeId: AXE_TYPE },
+    ]);
+    // Canary `playerQuickLootCorpse` sends this once per sweep.
+    expect(harness.killer.sent.filter((m) => m.type === "combat-log")).toEqual([
+      {
+        type: "combat-log",
+        kind: "warning",
+        text: "Attention! The loot you are trying to pick up is too heavy for you to carry.",
+      },
+    ]);
   });
 
   it("never sweeps a corpse owned by someone else", async () => {

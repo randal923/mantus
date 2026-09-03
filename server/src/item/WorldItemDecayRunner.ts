@@ -8,6 +8,7 @@ import type { ItemMutation } from "./ItemMutation";
 import type { ResolvedOutcomes } from "../ResolvedOutcomes";
 import type { ItemStore } from "./ItemStore";
 import { PendingItemOperations } from "./PendingItemOperations";
+import { decayKeepSlots } from "./decayKeepSlots";
 
 /** Executes due world-item decays against the store and queues their outcomes. */
 export class WorldItemDecayRunner {
@@ -146,8 +147,7 @@ export class WorldItemDecayRunner {
         removedItemIds: subtree.map((item) => item.id),
       };
     } else {
-      const keepSlots =
-        this.catalog.require(targetTypeId).containerCapacity ?? 0;
+      const keepSlots = decayKeepSlots(this.catalog, targetTypeId);
       const doomedIds = new Set<string>();
       for (const item of subtree) {
         if (
