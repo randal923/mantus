@@ -153,5 +153,10 @@ export function gridMapData(config: GridMapConfig): MapData {
     getTownTemples() {
       return [{ ...spawn }];
     },
+    getTownTemple(townId) {
+      return config.towns?.some((town) => town.id === townId)
+        ? { ...spawn }
+        : undefined;
+    },
   };
 }

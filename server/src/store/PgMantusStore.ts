@@ -330,12 +330,7 @@ export class PgMantusStore implements MantusStoreStore {
     if (grant.kind === "sex-change") {
       return { effect: await deliverSexChange(context), items: [] };
     }
-    if (grant.kind === "name-change") {
-      return { effect: await deliverNameChange(context), items: [] };
-    }
-    // Temple teleport moves a live creature and writes nothing durable; the
-    // tick applies it from the committed outcome.
-    return { effect: { kind: "temple-teleport" }, items: [] };
+    return { effect: await deliverNameChange(context), items: [] };
   }
 
   /**

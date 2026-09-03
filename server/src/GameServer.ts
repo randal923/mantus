@@ -51,6 +51,7 @@ import type { HouseStore } from "./house/HouseStore";
 import { loadHouseContent } from "./house/loadHouseContent";
 import { AdventurersGuildExitService } from "./action/AdventurersGuildExitService";
 import { AdventurersStoneService } from "./action/AdventurersStoneService";
+import { TempleTeleportScrollService } from "./action/TempleTeleportScrollService";
 import { ClockHandler } from "./action/ClockHandler";
 import { ElementalShrineService } from "./action/ElementalShrineService";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
@@ -298,6 +299,7 @@ export class GameServer {
   private readonly shops: ShopService;
   private readonly portableSeller: PortableSellerService;
   private readonly adventurersStone: AdventurersStoneService;
+  private readonly templeScroll: TempleTeleportScrollService;
   private readonly guildExit: AdventurersGuildExitService;
   private readonly elementalShrines: ElementalShrineService;
   private readonly shopStock = new ShopStockCache();
@@ -724,9 +726,6 @@ export class GameServer {
         },
         applySexChange: (characterId, sex, lookType) =>
           this.applyStoreSexChange(characterId, sex, lookType),
-        canTempleTeleport: (characterId) =>
-          this.canTempleTeleport(characterId),
-        templeTeleport: (characterId) => this.templeTeleport(characterId),
       },
       this.items,
     );
@@ -928,6 +927,15 @@ export class GameServer {
       setStorageValue: (player, key, value) =>
         this.quests.setStorageValue(player, key, value),
       fallbackTemple: () => this.world.templePosition,
+    });
+    this.templeScroll = new TempleTeleportScrollService(this.items, {
+      getPlayer: (characterId) => this.world.getPlayer(characterId),
+      homeTemple: (player) =>
+        this.world.townTemple(player.townId) ?? this.world.templePosition,
+      teleport: (session, player, destination) =>
+        this.teleportPlayerTo(session, player, destination),
+      effect: (position, effectId) =>
+        this.visibility.broadcastMagicEffect(position, effectId),
     });
     this.elementalShrines = new ElementalShrineService({
       teleport: (session, player, destination) =>
@@ -1954,6 +1962,7 @@ export class GameServer {
         if (this.clocks.handleUseItem(session, intent)) return;
         if (this.portableSeller.handleUseItem(session, intent, now)) return;
         if (this.adventurersStone.handleUseItem(session, intent)) return;
+        if (this.templeScroll.handleUseItem(session, intent, now)) return;
         this.items.handle(session, intent, now);
         return;
       case "equip-item":
@@ -2417,25 +2426,6 @@ export class GameServer {
     player.outfit = { ...player.outfit, lookType, addons: 0 };
     this.visibility.onCreatureStateChanged(player);
     this.persistence.markDirty(player);
-  }
-
-  /**
-   * Canary's temple-teleport rule: allowed inside a protection zone, refused
-   * outside one while the pz-lock from a fight is running. Read from live
-   * state at execution time, never from anything the client sent.
-   */
-  private canTempleTeleport(characterId: string): boolean {
-    const player = this.world.getPlayer(characterId);
-    if (!player) return false;
-    if (this.world.isProtectionZone(player.position)) return true;
-    return !player.conditions.has("pz-lock");
-  }
-
-  private templeTeleport(characterId: string): void {
-    const player = this.world.getPlayer(characterId);
-    const session = this.registry.sessionFor(characterId);
-    if (!player || !session) return;
-    this.teleportPlayerTo(session, player, this.world.templePosition);
   }
 
   /** Teleports near `destination`; false when no free tile was found. */

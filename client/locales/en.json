@@ -674,7 +674,6 @@
       "name-taken": "That name is already taken.",
       "name-invalid": "That name cannot be used.",
       "name-required": "Enter the new character name first.",
-      "in-combat": "You cannot use this while in combat.",
       "inbox-full": "Your character cannot carry any more items.",
       "pending-order-exists": "You already have an open Pix order. Cancel it before creating a new one.",
       "package-not-found": "That coin package is not available.",
@@ -701,8 +700,7 @@
       "exp-boost": "Boost",
       "prey-slot": "Prey slot",
       "prey-wildcard": "Prey wildcards",
-      "hunting-slot": "Hunting task slot",
-      "temple-teleport": "Transport"
+      "hunting-slot": "Hunting task slot"
     },
     "priceLabel": "Buy for {{price}} Mantus Coins",
     "priceLabelWithCount": "Buy {{count}} for {{price}} Mantus Coins",

@@ -49,3 +49,4 @@ worktree is created, merged, or removed.
 | `agents/lured-monster-return-home` | done        |
 | `agents/autoloot-e2e`            | done        |
 | `agents/autoloot-reach-corpses`  | done        |
+| `agents/temple-teleport-scroll` | done        |

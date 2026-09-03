@@ -355,15 +355,6 @@ export class MantusStoreService {
       this.fail(session, "unavailable");
       return;
     }
-    // Canary refuses a temple teleport in combat. Checked here so the player
-    // is not charged, and again when the committed outcome is applied.
-    if (
-      entry.offer.grant.kind === "temple-teleport" &&
-      this.hooks?.canTempleTeleport(characterId) === false
-    ) {
-      this.fail(session, "in-combat");
-      return;
-    }
     this.cooldownBySession.set(session.id, now + STORE_LIMITS.actionCooldownMs);
 
     const grantKind = entry.offer.grant.kind;
@@ -623,13 +614,6 @@ export class MantusStoreService {
         // description. `Creature.name` is immutable for exactly that reason:
         // the row is renamed, the live creature keeps its name until the
         // next login reads it back.
-        return;
-      case "temple-teleport":
-        // Re-checked at execution time: the fight the buyer was not in when
-        // the purchase started may have begun since.
-        if (hooks.canTempleTeleport(characterId)) {
-          hooks.templeTeleport(characterId);
-        }
         return;
       default:
         return;

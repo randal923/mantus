@@ -674,7 +674,6 @@
       "name-taken": "Esse nome já está em uso.",
       "name-invalid": "Esse nome não pode ser usado.",
       "name-required": "Digite o novo nome do personagem primeiro.",
-      "in-combat": "Você não pode usar isto durante um combate.",
       "inbox-full": "Seu personagem não pode carregar mais itens.",
       "pending-order-exists": "Você já tem um pedido Pix em aberto. Cancele-o antes de criar outro.",
       "package-not-found": "Esse pacote de coins não está disponível.",
@@ -701,8 +700,7 @@
       "exp-boost": "Impulso",
       "prey-slot": "Espaço de presa",
       "prey-wildcard": "Curingas de presa",
-      "hunting-slot": "Espaço de tarefa de caça",
-      "temple-teleport": "Transporte"
+      "hunting-slot": "Espaço de tarefa de caça"
     },
     "priceLabel": "Comprar por {{price}} Mantus Coins",
     "priceLabelWithCount": "Comprar {{count}} por {{price}} Mantus Coins",

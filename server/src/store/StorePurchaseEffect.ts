@@ -29,5 +29,4 @@ export type StorePurchaseEffect =
       readonly sex: CharacterSex;
       readonly lookType: number;
     }
-  | { readonly kind: "name-change"; readonly displayName: string }
-  | { readonly kind: "temple-teleport" };
+  | { readonly kind: "name-change"; readonly displayName: string };

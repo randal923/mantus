@@ -70,7 +70,6 @@ export const storeProductKindSchema = z.enum([
   "prey-slot",
   "prey-wildcard",
   "hunting-slot",
-  "temple-teleport",
 ]);
 
 /**
@@ -316,7 +315,6 @@ export const storeActionFailedMessageSchema = z
       "name-taken",
       "name-invalid",
       "name-required",
-      "in-combat",
       "rate-limited",
       "unavailable",
       "failed",

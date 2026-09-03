@@ -5,8 +5,10 @@
 // item catalog and are carriable (house furniture via decoration kits), look
 // types and mount ids exist in the outfit catalog. Offer types whose systems
 // do not exist yet (blessings, hirelings, charm expansion, instant reward
-// access, beds, casks, tournament) are absent by design. Behaviour lives in
-// storeCatalog.ts; this file is data only.
+// access, beds, casks, tournament) are absent by design, as is the instant
+// temple teleport service, sold as the temple teleport scroll instead
+// (TEMPLE_TELEPORT_SCROLL_PRODUCT.ts). Behaviour lives in storeCatalog.ts;
+// this file is data only.
 import type { StoreCatalogCategory } from "./storeCatalog";
 
 export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
@@ -15795,28 +15797,6 @@ export const STORE_CATALOG_CATEGORIES: ReadonlyArray<StoreCatalogCategory> = [
               "kind": "charges",
               "itemTypeId": 28525,
               "charges": 500
-            }
-          }
-        ]
-      },
-      {
-        "id": "useful-things-temple-teleport",
-        "name": "Temple Teleport",
-        "kind": "temple-teleport",
-        "description": {
-          "en": "Teleports you instantly to your home temple.\n\n{character}\n{useicon} use it to teleport you to your home temple\n{battlesign}\n{info} does not work in no-logout zones or close to a character's home temple",
-          "pt-BR": "Teleporta você instantaneamente para o seu templo de origem.\n\n{character}\n{useicon} use-o para se teleportar ao seu templo de origem\n{battlesign}\n{info} não funciona em zonas sem logout ou perto do templo de origem de um personagem"
-        },
-        "icon": {
-          "kind": "symbol",
-          "symbol": "temple"
-        },
-        "subOffers": [
-          {
-            "id": "temple-teleport",
-            "price": 15,
-            "grant": {
-              "kind": "temple-teleport"
             }
           }
         ]

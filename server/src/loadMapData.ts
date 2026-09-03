@@ -371,6 +371,12 @@ export function loadMapData(
     getTownTemples() {
       return townTemples;
     },
+    getTownTemple(townId) {
+      const town = meta.towns.find((candidate) => candidate.id === townId);
+      if (!town) return undefined;
+      const temple = positionSchema.safeParse({ x: town.x, y: town.y, z: town.z });
+      return temple.success ? temple.data : undefined;
+    },
     getHouseId(position) {
       return houseTiles.byPosition.get(positionKey(position));
     },

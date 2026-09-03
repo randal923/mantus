@@ -187,18 +187,14 @@ export function planStorePurchase(input: {
     return planned({ effect: { kind: grant.kind, slot } });
   }
 
-  if (grant.kind === "exp-boost") {
-    if (snapshot.xpBoostPurchasesToday >= XP_BOOST_DAILY_LIMIT) {
-      return { status: "limit-reached" };
-    }
-    return planned({
-      effect: {
-        kind: "exp-boost",
-        untilMs: Math.max(input.xpBoostUntilMs, nowMs) + XP_BOOST_DURATION_MS,
-      },
-      persist: { xpBoostCountBefore: snapshot.xpBoostPurchasesToday },
-    });
+  if (snapshot.xpBoostPurchasesToday >= XP_BOOST_DAILY_LIMIT) {
+    return { status: "limit-reached" };
   }
-
-  return planned({ effect: { kind: "temple-teleport" } });
+  return planned({
+    effect: {
+      kind: "exp-boost",
+      untilMs: Math.max(input.xpBoostUntilMs, nowMs) + XP_BOOST_DURATION_MS,
+    },
+    persist: { xpBoostCountBefore: snapshot.xpBoostPurchasesToday },
+  });
 }
