@@ -15,6 +15,7 @@
     "playtest:shrines": "tsx src/playtest/scenarios/elementalShrines.ts",
     "playtest:adventurers-stone": "tsx src/playtest/scenarios/adventurersStone.ts",
     "playtest:temple-scroll": "tsx src/playtest/scenarios/templeTeleportScroll.ts",
+    "playtest:gold-converter": "tsx src/playtest/scenarios/goldConverter.ts",
     "playtest:quest-chests": "tsx src/playtest/scenarios/questChestSweep.ts",
     "playtest:quest-doors": "tsx src/playtest/scenarios/questDoorKeySweep.ts",
     "playtest:rookgaard": "tsx src/playtest/scenarios/rookgaardQuests.ts",

@@ -54,6 +54,7 @@ import { loadHouseContent } from "./house/loadHouseContent";
 import { AdventurersGuildExitService } from "./action/AdventurersGuildExitService";
 import { AdventurersStoneService } from "./action/AdventurersStoneService";
 import { TempleTeleportScrollService } from "./action/TempleTeleportScrollService";
+import { GoldConverterService } from "./action/GoldConverterService";
 import { ClockHandler } from "./action/ClockHandler";
 import { ElementalShrineService } from "./action/ElementalShrineService";
 import { loadChestDefinitions } from "./action/loadChestDefinitions";
@@ -302,6 +303,7 @@ export class GameServer {
   private readonly portableSeller: PortableSellerService;
   private readonly adventurersStone: AdventurersStoneService;
   private readonly templeScroll: TempleTeleportScrollService;
+  private readonly goldConverter: GoldConverterService;
   private readonly guildExit: AdventurersGuildExitService;
   private readonly elementalShrines: ElementalShrineService;
   private readonly shopStock = new ShopStockCache();
@@ -930,6 +932,7 @@ export class GameServer {
         this.quests.setStorageValue(player, key, value),
       fallbackTemple: () => this.world.templePosition,
     });
+    this.goldConverter = new GoldConverterService(this.items, deps.itemCatalog);
     this.templeScroll = new TempleTeleportScrollService(this.items, {
       getPlayer: (characterId) => this.world.getPlayer(characterId),
       homeTemple: (player) =>
@@ -1990,6 +1993,18 @@ export class GameServer {
         return;
       case "use-item-with":
         this.useItemWith(session, intent, now);
+        return;
+      case "use-item-on-item":
+        // Item-on-item uses share the generic use exhaust; only the gold
+        // converter answers, anything else fails closed.
+        if (session.useExhausted(now)) {
+          session.sendError("item-exhausted");
+          return;
+        }
+        session.armUseExhaust(now);
+        if (!this.goldConverter.handle(session, intent, now)) {
+          session.sendError("item-action-failed");
+        }
         return;
       case "use-item":
         this.useItem(session, intent, now);

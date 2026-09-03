@@ -268,6 +268,17 @@ export class GameClient {
     });
   }
 
+  /** Uses a carried item on another carried item (the gold converter). */
+  useItemOnItem(item: InventoryItem, target: InventoryItem): boolean {
+    return this.send({
+      type: "use-item-on-item",
+      itemId: item.id,
+      revision: item.revision,
+      targetItemId: target.id,
+      targetRevision: target.revision,
+    });
+  }
+
   advertiseParty(advert: {
     title?: string;
     minLevel?: number;

@@ -6660,3 +6660,75 @@ reaches players once main is pushed and the Fly deploy runs.
   window on the client (recorded in `TODO.md`). A button uses whichever
   carried instance of the type the server resolves first, which need not be
   the one the player would click.
+
+## 2026-09-03 — Gold Converter works (store item 23722 / daily 25719)
+
+- **Problem:** the store sold the Gold Converter (`charges-23722-500`) and
+  delivered it with 500 charges, but nothing consumed it: item 23722 was in
+  no tool table, the generic use path rejected it, the server stamped no
+  `useKind` so the client offered no action at all, and the only use-with
+  message carried a map position, so a coin stack inside a backpack could
+  not even be named as a target. A live probe (converter + 100 gold) got
+  `item-action-failed` on every path. Canary's `gold_converter.lua` had sat
+  in the parity manifest as deferred ("item-use effect not yet reproduced").
+- **What changed:** new client message `use-item-on-item` (owned item at a
+  revision, target owned item at a revision) in `protocol/`. New
+  `planGoldConversion` builds one carried plan per Canary's coin table: a
+  full 100-stack of gold/platinum steps up to one platinum/crystal, any
+  other platinum/crystal stack breaks one coin down into a full stack of
+  the lower coin; the converter burns a charge (catalog fallback for
+  GM-minted ones) and its last charge destroys it; the coins top up a
+  partial stack first, else take the first free backpack slot, else the
+  slot the spent stack vacated; a break-down with no room or over capacity
+  is refused. `GoldConverterService` re-reads both items from the live
+  cache at execution time and applies the plan through the new public
+  `ItemIntentHandler.applyCarriedPlan` (memory mutation in-tick, one
+  persist transaction behind it with `gold-converter` destruction/creation
+  audits). `GameServer` dispatches the message behind the shared 200 ms use
+  exhaust. `getItemUseKind` stamps the converters `useWithItem`, a new use
+  kind the client treats like `useWith` but keeps the bags open for; while
+  a use-with is pending, a left click on any carried item (backpack tree
+  or a floating container such as the Loot Pouch) sends the pair
+  (`ItemSlot.onSelect` → `InventoryContainerView`/`ContainerInventorySection`
+  → `GameInventoryOverlays.selectUseWithTarget`), and slots show a
+  crosshair cursor. Parity manifest: `gold_converter.lua` is now
+  `implemented` (classifier disposition + hand-edited JSON entry and
+  counts, classifier hash re-pinned).
+- **Files:** `protocol/src/clientMessages.ts`, `protocol/src/item.ts`,
+  `server/src/item/goldConverterTypeIds.ts`,
+  `server/src/item/plan/planGoldConversion.ts` (+ test),
+  `server/src/action/GoldConverterService.ts` (+ test),
+  `server/src/item/ItemIntentHandler.ts`, `server/src/item/getItemUseKind.ts`,
+  `server/src/item/CarriedPersistPlan.ts`, `server/src/GameServer.ts`,
+  `server/src/playtest/scenarios/goldConverter.ts`, `server/package.json`,
+  `client/lib/net/GameClient.ts`, `client/components/inventory/ItemSlot.tsx`,
+  `client/components/inventory/InventoryContainerView.tsx`,
+  `client/components/inventory/InventoryPanel.tsx`,
+  `client/components/inventory/ContainerInventorySection.tsx`,
+  `client/components/inventory/CarriedContainerPanel.tsx`,
+  `client/components/game-window/GameInventoryOverlays.tsx`,
+  `client/lib/action-bar/createItemAction.ts`,
+  `client/components/action-bar/ActionBarItemPicker.tsx`,
+  `tools/classifyWorldActionRegistration.mjs`,
+  `content/canary-world-action-parity.json`, `content/source-manifest.json`.
+- **Verification:** 12 planner tests (step-up, merge into a partial stack,
+  short gold refused, platinum→crystal, partial platinum→100 gold, lone
+  crystal→100 platinum, last charge destroys the converter, empty converter,
+  stale revisions on either item, non-coin/self/non-converter, over
+  capacity, full backpack: break-down refused but step-up lands in the
+  vacated slot) and 4 service tests (one applied plan; replay/race of the
+  same stack converts exactly once; stale revision; DB-first op pending).
+  `yarn playtest:gold-converter` (real server on an embedded Postgres):
+  100 gold→1 platinum, exact replay refused with the inventory untouched,
+  99 gold refused, 100 platinum→+1 crystal merged into the starter crystal
+  stack, crystal→100 platinum, converter still carried, and a relogin shows
+  the persisted counts. All three workspaces typecheck, `yarn parity:check`
+  passes, client unit suite 505/505, client lint has only the 2 errors
+  `main` already has.
+- **Residual risk:** a coin stack lying on the ground cannot be targeted
+  (Canary's script accepts any target item); the map click of a pending
+  converter use fails closed. The Magic Gold Converter (28525/28526,
+  store `charges-28525-500`) is still inert. Both in `TODO.md`. The parity
+  JSON on `main` carries hand edits the classifier does not know
+  (Adventurer's Stone, temple scroll, quest teleports flip back to
+  deferred on regeneration) — also recorded in `TODO.md`.

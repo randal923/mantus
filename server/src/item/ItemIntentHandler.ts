@@ -1471,6 +1471,21 @@ export class ItemIntentHandler {
     plan: CarriedPlan,
     now: number,
   ): void {
+    this.applyCarriedPlan(session, characterId, plan, now);
+  }
+
+  /**
+   * Applies an already-validated carried plan built by another handler
+   * (the gold converter): the memory mutation lands synchronously in this
+   * tick and its persist plan queues on the character's write lane as one
+   * transaction (charter rules 2, 3, 5).
+   */
+  applyCarriedPlan(
+    session: Session,
+    characterId: string,
+    plan: CarriedPlan,
+    now: number,
+  ): void {
     const inventory = this.operations.applyMutation(
       characterId,
       plan.mutation,
