@@ -1204,6 +1204,15 @@ limitations accepted during a session are recorded in the owning feature file
   (`sanitizeActionBarAction` already resolves each type against the catalog),
   and relax `carriedItemSummarySchema.count` to non-negative. Owner: the
   action-bar work recorded in `todo/done.md` (2026-07-31).
+- **A container action button opens nothing on screen when every carried
+  instance is inside a closed container** (accepted 2026-09-03). The HUD
+  opens the first instance it can see (equipped backpack → inventory window,
+  anything else → floating window); when none is visible it falls back to
+  `activate-action-bar`, the server opens the container it resolves, but the
+  inventory window's navigation is local component state so the client
+  shows no window for it. Recommended fix: float any container the server
+  reports open that the client did not request through the inventory tree.
+  Owner: the action-bar work recorded in `todo/done.md` (2026-09-03).
 - **Public-website editorial destinations are provisional** (2026-07-31,
   Feature 110). The portal layout, live world status, boosted rotation,
   highscores, online list, character lookup/profile, server-info, and vocation

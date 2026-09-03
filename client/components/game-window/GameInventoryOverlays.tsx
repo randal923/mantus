@@ -1,5 +1,4 @@
 import type { InventoryItem, ItemContainerDestination } from "@tibia/protocol";
-import { useState } from "react";
 import { getRuneCombatTarget } from "../../lib/combat/getRuneCombatTarget";
 import { quiverDropDestination } from "../../lib/inventory/quiverDropDestination";
 import { MailboxModal } from "../depot/MailboxModal";
@@ -46,11 +45,16 @@ export function GameInventoryOverlays() {
   const setUseWithTargeting = useGameWindowStore(
     (state) => state.setUseWithTargeting,
   );
-  // Carried containers opened from a gear slot (the quiver) float beside the
-  // inventory like loot windows; the server's open-container set is the
-  // source of truth, so a container it no longer lists simply stops showing.
-  const [floatingContainerIds, setFloatingContainerIds] = useState<string[]>(
-    [],
+  // Carried containers opened from a gear slot (the quiver) or an action-bar
+  // button float beside the inventory like loot windows.
+  const floatingContainerIds = useGameWindowStore(
+    (state) => state.floatingContainerIds,
+  );
+  const openFloatingContainer = useGameWindowStore(
+    (state) => state.openFloatingContainer,
+  );
+  const forgetFloatingContainer = useGameWindowStore(
+    (state) => state.closeFloatingContainer,
   );
 
   if (!ownCharacter || !dispatchItemOp) return null;
@@ -133,9 +137,7 @@ export function GameInventoryOverlays() {
   };
   const closeFloatingContainer = (containerId: string) => {
     runtime.clientRef.current?.closeContainer(containerId);
-    setFloatingContainerIds((current) =>
-      current.filter((id) => id !== containerId),
-    );
+    forgetFloatingContainer(containerId);
   };
 
   return (
@@ -342,9 +344,7 @@ export function GameInventoryOverlays() {
             }}
             onOpenEquippedContainer={(item) => {
               runtime.clientRef.current?.openContainer(item);
-              setFloatingContainerIds((current) =>
-                current.includes(item.id) ? current : [...current, item.id],
-              );
+              openFloatingContainer(item.id);
             }}
             onDropInEquipment={(slot) => {
               const source = runtime.itemDragRef.current;

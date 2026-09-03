@@ -16,6 +16,7 @@ import { parseChatInput } from "../../lib/chat/parseChatInput";
 import { sanitizeChatText } from "../../lib/chat/sanitizeChatText";
 import { toChatMessage } from "../../lib/chat/toChatMessage";
 import { getCarriedItems } from "../../lib/inventory/getCarriedItems";
+import { getInventoryItems } from "../../lib/inventory/getInventoryItems";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 import type { ActionBarEditorRequest } from "../action-bar/ActionBarEditorRequest";
 import type { ChatChannel } from "../chat/chatTypes";
@@ -251,6 +252,37 @@ export function GameHudOverlay() {
       setPotionTargeting(false);
       runtime.pendingActionBarRef.current = null;
 
+      const currentInventory = state.sessions?.inventory ?? null;
+      const currentSpells = state.spells;
+      const configuredItem =
+        action.kind === "item"
+          ? getCarriedItems(currentInventory).find(
+              (item) => item.typeId === action.itemTypeId,
+            )
+          : undefined;
+      // A container button opens its window here, exactly like a click on the
+      // object in the inventory: the equipped backpack is the inventory window
+      // itself, any other carried container floats beside it. Only when no
+      // instance is in view does the server pick one on its own.
+      if (
+        action.kind === "item" &&
+        action.mode === "use" &&
+        configuredItem?.useKind === "container"
+      ) {
+        const instance = getInventoryItems(currentInventory).find(
+          (item) => item.typeId === action.itemTypeId,
+        );
+        if (instance) {
+          if (instance.id === currentInventory?.equipment.backpack?.id) {
+            state.setInventoryOpen(true);
+            return;
+          }
+          runtime.clientRef.current?.openContainer(instance);
+          state.openFloatingContainer(instance.id);
+          return;
+        }
+      }
+
       const mode =
         action.kind === "spell"
           ? action.targetMode
@@ -272,14 +304,6 @@ export function GameHudOverlay() {
         runtime.clientRef.current?.activateActionBar(slotIndex);
         return;
       }
-      const currentInventory = state.sessions?.inventory ?? null;
-      const currentSpells = state.spells;
-      const configuredItem =
-        action.kind === "item"
-          ? getCarriedItems(currentInventory).find(
-              (item) => item.typeId === action.itemTypeId,
-            )
-          : undefined;
       const rune =
         action.kind === "item"
           ? currentSpells.find(

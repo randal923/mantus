@@ -187,6 +187,8 @@ export interface GameWindowStoreActions {
   setRuneTargeting: (value: SetStateAction<boolean>) => void;
   setPotionTargeting: (value: SetStateAction<boolean>) => void;
   setUseWithTargeting: (value: SetStateAction<boolean>) => void;
+  openFloatingContainer: (containerId: string) => void;
+  closeFloatingContainer: (containerId: string) => void;
   setMapContextMenu: (
     value: SetStateAction<MapContextMenuState | null>,
   ) => void;

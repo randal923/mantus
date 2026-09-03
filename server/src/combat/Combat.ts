@@ -6,7 +6,6 @@ import type {
   Direction,
   Position,
   SetFightModeMessage,
-  UseItemWithMessage,
   UsePotionMessage,
   UseRuneMessage,
 } from "@tibia/protocol";
@@ -77,6 +76,7 @@ import { wheelSpellAugmentFor } from "./wheelSpellAugments";
 import { ActionBot } from "./ActionBot";
 import { selectAutoTarget } from "../huntingBot/selectAutoTarget";
 import { getPotionDefinition } from "../potion/getPotionDefinition";
+import type { ItemUseHooks } from "./ItemUseHooks";
 import { getSpellActionTargetMode } from "./getSpellActionTargetMode";
 import { drainDue } from "../drainDue";
 import type { RarityConfig } from "../rarity/RarityConfig";
@@ -183,11 +183,7 @@ export class Combat {
     lootRate = 1,
     bestiaryHooks?: BestiaryHooks,
     private readonly monsterEventHooks?: MonsterEventHooks,
-    private readonly useItemWith?: (
-      session: Session,
-      intent: UseItemWithMessage,
-      now: number,
-    ) => boolean,
+    private readonly itemUse?: ItemUseHooks,
     private readonly worldSpells?: WorldSpellHooks,
     staminaSystem = false,
     experienceStages: ReadonlyArray<StageRow> = [],
@@ -1271,15 +1267,44 @@ export class Combat {
         now,
       );
     }
+    // Everything else is routed exactly as the same click in the inventory
+    // window: the server's item-use entry points own the exhaust gate and the
+    // item-specific handlers (exercise weapons, tools, watches, scrolls).
+    if (session.itemOperationPending) return false;
+    if (action.mode === "use") {
+      // Opening a container is not a "use" and is not exhaust-gated.
+      if (combatItem.type.containerCapacity !== undefined) {
+        this.items.handle(
+          session,
+          {
+            type: "open-container",
+            itemId: combatItem.item.id,
+            revision: combatItem.item.version,
+          },
+          now,
+        );
+        return true;
+      }
+      return (
+        this.itemUse?.use(
+          session,
+          {
+            type: "use-item",
+            itemId: combatItem.item.id,
+            revision: combatItem.item.version,
+          },
+          now,
+        ) ?? false
+      );
+    }
     const itemTarget =
       target ?? (automatic ? this.automaticTarget(session, true) : null);
     const targetPosition = itemTarget
       ? this.targetPosition(session, player, itemTarget)
       : null;
-    if (
-      targetPosition &&
-      action.mode !== "use" &&
-      this.useItemWith?.(
+    if (!targetPosition) return false;
+    return (
+      this.itemUse?.useWith(
         session,
         {
           type: "use-item-with",
@@ -1288,16 +1313,7 @@ export class Combat {
           targetPosition,
         },
         now,
-      )
-    ) {
-      return true;
-    }
-    return this.items.activateOwnedItem(
-      session,
-      action.itemTypeId,
-      action.mode,
-      targetPosition,
-      now,
+      ) ?? false
     );
   }
 
