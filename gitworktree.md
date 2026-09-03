@@ -50,4 +50,4 @@ worktree is created, merged, or removed.
 | `agents/autoloot-e2e`            | done        |
 | `agents/autoloot-reach-corpses`  | done        |
 | `agents/temple-teleport-scroll` | done        |
-| `agents/action-bar-item-use`   | in progress |
+| `agents/action-bar-item-use`   | done        |
