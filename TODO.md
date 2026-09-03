@@ -1127,6 +1127,64 @@ limitations accepted during a session are recorded in the owning feature file
   only auto-loot enjoys — but Canary's quick-loot is more forgiving, so
   revisit if playtest finds it annoying. Recommended fix if changed: widen
   the check inside `autoLoot` only, never in `planLoot`. Owner: same.
+- **A loot-filter edit sent while the previous one is still being written is
+  refused and lost** (found 2026-09-02 by `yarn playtest:autoloot`, scenario
+  `double`). `LootFilterHandler.handleUpdate` answers
+  `loot-filter-update-pending` for the second `update-loot-filter` and keeps
+  the first; the session ends up with the *older* list, the client shows the
+  newer one until the echo reverts it, and the next kill sweeps against the
+  stale list. Only needs the DB write to outlast the client's 800 ms
+  debounce (a slow prod round-trip, or a player ticking two cells fast).
+  Recommended fix: coalesce instead of refuse — keep a `nextLootFilter` on the
+  session, apply it in memory at once, and let the in-flight persist chain
+  write the latest value when it finishes (one echo per committed write).
+  Owner: the loot filter work (2026-08-06).
+- **Auto-loot needs the killer within one tile** is now measured, not just
+  accepted: scenario `ranged` (sudden death rune from three tiles) sweeps
+  nothing and leaves the corpse full. Canary's `Creature::onDeath` auto-loots
+  for any corpse the killer can *path* to (`getPathMatching` + `isReachable`),
+  so every paladin, wand/rod and rune kill here is a "auto-loot did not pick
+  up" report waiting to happen. Recommended fix (if the design changes):
+  replace `isNear` inside `autoLoot` with a bounded reachability check
+  (same-floor, within the client viewport, walkable path), leaving `planLoot`
+  and hand-loot reach untouched. Owner: same.
+- **The last hitter, not the top damager, owns and auto-loots the corpse**
+  (found 2026-09-02, scenario `two`). `DeathHandler` resolves `killerId` as the
+  player who landed the final blow and only falls back to `topDamagerId()`
+  when that source is not a player; Canary stamps `CORPSEOWNER` with the
+  most-damage creature and auto-loots for that player
+  (`monster.cpp:3309`, `creature.cpp` onDeath). In a duo the player who did
+  59% of the work got nothing and could not even open the corpse
+  (`loot-protected`). Recommended fix: `killerId = target.topDamagerId() ??
+  lastHitPlayer`, keeping experience/bestiary credit as they are. Owner: same.
+- **22 monster types with loot tables leave no corpse at all** (found
+  2026-09-02, scenario `nocorpse`). `createMonsterCorpse` returns null when the
+  corpse type has no container capacity, so the whole loot roll is
+  discarded: water elemental and massive water elemental (9582 — in Canary
+  the "remains" are a fluid source you fish the loot out of with a fishing
+  rod, `fishing_rod.lua`, an action this server does not have), gaffir
+  (31307), misguided bully/thief (26125), death blob (11317), lava lurker
+  (27586), plus 15 types whose corpse id is not in `data/item-catalog.json`
+  at all (48340, 21887, 48271, 49994, 48112, 48259, 35384, 35388, 33891,
+  30298, 30137, 49990, 48416, 3138, 0). Recommended fix: port the fishing-rod
+  corpse loot for the two water elementals; for the rest, re-check the
+  corpse ids against Canary's `items.xml`/OTB and either give the corpse a
+  container capacity in the catalog or map the monster to its lootable
+  corpse stage. Owner: monster/loot parity.
+- **`rollMonsterLoot` stops at the corpse's container capacity** (noted
+  2026-09-02). 147 monster types have more table entries than corpse slots
+  (annihilon 39 > 24, black knight 22 > 20 …); entries past the cap can never
+  drop once the earlier ones hit, which the playtest's ×50 loot rate makes
+  visible (a minotaur corpse showed 10 of its entries and dropped the rest).
+  At 1× rates this is rare but real for bosses. Verify Canary's
+  `MonsterType::createLoot` behaviour (it inserts with `internalAddThing`,
+  which does not enforce capacity) before deciding. Owner: monster/loot
+  parity.
+- **Auto-loot's capacity skip is silent** (scenario `cap`): a drop heavier
+  than the free capacity is left in the corpse with no message; Canary sends
+  "Attention: Your capacity is not enough to loot this item" per sweep
+  (`playerQuickLootCorpse`). Recommended fix: one `combat-text`/status line per
+  sweep when at least one listed drop was skipped for capacity. Owner: same.
 - **Auto-loot has no per-category container routing** (accepted 2026-07-30).
   Everything on the pick-up list goes through `planBackpackPlacement`, which fills
   the equipped backpack and every bag nested inside it depth-first — correct

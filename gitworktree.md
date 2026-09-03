@@ -47,3 +47,4 @@ worktree is created, merged, or removed.
 | `agents/paladin-no-ammo-target` | done        |
 | `agents/depot-closed-container-deposit` | done        |
 | `agents/lured-monster-return-home` | done        |
+| `agents/autoloot-e2e`            | done        |
