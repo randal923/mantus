@@ -44,6 +44,7 @@ import { Visibility } from "../Visibility";
 import { World } from "../World";
 import { Combat } from "./Combat";
 import { CombatIntentHandler } from "./CombatIntentHandler";
+import type { ItemUseHooks } from "./ItemUseHooks";
 import type { WorldSpellHooks } from "./WorldSpellHooks";
 
 const PLAYER_ID = "00000000-0000-4000-8000-000000000010";
@@ -286,6 +287,7 @@ async function makeHarness(options: {
   actionBotSettings?: ActionBotSettings;
   worldSpells?: WorldSpellHooks;
   wheelBonuses?: WheelBonuses;
+  itemUse?: ItemUseHooks;
 } = {}): Promise<Harness> {
   const world = new World(
     options.map ?? makeMap(),
@@ -414,7 +416,7 @@ async function makeHarness(options: {
     undefined,
     undefined,
     undefined,
-    undefined,
+    options.itemUse,
     options.worldSpells,
   );
   return {
@@ -4199,5 +4201,257 @@ describe("Combat", () => {
     expect(tiles).not.toContain(positionKey({ x: 5, y: 6, z: 7 }));
     // The wave stops one short of the player, so it deals no damage.
     expect(harness.player.health).toBe(harness.player.maxHealth);
+  });
+  describe("item buttons that are neither runes nor potions", () => {
+    /** Canary's stock exercise sword; carried in the backpack for these tests. */
+    const EXERCISE_SWORD = 28_552;
+    /** A readable letter: a plain "use" object with no target. */
+    const LETTER = 3505;
+    const EXERCISE_SWORD_ID = "00000000-0000-4000-8000-000000000031";
+    const LETTER_ID = "00000000-0000-4000-8000-000000000032";
+
+    function recordingHooks() {
+      const calls: Array<{ kind: "use" | "useWith"; intent: unknown }> = [];
+      const hooks: ItemUseHooks = {
+        use: (_session, intent) => {
+          calls.push({ kind: "use", intent });
+          return true;
+        },
+        useWith: (_session, intent) => {
+          calls.push({ kind: "useWith", intent });
+          return true;
+        },
+      };
+      return { calls, hooks };
+    }
+
+    it("routes a crosshair use of an exercise weapon through the server's use-with entry point", async () => {
+      const { calls, hooks } = recordingHooks();
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(EXERCISE_SWORD_ID, EXERCISE_SWORD, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          {
+            kind: "item",
+            itemTypeId: EXERCISE_SWORD,
+            mode: "use-with-crosshair",
+          },
+        ]),
+        itemUse: hooks,
+      });
+      const dummyPosition = { x: 1, y: 2, z: 7 };
+
+      harness.combat.activateActionBar(
+        harness.session,
+        {
+          type: "activate-action-bar",
+          slotIndex: 0,
+          target: { kind: "position", position: dummyPosition },
+        },
+        1_000,
+      );
+
+      expect(calls).toEqual([
+        {
+          kind: "useWith",
+          intent: {
+            type: "use-item-with",
+            itemId: EXERCISE_SWORD_ID,
+            revision: 1,
+            targetPosition: dummyPosition,
+          },
+        },
+      ]);
+      expect(harness.sent).toContainEqual({
+        type: "action-bar-activation-result",
+        slotIndex: 0,
+        accepted: true,
+      });
+    });
+
+    it("uses a cursor-mode item on the selected creature's tile", async () => {
+      const { calls, hooks } = recordingHooks();
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(EXERCISE_SWORD_ID, EXERCISE_SWORD, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          {
+            kind: "item",
+            itemTypeId: EXERCISE_SWORD,
+            mode: "use-at-cursor",
+          },
+        ]),
+        itemUse: hooks,
+      });
+      const monster = makeMonster(
+        "monster-instance:cursor-use-target:0",
+        { x: 2, y: 1, z: 7 },
+        makeMonsterType(),
+      );
+      harness.world.addCreature(monster);
+
+      harness.combat.activateActionBar(
+        harness.session,
+        {
+          type: "activate-action-bar",
+          slotIndex: 0,
+          target: { kind: "creature", creatureId: monster.id },
+        },
+        1_000,
+      );
+
+      expect(calls).toEqual([
+        {
+          kind: "useWith",
+          intent: {
+            type: "use-item-with",
+            itemId: EXERCISE_SWORD_ID,
+            revision: 1,
+            targetPosition: { x: 2, y: 1, z: 7 },
+          },
+        },
+      ]);
+    });
+
+    it("rejects a crosshair use that arrives without a target", async () => {
+      const { calls, hooks } = recordingHooks();
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(EXERCISE_SWORD_ID, EXERCISE_SWORD, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          {
+            kind: "item",
+            itemTypeId: EXERCISE_SWORD,
+            mode: "use-with-crosshair",
+          },
+        ]),
+        itemUse: hooks,
+      });
+
+      harness.combat.activateActionBar(
+        harness.session,
+        { type: "activate-action-bar", slotIndex: 0 },
+        1_000,
+      );
+
+      expect(calls).toEqual([]);
+      expect(harness.sent).toContainEqual({
+        type: "action-bar-activation-result",
+        slotIndex: 0,
+        accepted: false,
+      });
+    });
+
+    it("routes a plain use through the server's use-item entry point", async () => {
+      const { calls, hooks } = recordingHooks();
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(LETTER_ID, LETTER, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          { kind: "item", itemTypeId: LETTER, mode: "use" },
+        ]),
+        itemUse: hooks,
+      });
+
+      harness.combat.activateActionBar(
+        harness.session,
+        { type: "activate-action-bar", slotIndex: 0 },
+        1_000,
+      );
+
+      expect(calls).toEqual([
+        {
+          kind: "use",
+          intent: { type: "use-item", itemId: LETTER_ID, revision: 1 },
+        },
+      ]);
+      expect(harness.sent).toContainEqual({
+        type: "action-bar-activation-result",
+        slotIndex: 0,
+        accepted: true,
+      });
+    });
+
+    it("opens a container button instead of using it", async () => {
+      const { calls, hooks } = recordingHooks();
+      const BAG_ID = "00000000-0000-4000-8000-000000000033";
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(BAG_ID, 2853, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          { kind: "item", itemTypeId: 2853, mode: "use" },
+        ]),
+        itemUse: hooks,
+      });
+
+      harness.combat.activateActionBar(
+        harness.session,
+        { type: "activate-action-bar", slotIndex: 0 },
+        1_000,
+      );
+
+      expect(calls).toEqual([]);
+      expect(
+        harness.sent.some(
+          (message) =>
+            message.type === "inventory-updated" &&
+            (message.inventory.containers ?? []).some(
+              (container) => container.container.id === BAG_ID,
+            ),
+        ),
+      ).toBe(true);
+    });
+
+    it("reports the button as not started when the server has no item-use routing", async () => {
+      const harness = await makeHarness({
+        inventory: [
+          ownedItem(LETTER_ID, LETTER, {
+            kind: "container",
+            containerId: BACKPACK_ID,
+            slot: 0,
+          }),
+        ],
+        actionBar: actionBarWith([
+          { kind: "item", itemTypeId: LETTER, mode: "use" },
+        ]),
+      });
+
+      harness.combat.activateActionBar(
+        harness.session,
+        { type: "activate-action-bar", slotIndex: 0 },
+        1_000,
+      );
+
+      expect(harness.sent).toContainEqual({
+        type: "action-bar-activation-result",
+        slotIndex: 0,
+        accepted: false,
+      });
+    });
   });
 });

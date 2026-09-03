@@ -1,9 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type {
-  ActionBarItemMode,
-  InventoryState,
-  Position,
-} from "@tibia/protocol";
+import type { InventoryState, Position } from "@tibia/protocol";
 import type { Session } from "../Session";
 import type { Visibility } from "../Visibility";
 import type { World } from "../World";
@@ -375,63 +371,6 @@ export class ItemIntentHandler {
           candidate.typeId === itemTypeId && candidate.count > 0,
       );
     return item ? { item, type: this.catalog.require(item.typeId) } : null;
-  }
-
-  activateOwnedItem(
-    session: Session,
-    itemTypeId: number,
-    mode: Extract<ActionBarItemMode, "use" | "use-on-self" | "use-on-target" | "use-at-cursor" | "use-with-crosshair">,
-    targetPosition: Position | null,
-    now: number,
-  ): boolean {
-    if (session.itemOperationPending) return false;
-    const characterId = session.playerId;
-    const item = characterId
-      ? this.combatItemByType(characterId, itemTypeId)?.item
-      : undefined;
-    if (!item) return false;
-    if (
-      mode === "use-on-self" ||
-      mode === "use-on-target" ||
-      mode === "use-at-cursor" ||
-      mode === "use-with-crosshair"
-    ) {
-      if (!targetPosition) return false;
-      // Action-bar item uses reach the tick outside handleIntent, so the
-      // 200 ms generic use exhaust is applied here as well (charter rule 8).
-      if (session.useExhausted(now)) return false;
-      session.armUseExhaust(now);
-      this.handle(
-        session,
-        {
-          type: "use-item-with",
-          itemId: item.id,
-          revision: item.version,
-          targetPosition,
-        },
-        now,
-      );
-      return true;
-    }
-    const type = this.catalog.require(item.typeId);
-    // Opening a container is not a "use" and is not exhaust-gated.
-    if (type.containerCapacity === undefined) {
-      if (session.useExhausted(now)) return false;
-      session.armUseExhaust(now);
-    }
-    this.handle(
-      session,
-      {
-        type:
-          type.containerCapacity !== undefined
-            ? "open-container"
-            : "use-item",
-        itemId: item.id,
-        revision: item.version,
-      },
-      now,
-    );
-    return true;
   }
 
   toggleEquippedItem(

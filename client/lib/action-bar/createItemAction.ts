@@ -49,6 +49,23 @@ export function createItemAction(
       display,
     };
   }
+  // Same precedence as a click in the inventory window: an object that opens,
+  // reads, rotates, eats or activates does that even when it could also be
+  // worn (a backpack, the Portable Seller). Equip stays a picker choice.
+  if (
+    item.useKind === "container" ||
+    item.useKind === "read" ||
+    item.useKind === "rotate" ||
+    item.useKind === "food" ||
+    item.useKind === "activate"
+  ) {
+    return {
+      kind: "item",
+      itemTypeId: item.typeId,
+      mode: "use",
+      display,
+    };
+  }
   if (item.equipmentSlot) {
     return {
       kind: "item",

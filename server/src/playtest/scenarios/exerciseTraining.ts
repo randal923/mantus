@@ -1,3 +1,4 @@
+import { createDefaultActionBar } from "@tibia/protocol";
 import { PlaytestClient } from "../PlaytestClient";
 import { startPlaytestServer } from "../startPlaytestServer";
 
@@ -8,7 +9,9 @@ import { startPlaytestServer } from "../startPlaytestServer";
  * It covers the three claims the tier makes at once — the store sells only the
  * epic and legendary tiers, the weapon exists and is carriable, and it lands
  * two hits in the time a stock weapon lands one — against the real server, the
- * real catalog and the real wire protocol.
+ * real catalog and the real wire protocol. The last run starts from an
+ * action-bar button aimed with the crosshair, the way a player trains once the
+ * weapon sits on the bar, so the two entry points are proven to share a path.
  * Run with: yarn playtest:exercise
  */
 const DUMMY = { x: 32_347, y: 32_240, z: 7 };
@@ -121,6 +124,9 @@ try {
   );
 
   step("conjuring both tiers and standing next to the dummy");
+  // The purchase's persist lane is still asserting for a moment after the
+  // delivery message; a conjure that arrives inside that window is refused.
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   // The playtest character persists between runs, and its backpack does not
   // grow: only conjure a tier this character is not already carrying.
   const carriedTypeIds = new Set(
@@ -159,28 +165,36 @@ try {
   const trainFor = async (
     weapon: typeof epic,
     effectId: number,
+    start: () => void = () =>
+      client.send({
+        type: "use-item-with",
+        itemId: weapon.id,
+        revision: weapon.revision,
+        targetPosition: DUMMY,
+      }),
+    // Charges left after the run; the default reads the one weapon used.
+    chargesLeft: (
+      seen: ReadonlyArray<(typeof client.messages)[number]>,
+    ) => number | undefined = (seen) =>
+      seen
+        .flatMap((message) =>
+          message.type === "inventory-updated"
+            ? message.inventory.items
+                .filter((entry) => entry.item.id === weapon.id)
+                .map((entry) => entry.item.tooltip.charges ?? 0)
+            : [],
+        )
+        .at(-1),
   ): Promise<{ hits: number; spent: number; left: number }> => {
     const since = client.mark();
-    client.send({
-      type: "use-item-with",
-      itemId: weapon.id,
-      revision: weapon.revision,
-      targetPosition: DUMMY,
-    });
+    start();
     await new Promise((resolve) => setTimeout(resolve, TRAINING_WINDOW_MS));
     const seen = client.messages.slice(since);
     const hits = seen.filter(
       (message) =>
         message.type === "magic-effect" && message.effectId === effectId,
     ).length;
-    const counts = seen.flatMap((message) =>
-      message.type === "inventory-updated"
-        ? message.inventory.items
-            .filter((entry) => entry.item.id === weapon.id)
-            .map((entry) => entry.item.tooltip.charges ?? 0)
-        : [],
-    );
-    const left = counts.at(-1) ?? weapon.tooltip.charges ?? 0;
+    const left = chargesLeft(seen) ?? weapon.tooltip.charges ?? 0;
     // Stepping out of the protection zone is what a player does to stop; the
     // server has to see them outside it, so wait for its own confirmation
     // before walking back.
@@ -231,6 +245,111 @@ try {
   ok(
     `charges track hits one for one, and the epic tier trains ` +
       `${ratio.toFixed(1)}x as fast as the stock one`,
+  );
+
+  step(`waiting out the ${START_EXHAUST_MS}ms dummy cooldown`);
+  await new Promise((resolve) => setTimeout(resolve, START_EXHAUST_MS));
+
+  step("putting the epic sword on action button 1 and training from it");
+  const actionBar = createDefaultActionBar();
+  actionBar[0] = {
+    ...actionBar[0]!,
+    action: {
+      kind: "item",
+      itemTypeId: EPIC_EXERCISE_SWORD,
+      mode: "use-with-crosshair",
+    },
+  };
+  const beforeBar = client.mark();
+  client.send({ type: "update-action-bar", actionBar });
+  // The bar is persisted before it is applied; press only once it is live.
+  await client.waitFor(
+    (m): m is Extract<typeof m, { type: "action-bar-updated" }> =>
+      m.type === "action-bar-updated",
+    "action-bar-updated",
+    { since: beforeBar },
+  );
+  // A button uses whichever carried instance of the type the server picks —
+  // here the store deliveries in the bound container compete with the
+  // conjured sword — so the run is measured over every epic sword in view,
+  // with the bound container opened first so its contents are visible.
+  type Inventory = Extract<
+    (typeof client.messages)[number],
+    { type: "inventory-updated" }
+  >["inventory"];
+  const epicChargesIn = (inventory: Inventory): number =>
+    [
+      ...Object.values(inventory.equipment),
+      ...inventory.items.map((entry) => entry.item),
+      ...(inventory.containers ?? []).flatMap((container) =>
+        container.items.map((entry) => entry.item),
+      ),
+    ]
+      .filter((item) => item !== undefined && item.typeId === EPIC_EXERCISE_SWORD)
+      .reduce((sum, item) => sum + (item!.tooltip.charges ?? 0), 0);
+  const latestInventory = (): Inventory =>
+    client.messages
+      .flatMap((message) =>
+        message.type === "inventory-updated" ? [message.inventory] : [],
+      )
+      .at(-1)!;
+  const bound = latestInventory().equipment.bound;
+  if (bound) {
+    const beforeBound = client.mark();
+    client.send({
+      type: "open-container",
+      itemId: bound.id,
+      revision: bound.revision,
+    });
+    await client.waitFor(
+      (m): m is Extract<typeof m, { type: "inventory-updated" }> =>
+        m.type === "inventory-updated" &&
+        (m.inventory.containers ?? []).some(
+          (container) => container.container.id === bound.id,
+        ),
+      "the bound container to open",
+      { since: beforeBound },
+    );
+  }
+  const chargesBeforeButton = epicChargesIn(latestInventory());
+  const beforeButton = client.mark();
+  const buttonRun = await trainFor(
+    { ...epic, tooltip: { ...epic.tooltip, charges: chargesBeforeButton } },
+    PURPLE_LIGHTNING,
+    () =>
+      client.send({
+        type: "activate-action-bar",
+        slotIndex: 0,
+        target: { kind: "position", position: DUMMY },
+      }),
+    (seen) =>
+      seen
+        .flatMap((message) =>
+          message.type === "inventory-updated"
+            ? [epicChargesIn(message.inventory)]
+            : [],
+        )
+        .at(-1),
+  );
+  const buttonResult = client.messages
+    .slice(beforeButton)
+    .find((message) => message.type === "action-bar-activation-result");
+  if (buttonResult?.type !== "action-bar-activation-result" || !buttonResult.accepted) {
+    throw new Error(
+      `the action button was not accepted: ${JSON.stringify(buttonResult)}`,
+    );
+  }
+  if (buttonRun.hits === 0) {
+    throw new Error("training from the action button never hit the dummy");
+  }
+  if (buttonRun.spent < buttonRun.hits) {
+    throw new Error(
+      `button: ${buttonRun.hits} hits drawn but only ${buttonRun.spent} charges spent`,
+    );
+  }
+  ok(
+    `button accepted, ${buttonRun.hits} purple-lightning hits, ` +
+      `${buttonRun.spent} charges spent`,
   );
 
   client.terminate();

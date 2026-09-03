@@ -11,6 +11,8 @@ import {
   type ClientMessage,
   type PodiumRaceEntry,
   type Position,
+  type UseItemMessage,
+  type UseItemWithMessage,
 } from "@tibia/protocol";
 import type { AccountStore } from "./AccountStore";
 import { AuthHandler } from "./AuthHandler";
@@ -1293,7 +1295,11 @@ export class GameServer {
         },
       },
       this.monsterEvents,
-      (session, intent, now) => this.toolUse.handle(session, intent, now),
+      {
+        use: (session, intent, now) => this.useItem(session, intent, now),
+        useWith: (session, intent, now) =>
+          this.useItemWith(session, intent, now),
+      },
       {
         magicRope: (session, now) =>
           this.movement.handleMagicRopeSpell(session, now),
@@ -1832,6 +1838,49 @@ export class GameServer {
     }
   }
 
+  /**
+   * Generic item use (food, readables, watches, teleport scrolls, world-action
+   * items). Shared by the inventory click and the action bar so both take the
+   * same exhaust gate and the same handler order; container open/move/equip
+   * flows are not "uses" and do not come through here.
+   */
+  private useItem(
+    session: Session,
+    intent: UseItemMessage,
+    now: number,
+  ): boolean {
+    if (session.useExhausted(now)) {
+      session.sendError("item-exhausted");
+      return false;
+    }
+    session.armUseExhaust(now);
+    // Canary registers the watch action by item id, ahead of the generic
+    // item-use path; it only reads the world clock.
+    if (this.clocks.handleUseItem(session, intent)) return true;
+    if (this.portableSeller.handleUseItem(session, intent, now)) return true;
+    if (this.adventurersStone.handleUseItem(session, intent)) return true;
+    if (this.templeScroll.handleUseItem(session, intent, now)) return true;
+    this.items.handle(session, intent, now);
+    return true;
+  }
+
+  /** Use-with (exercise weapons, tools, then the generic handler); see useItem. */
+  private useItemWith(
+    session: Session,
+    intent: UseItemWithMessage,
+    now: number,
+  ): boolean {
+    if (session.useExhausted(now)) {
+      session.sendError("item-exhausted");
+      return false;
+    }
+    session.armUseExhaust(now);
+    if (this.exerciseTraining.handle(session, intent, now)) return true;
+    if (this.toolUse.handle(session, intent, now)) return true;
+    this.items.handle(session, intent, now);
+    return true;
+  }
+
   private handleIntent(
     session: Session,
     intent: ClientMessage,
@@ -1940,30 +1989,10 @@ export class GameServer {
         this.combat.handle(session, intent, now);
         return;
       case "use-item-with":
-        if (session.useExhausted(now)) {
-          session.sendError("item-exhausted");
-          return;
-        }
-        session.armUseExhaust(now);
-        if (this.exerciseTraining.handle(session, intent, now)) return;
-        if (this.toolUse.handle(session, intent, now)) return;
-        this.items.handle(session, intent, now);
+        this.useItemWith(session, intent, now);
         return;
       case "use-item":
-        // Generic item use (food, tools, readables, world-action items) is
-        // exhaust-gated; container open/move/equip flows are not "uses".
-        if (session.useExhausted(now)) {
-          session.sendError("item-exhausted");
-          return;
-        }
-        session.armUseExhaust(now);
-        // Canary registers the watch action by item id, ahead of the generic
-        // item-use path; it only reads the world clock.
-        if (this.clocks.handleUseItem(session, intent)) return;
-        if (this.portableSeller.handleUseItem(session, intent, now)) return;
-        if (this.adventurersStone.handleUseItem(session, intent)) return;
-        if (this.templeScroll.handleUseItem(session, intent, now)) return;
-        this.items.handle(session, intent, now);
+        this.useItem(session, intent, now);
         return;
       case "equip-item":
       case "unequip-item":

@@ -189,6 +189,7 @@ export function createGameWindowStore({
       runeTargeting: false,
       potionTargeting: false,
       useWithTargeting: false,
+      floatingContainerIds: [],
       mapContextMenu: null,
       screenMessage: null,
       setConfig: (config) => set(config),
@@ -577,6 +578,23 @@ export function createGameWindowStore({
         set((state) => ({
           useWithTargeting: resolveStateAction(value, state.useWithTargeting),
         })),
+      openFloatingContainer: (containerId) =>
+        set((state) =>
+          state.floatingContainerIds.includes(containerId)
+            ? {}
+            : {
+                floatingContainerIds: [
+                  ...state.floatingContainerIds,
+                  containerId,
+                ],
+              },
+        ),
+      closeFloatingContainer: (containerId) =>
+        set((state) => ({
+          floatingContainerIds: state.floatingContainerIds.filter(
+            (id) => id !== containerId,
+          ),
+        })),
       setMapContextMenu: (value) =>
         set((state) => ({
           mapContextMenu: resolveStateAction(value, state.mapContextMenu),
@@ -740,6 +758,7 @@ export function createGameWindowStore({
           runeTargeting: false,
           potionTargeting: false,
           useWithTargeting: false,
+          floatingContainerIds: [],
           mapContextMenu: null,
           screenMessage: null,
           serverError: null,

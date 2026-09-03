@@ -6603,3 +6603,60 @@ reaches players once main is pushed and the Fly deploy runs.
   the one DB round trip between the use and the charge commit refuses the
   teleport but the scroll is already spent (charter rule 4 wins over the
   refund).
+
+## 2026-09-03 — Action-bar item buttons do what the inventory click does (`agents/action-bar-item-use`)
+
+- **Problem:** an exercise weapon on the action bar could not be used: the
+  button's crosshair activation reached `Combat.activateAction`, whose
+  use-with callback was wired to the tool handler only, and the fallthrough
+  (`ItemIntentHandler.activateOwnedItem`) dispatched straight into the
+  generic item handler — bypassing `ExerciseTrainingHandler`. The plain
+  "use" path had the same shape and skipped every `use-item` pre-handler the
+  inventory click goes through (watches, Portable Seller, Adventurer's
+  Stone, temple teleport scroll). On the client, `createItemAction` gave a
+  wearable container or an activatable device with a slot (backpack,
+  Portable Seller) the `equip` mode by default, unlike the inventory click
+  that opens/activates first.
+- **What changed:** `GameServer` now owns two entry points, `useItem` and
+  `useItemWith` (exhaust gate + handler order + generic fallback), used by
+  both the intent switch and, through the new `ItemUseHooks` passed to
+  `Combat`, by every non-rune/non-potion action-bar item. `Combat` builds
+  the `use-item` / `use-item-with` / `open-container` intent from the carried
+  instance it resolves and hands it over; `activateOwnedItem` is gone. A
+  crosshair/cursor button with no resolvable target is reported as not
+  started instead of quietly using the object. Client: `createItemAction`
+  mirrors the inventory precedence (container/read/rotate/food/activate →
+  `use` before `equip`); a `use` button for a container opens it like the
+  inventory does — the equipped backpack opens the inventory window, any
+  other visible instance floats beside it (the floating container list moved
+  from `GameInventoryOverlays` local state into the game-window store so the
+  HUD can open one). `ServerConfig`'s inline grid map accepts
+  `protectionZones` (the runtime already forwarded it).
+- **Files:** `server/src/combat/ItemUseHooks.ts` (new), `server/src/combat/Combat.ts`,
+  `server/src/GameServer.ts`, `server/src/item/ItemIntentHandler.ts`,
+  `server/src/config.ts`, `server/src/GameServer.actionBarItemUse.test.ts`
+  (new), `server/src/combat/Combat.test.ts`, `server/src/item/ItemIntentHandler.test.ts`,
+  `server/src/playtest/scenarios/exerciseTraining.ts`,
+  `client/lib/action-bar/createItemAction.ts` (+ new test),
+  `client/components/game-window/GameHudOverlay.tsx`,
+  `client/components/game-window/GameInventoryOverlays.tsx`,
+  `client/components/game-window/store/createGameWindowStore.ts`,
+  `client/components/game-window/types/GameWindowState.ts`,
+  `client/components/game-window/types/GameWindowStoreActions.ts`.
+- **Verification:** new websocket-level test starts exercise training from a
+  crosshair button on a grid map with a dummy and proves a charge is spent,
+  and shows a plain-use button hits the same 200 ms exhaust as inventory
+  clicks; Combat unit tests pin the routing (crosshair → `useWith` with the
+  carried instance, cursor on a creature → its tile, no target → not
+  started, plain use → `use`, container → open, no hooks → not started);
+  `createItemAction` tests pin the client defaults. Server suite 4230 pass,
+  client unit suite pass, both typecheck. `yarn playtest:exercise` (real
+  Thais dummy, embedded Postgres) now ends with a run started from action
+  button 1 and passes; the scenario also gained two harness fixes it needed
+  on a fresh database (settle after the store purchase before conjuring,
+  wait for `action-bar-updated` before pressing).
+- **Residual risk:** a `use` button for a container whose only carried
+  instances sit inside closed containers is opened server-side but gets no
+  window on the client (recorded in `TODO.md`). A button uses whichever
+  carried instance of the type the server resolves first, which need not be
+  the one the player would click.

@@ -192,6 +192,13 @@ export interface GameWindowState {
   runeTargeting: boolean;
   potionTargeting: boolean;
   useWithTargeting: boolean;
+  /**
+   * Carried containers shown in their own window beside the inventory (a
+   * quiver opened from its gear slot, a bag used from the action bar). The
+   * server's open-container set stays the source of truth; an id it no
+   * longer lists simply stops showing.
+   */
+  floatingContainerIds: ReadonlyArray<string>;
   mapContextMenu: MapContextMenuState | null;
   screenMessage: ScreenMessageState | null;
 }

@@ -24,6 +24,7 @@ export type MapConfig =
       floors?: ReadonlyArray<number>;
       groundSpeed?: number;
       groundSpeeds?: ReadonlyArray<readonly [number, number, number, number]>;
+      protectionZones?: ReadonlyArray<readonly [number, number, number]>;
       transitions?: ReadonlyArray<MapTransition>;
       actions?: ReadonlyArray<MapAction>;
       items?: ReadonlyArray<{
