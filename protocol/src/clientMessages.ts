@@ -630,6 +630,19 @@ export const useItemWithMessageSchema = ownedItemIntentSchema
   })
   .strict();
 
+/**
+ * Uses a carried item on another carried item (the gold converter on a coin
+ * stack). Both are owned-item references at a claimed revision; the server
+ * re-validates ownership and versions inside the tick.
+ */
+export const useItemOnItemMessageSchema = ownedItemIntentSchema
+  .extend({
+    type: z.literal("use-item-on-item"),
+    targetItemId: z.string().uuid(),
+    targetRevision: z.number().int().positive(),
+  })
+  .strict();
+
 export const splitStackMessageSchema = ownedItemIntentSchema
   .extend({
     type: z.literal("split-stack"),
@@ -756,6 +769,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   closeWorldContainerMessageSchema,
   useItemMessageSchema,
   useItemWithMessageSchema,
+  useItemOnItemMessageSchema,
   splitStackMessageSchema,
   rotateItemMessageSchema,
   moveItemMessageSchema,
@@ -967,6 +981,7 @@ export type CloseWorldContainerMessage = z.infer<
 >;
 export type UseItemMessage = z.infer<typeof useItemMessageSchema>;
 export type UseItemWithMessage = z.infer<typeof useItemWithMessageSchema>;
+export type UseItemOnItemMessage = z.infer<typeof useItemOnItemMessageSchema>;
 export type SplitStackMessage = z.infer<typeof splitStackMessageSchema>;
 export type RotateItemMessage = z.infer<typeof rotateItemMessageSchema>;
 export type MoveItemMessage = z.infer<typeof moveItemMessageSchema>;

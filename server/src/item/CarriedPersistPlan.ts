@@ -46,7 +46,8 @@ export type CarriedDestructionReason =
   | "shop-purchase-currency"
   | "shop-sale"
   | "bank-deposit"
-  | "portable-seller-sale";
+  | "portable-seller-sale"
+  | "gold-converter";
 
 /** Why a row gained units, mirroring the DB-first economy reason strings. */
 export type CarriedCreationReason =
@@ -56,7 +57,8 @@ export type CarriedCreationReason =
   | "shop-sale-currency"
   | "bank-deposit-change"
   | "bank-withdraw"
-  | "harvest";
+  | "harvest"
+  | "gold-converter";
 
 export type CarriedPersistAudit =
   | {

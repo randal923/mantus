@@ -45,6 +45,9 @@ export function GameInventoryOverlays() {
   const setUseWithTargeting = useGameWindowStore(
     (state) => state.setUseWithTargeting,
   );
+  const useWithTargeting = useGameWindowStore(
+    (state) => state.useWithTargeting,
+  );
   // Carried containers opened from a gear slot (the quiver) or an action-bar
   // button float beside the inventory like loot windows.
   const floatingContainerIds = useGameWindowStore(
@@ -58,6 +61,18 @@ export function GameInventoryOverlays() {
   );
 
   if (!ownCharacter || !dispatchItemOp) return null;
+
+  // A pending use-with resolved on a carried item (the gold converter on a
+  // coin stack); the server decides what, if anything, the pair does.
+  const selectUseWithTarget = useWithTargeting
+    ? (target: InventoryItem) => {
+        const tool = runtime.pendingUseWithRef.current;
+        if (!tool) return;
+        runtime.pendingUseWithRef.current = null;
+        setUseWithTargeting(false);
+        runtime.clientRef.current?.useItemOnItem(tool, target);
+      }
+    : undefined;
 
   const floatingContainers = floatingContainerIds.flatMap((containerId) => {
     const state = inventory?.containers?.find(
@@ -194,6 +209,7 @@ export function GameInventoryOverlays() {
                 }
                 runtime.clientRef.current?.useItem(item);
               }}
+              onSelect={selectUseWithTarget}
               onDragStart={(source) => {
                 runtime.itemDragRef.current = source;
               }}
@@ -321,9 +337,13 @@ export function GameInventoryOverlays() {
               setPotionTargeting(false);
               runtime.pendingUseWithRef.current = item;
               setUseWithTargeting(true);
+              // An item-targeting tool keeps the bags open so the target
+              // (a coin stack) can be clicked; tile tools clear the view.
+              if (item.useKind === "useWithItem") return;
               setInventoryOpen(false);
               setCharacterStatsOpen(false);
             }}
+            onSelectItem={selectUseWithTarget}
             onOpenContainer={(item) =>
               runtime.clientRef.current?.openContainer(item)
             }

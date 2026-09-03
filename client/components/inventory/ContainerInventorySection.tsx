@@ -19,6 +19,8 @@ interface ContainerInventorySectionProps {
   /** Render only the rows the contents need, for windows that take no drops. */
   fitContents?: boolean;
   onActivate(item: InventoryItem): void;
+  /** Set while a use-with awaits its target: a left click on an item picks it. */
+  onSelect?: (item: InventoryItem) => void;
   onDragStart(source: ItemDragSource): void;
   onDragEnd(): void;
   onDrop(destination: InventoryItem, slot: number): void;
@@ -30,6 +32,7 @@ export function ContainerInventorySection({
   dragSourceKind = "owned",
   fitContents = false,
   onActivate,
+  onSelect,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -78,6 +81,7 @@ export function ContainerInventorySection({
               key={item?.id ?? `empty-${state.container.id}-${slot}`}
               item={item}
               onActivate={item ? () => onActivate(item) : undefined}
+              onSelect={item && onSelect ? () => onSelect(item) : undefined}
               onDragStart={
                 item
                   ? () =>

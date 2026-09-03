@@ -7,6 +7,7 @@ import type { ItemDragSource } from "./ItemDragSource";
 interface CarriedContainerPanelProps {
   state: ContainerState;
   onActivate(item: InventoryItem): void;
+  onSelect?: (item: InventoryItem) => void;
   onDragStart(source: ItemDragSource): void;
   onDragEnd(): void;
   onDrop(destination: InventoryItem, slot: number): void;
@@ -21,6 +22,7 @@ interface CarriedContainerPanelProps {
 export function CarriedContainerPanel({
   state,
   onActivate,
+  onSelect,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -31,6 +33,7 @@ export function CarriedContainerPanel({
       <ContainerInventorySection
         state={state}
         onActivate={onActivate}
+        onSelect={onSelect}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDrop={onDrop}

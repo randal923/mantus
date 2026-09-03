@@ -16,8 +16,8 @@
  },
  "counts": {
   "registrations": 1367,
-  "implemented": 33,
-  "deferred": 1297,
+  "implemented": 34,
+  "deferred": 1296,
   "excluded": 37,
   "unclassified": 0
  },
@@ -688,9 +688,9 @@
    "aids": [],
    "positionCount": 0,
    "dynamicSelectors": false,
-   "status": "deferred",
-   "owner": "todo-13 Feature 51",
-   "reason": "item-use effect not yet reproduced"
+   "status": "implemented",
+   "owner": "agents/gold-converter",
+   "reason": "GoldConverterService + planGoldConversion: use-item-on-item exchanges a carried coin stack and burns a charge in one carried plan (ground-stack targets stay deferred, TODO.md)"
   },
   {
    "sourcePath": "data/scripts/actions/items/hireling_foods.lua",

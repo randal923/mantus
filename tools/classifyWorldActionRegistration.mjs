@@ -153,6 +153,13 @@ const FILE_DISPOSITIONS = [
     reason: "fishing ships in handleFishingUse",
   },
   {
+    match: /^data\/scripts\/actions\/items\/gold_converter\.lua$/,
+    status: "implemented",
+    owner: "agents/gold-converter",
+    reason:
+      "GoldConverterService + planGoldConversion: use-item-on-item exchanges a carried coin stack and burns a charge in one carried plan (ground-stack targets stay deferred, TODO.md)",
+  },
+  {
     match: /^data-otservbr-global\/scripts\/actions\/system\/quest_reward_common\.lua$/,
     status: "implemented",
     owner: "todo-13 Feature 50",

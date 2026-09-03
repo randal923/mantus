@@ -50,7 +50,11 @@ function availableModes(
       "use-with-crosshair",
     ]);
   }
-  if (item.useKind === "potion" || item.useKind === "useWith") {
+  if (
+    item.useKind === "potion" ||
+    item.useKind === "useWith" ||
+    item.useKind === "useWithItem"
+  ) {
     return new Set([
       "use-on-self",
       "use-on-target",
