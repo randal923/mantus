@@ -55,24 +55,14 @@ limitations accepted during a session are recorded in the owning feature file
   it before searching, which is a guaranteed walk whenever the corridor is
   still free. Owner: `server/src/ai/MonsterBrain.ts`.
 
-- **Gold converter cannot target coins on the ground** (2026-09-03). The
-  new `use-item-on-item` message names two carried items; Canary's
-  `gold_converter.lua` also accepts a coin stack lying on a tile. A map
-  click while a converter use is pending goes through `use-item-with` and
-  fails closed (`item-action-failed`). Fix: a world-target variant of
-  `planGoldConversion` built like `planPickup` (materialized world source,
-  one plan that removes/decrements the tile stack, places the coins and
-  spends the charge), dispatched from `ToolUseHandler` with the converters
-  in `getToolDefinition`. Owner: `server/src/action/GoldConverterService.ts`.
-
 - **Magic Gold Converter is inert** (2026-09-03). Store offer
   `charges-28525-500` delivers 28525 with 500 charges but no handler exists:
   Canary's `magic_gold_converter.lua` toggles 28525↔28526 on use and, while
   active, walks the store inbox every 300 ms converting full gold/platinum
-  stacks and burning a charge each. Fix: a per-player tick-driven sweep over
-  the bound container reusing `planGoldConversion` (one plan per 300 ms
-  think, no timers outside the tick), the transform on use, and the item
-  destroyed at 0 charges. Owner: `server/src/action/GoldConverterService.ts`.
+  stacks and burning a charge each. Fix: the transform on use plus a
+  per-player tick-driven `planGoldConverterSweep` (one plan per think, no
+  timers outside the tick) and the item destroyed at 0 charges. Owner:
+  `server/src/action/GoldConverterService.ts`.
 
 - **World-action parity JSON carries hand edits the classifier does not
   reproduce** (2026-09-03). `yarn parity:world-actions ../canary` on `main`

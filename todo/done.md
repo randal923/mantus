@@ -6732,3 +6732,60 @@ reaches players once main is pushed and the Fly deploy runs.
   JSON on `main` carries hand edits the classifier does not know
   (Adventurer's Stone, temple scroll, quest teleports flip back to
   deferred on regeneration) — also recorded in `TODO.md`.
+
+## 2026-09-03 — Gold Converter sweeps all carried coins on a plain use
+
+- **Problem:** the same-day Gold Converter implementation mirrored Canary:
+  a crosshair use-with on one coin stack, one stack per use, with a new
+  `use-item-on-item` message and click-to-target plumbing across the
+  inventory windows. Randal wants the converter to act like a one-click
+  sweep instead: right-click it, everything convertible in the inventory
+  converts, and a message says what happened.
+- **What changed:** `use-item-on-item`, the `useWithItem` use kind and the
+  client's item-target selection (`ItemSlot.onSelect` and its threading)
+  are gone; the converters are stamped `activate` (plain use, no
+  crosshair). `planGoldConverterSweep` replaces `planGoldConversion`: it
+  counts every carried gold and platinum coin by **total** across all
+  containers (backpack tree, Loot Pouch, anything carried), mints one
+  platinum per 100 gold, then one crystal per 100 platinum with the minted
+  platinum counting (10,000 gold → 1 crystal in one use), one charge per
+  conversion and no more than the charges left; the last charge destroys
+  the converter. Stacks are consolidated with the least churn: a shrinking
+  coin empties its last stacks first, a growing one tops up its stacks in
+  order before opening a new one in the first free backpack slot, else the
+  slot a spent stack vacated. Per-stack audits record the net delta of each
+  row (`gold-converter`). `GoldConverterService.handleUseItem` sits in the
+  `use-item` chain after the temple scroll and answers with a status line
+  (`describeGoldConverterSweep`: "Converted 200 gold coins into 2 platinum
+  coins and 100 platinum coins into 1 crystal coin." plus "The gold
+  converter is used up." on the last charge), or "You need at least 100
+  gold or platinum coins to convert." when nothing converts; a stale
+  revision or a DB-first operation in flight fails closed. This is a
+  deliberate deviation from Canary's per-stack tool, recorded in the parity
+  manifest reason.
+- **Files:** `protocol/src/clientMessages.ts`, `protocol/src/item.ts`
+  (reverted), `server/src/item/plan/planGoldConverterSweep.ts` (+ test,
+  replaces `planGoldConversion`), `server/src/action/GoldConverterService.ts`
+  (+ test), `server/src/action/describeGoldConverterSweep.ts`,
+  `server/src/item/getItemUseKind.ts`, `server/src/GameServer.ts`,
+  `server/src/playtest/scenarios/goldConverter.ts`, the client inventory /
+  action-bar files reverted to their pre-converter state,
+  `tools/classifyWorldActionRegistration.mjs`,
+  `content/canary-world-action-parity.json`, `content/source-manifest.json`.
+- **Verification:** 7 planner tests (totals across stacks with
+  consolidation and row-op/audit shape, the gold→platinum→crystal chain
+  from 100 stacks, top-up and net minted-vs-spent platinum, Loot Pouch coins
+  counted and a new stack landing in a vacated pouch slot with a full
+  backpack, charge cap + converter destruction, nothing/no charges/stale
+  revision/non-converter, 99+1 gold converting as 100) and 6 service tests
+  (one applied plan + message, replay refused by the moved revision,
+  nothing-to-convert status line without an error, used-up message,
+  non-converter ignored, DB-first op pending). `yarn playtest:gold-converter`
+  on the real server: 250 gold in three stacks → 2 platinum + 50 gold in
+  one stack with the exact message, a second use answers the nothing line
+  with no inventory change, 98 platinum + 100 gold chains into 1 crystal
+  with the two-part message, converter still carried, relogin shows the
+  persisted counts. All workspaces typecheck, `yarn parity:check` passes.
+- **Residual risk:** audits are per-row net deltas, so a platinum stack
+  that both gains minted coins and loses spent ones logs only the net
+  movement. The Magic Gold Converter stays inert (`TODO.md`).

@@ -19,8 +19,6 @@ interface ItemSlotProps {
    */
   drawOpen?: boolean;
   onActivate?: () => void;
-  /** Left click picks this item as the target of a pending use-with. */
-  onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onDrop?: () => void;
@@ -33,7 +31,6 @@ export function ItemSlot({
   placeholderSpriteId,
   drawOpen = false,
   onActivate,
-  onSelect,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -55,11 +52,7 @@ export function ItemSlot({
   const emptyDragImageRef = useRef<HTMLSpanElement>(null);
 
   return (
-    <span
-      className={`group/slot relative inline-flex ${
-        item && onSelect ? "cursor-crosshair" : ""
-      }`}
-    >
+    <span className="group/slot relative inline-flex">
       <ItemCell
         spriteId={item?.spriteId}
         clientId={item?.clientId}
@@ -77,7 +70,6 @@ export function ItemSlot({
               })
             : undefined
         }
-        onClick={item && onSelect && !optimistic ? onSelect : undefined}
         onContextMenu={(event) => {
           if (!item || optimistic) return;
           event.preventDefault();

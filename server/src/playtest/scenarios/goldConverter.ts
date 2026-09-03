@@ -4,16 +4,18 @@ import {
   GOLD_COIN_TYPE_ID,
   PLATINUM_COIN_TYPE_ID,
 } from "@tibia/protocol";
+import { GOLD_CONVERTER_NOTHING_MESSAGE } from "../../action/GoldConverterService";
 import { USE_EXHAUST_MS } from "../../Session";
 import { PlaytestClient } from "../PlaytestClient";
 import { startPlaytestServer } from "../startPlaytestServer";
 
 /**
- * Scenario: the gold converter (Canary `actions/items/gold_converter.lua`,
- * the store's "Gold Converter" offer). A fresh character conjures one and
- * uses it on carried coin stacks: 100 gold become 1 platinum, 100 platinum
- * become 1 crystal, a crystal breaks back into 100 platinum, a short gold
- * stack is refused, and replaying the exact intent converts nothing twice.
+ * Scenario: the gold converter (the store's "Gold Converter" offer). A fresh
+ * character conjures one plus coins spread over several stacks and uses it:
+ * one use sweeps every carried coin by total (250 gold in three stacks ->
+ * 2 platinum + 50 gold), reports what it converted, chains platinum into
+ * crystal, answers a status line when nothing is left to convert, and the
+ * result survives a relogin.
  * Run with: yarn playtest:gold-converter
  */
 const GOLD_CONVERTER = 23722;
@@ -33,7 +35,6 @@ const isType =
   (m: ServerMessage): m is Extract<ServerMessage, { type: T }> =>
     m.type === type;
 type Inventory = Extract<ServerMessage, { type: "inventory-updated" }>;
-type Carried = { id: string; revision: number; count: number; typeId: number };
 
 const externalUrl = process.env.PLAYTEST_SERVER_URL;
 const server = externalUrl ? null : await startPlaytestServer({ log: false });
@@ -59,14 +60,19 @@ try {
   );
   ok("backpack open");
 
-  const carried = (m: Inventory, typeId: number): Carried[] =>
+  const carried = (m: Inventory, typeId: number) =>
     (m.inventory.containers ?? [])
       .flatMap((container) => container.items)
       .map((entry) => entry.item)
-      .filter((item) => item.typeId === typeId)
-      .map((item) => ({ id: item.id, revision: item.revision, count: item.count, typeId }));
+      .filter((item) => item.typeId === typeId);
   const total = (m: Inventory, typeId: number) =>
     carried(m, typeId).reduce((sum, item) => sum + item.count, 0);
+  const counts = (m: Inventory) => ({
+    gold: total(m, GOLD_COIN_TYPE_ID),
+    platinum: total(m, PLATINUM_COIN_TYPE_ID),
+    crystal: total(m, CRYSTAL_COIN_TYPE_ID),
+    goldStacks: carried(m, GOLD_COIN_TYPE_ID).length,
+  });
 
   const gm = async (command: string) => {
     const before = client.mark();
@@ -77,10 +83,11 @@ try {
   };
   const conjure = async (typeId: number, count: number) => {
     const before = client.mark();
+    const had = total(inventory, typeId);
     await gm(`/i ${typeId} ${count}`);
     inventory = await client.waitFor(
-      (m): m is Inventory => m.type === "inventory-updated" && total(m, typeId) >= count,
-      `inventory holding ${count}x ${typeId}`,
+      (m): m is Inventory => m.type === "inventory-updated" && total(m, typeId) >= had + count,
+      `inventory holding ${had + count}x ${typeId}`,
       { since: before },
     );
     // The conjure's persist lane drains behind the tick.
@@ -91,122 +98,80 @@ try {
     if (!tool) throw new Error("the converter is gone");
     return tool;
   };
-  const useOn = (target: Carried) => {
-    const tool = converter();
-    const intent = {
-      type: "use-item-on-item" as const,
-      itemId: tool.id,
-      revision: tool.revision,
-      targetItemId: target.id,
-      targetRevision: target.revision,
-    };
-    client.send(intent);
-    return intent;
-  };
-  // Every use is exhaust-gated (Session.USE_EXHAUST_MS); the scenario proves
-  // the version checks, so it never leans on the exhaust refusal.
-  const expectConversion = async (
-    label: string,
-    target: Carried,
-    check: (m: Inventory) => boolean,
-  ) => {
+  // Every use is exhaust-gated (Session.USE_EXHAUST_MS); the scenario never
+  // leans on that refusal.
+  const use = async (label: string, expectText: string, check?: (m: Inventory) => boolean) => {
     await sleep(USE_EXHAUST_MS + 100);
     const before = client.mark();
-    const intent = useOn(target);
-    try {
+    const tool = converter();
+    client.send({ type: "use-item", itemId: tool.id, revision: tool.revision });
+    const status = await client.waitFor(
+      (m): m is Extract<ServerMessage, { type: "combat-log" }> =>
+        m.type === "combat-log" && m.kind === "condition" && m.text.startsWith(expectText.slice(0, 9)),
+      `${label}: status line`,
+      { since: before },
+    );
+    if (status.text !== expectText) {
+      throw new Error(`${label}: expected "${expectText}", got "${status.text}"`);
+    }
+    ok(`"${status.text}"`);
+    if (check) {
       inventory = await client.waitFor(
         (m): m is Inventory => m.type === "inventory-updated" && check(m),
-        label,
+        `${label}: inventory`,
         { since: before },
       );
-    } catch (error) {
-      const last = client.messages
-        .slice(before)
-        .filter((m): m is Inventory => m.type === "inventory-updated")
-        .at(-1);
-      const errors = client.messages
-        .slice(before)
-        .filter((m): m is Extract<ServerMessage, { type: "error" }> => m.type === "error")
-        .map((m) => m.code);
-      throw new Error(
-        `${String(error)}; last inventory gold=${last ? total(last, GOLD_COIN_TYPE_ID) : "?"} ` +
-          `platinum=${last ? JSON.stringify(carried(last, PLATINUM_COIN_TYPE_ID).map((c) => c.count)) : "?"} ` +
-          `crystal=${last ? JSON.stringify(carried(last, CRYSTAL_COIN_TYPE_ID)) : "?"}; errors=${errors.join(",") || "none"}`,
-      );
+    } else {
+      await sleep(500);
+      if (client.messages.slice(before).some((m) => m.type === "inventory-updated")) {
+        throw new Error(`${label}: the inventory changed although nothing should convert`);
+      }
     }
     if (client.messages.slice(before).some((m) => m.type === "error")) {
       throw new Error(`${label}: the server also reported an error`);
     }
-    return intent;
-  };
-  const expectRefusal = async (label: string, send: () => void) => {
-    await sleep(USE_EXHAUST_MS + 100);
-    const before = client.mark();
-    send();
-    await client.waitFor(
-      (m): m is Extract<ServerMessage, { type: "error" }> =>
-        m.type === "error" && m.code === "item-action-failed",
-      `${label} refused`,
-      { since: before },
-    );
-    await sleep(500);
-    const later = client.messages.slice(before);
-    if (later.some((m) => m.type === "inventory-updated")) {
-      throw new Error(`${label}: the inventory changed on a refused use`);
-    }
-    ok(`${label} refused, inventory untouched`);
   };
 
-  step("conjuring a gold converter and 100 gold coins");
+  step("conjuring a gold converter and 250 gold in three stacks (100, 100, 50)");
   await conjure(GOLD_CONVERTER, 1);
   await conjure(GOLD_COIN_TYPE_ID, 100);
-  ok(`carrying ${total(inventory, GOLD_COIN_TYPE_ID)} gold (starter kit: ${total(inventory, CRYSTAL_COIN_TYPE_ID)} crystal)`);
+  await conjure(GOLD_COIN_TYPE_ID, 100);
+  await conjure(GOLD_COIN_TYPE_ID, 50);
+  const start = counts(inventory);
+  ok(`carrying ${JSON.stringify(start)} (starter kit crystal: ${start.crystal})`);
+  if (start.goldStacks !== 3) throw new Error(`expected 3 gold stacks, got ${start.goldStacks}`);
 
-  step("100 gold -> 1 platinum");
-  const goldStack = carried(inventory, GOLD_COIN_TYPE_ID)[0]!;
-  const firstIntent = await expectConversion(
-    "platinum minted",
-    goldStack,
-    (m) => total(m, GOLD_COIN_TYPE_ID) === 0 && total(m, PLATINUM_COIN_TYPE_ID) === 1,
+  step("one use sweeps by total: 250 gold -> 2 platinum + 50 gold in a single stack");
+  await use(
+    "sweep",
+    "Converted 200 gold coins into 2 platinum coins.",
+    (m) => {
+      const c = counts(m);
+      return c.gold === 50 && c.goldStacks === 1 && c.platinum === 2 && c.crystal === start.crystal;
+    },
   );
-  ok(`gold=${total(inventory, GOLD_COIN_TYPE_ID)} platinum=${total(inventory, PLATINUM_COIN_TYPE_ID)}`);
+  ok(JSON.stringify(counts(inventory)));
 
-  step("replaying the exact same intent converts nothing (the stack and revision are gone)");
-  await expectRefusal("replay", () => client.send(firstIntent));
+  step("nothing left to convert answers a status line, never an error");
+  await use("nothing", GOLD_CONVERTER_NOTHING_MESSAGE);
 
-  step("a short gold stack is refused");
-  await conjure(GOLD_COIN_TYPE_ID, 99);
-  await expectRefusal("99 gold", () => useOn(carried(inventory, GOLD_COIN_TYPE_ID)[0]!));
-
-  step("100 platinum -> 1 crystal (tops up the starter crystal stack; the minted platinum stays)");
-  // GM conjures open their own stack rather than topping up the minted coin.
-  await conjure(PLATINUM_COIN_TYPE_ID, 100);
-  const platinumStack = carried(inventory, PLATINUM_COIN_TYPE_ID).find((s) => s.count === 100);
-  if (!platinumStack) throw new Error(`no full platinum stack: ${JSON.stringify(carried(inventory, PLATINUM_COIN_TYPE_ID))}`);
-  const crystalBefore = total(inventory, CRYSTAL_COIN_TYPE_ID);
-  await expectConversion(
-    "crystal minted",
-    platinumStack,
-    (m) =>
-      total(m, CRYSTAL_COIN_TYPE_ID) === crystalBefore + 1 &&
-      total(m, PLATINUM_COIN_TYPE_ID) === 1,
+  step("chaining: 98 more platinum + 100 gold -> 1 platinum minted, 100 platinum -> 1 crystal");
+  await conjure(PLATINUM_COIN_TYPE_ID, 98);
+  await conjure(GOLD_COIN_TYPE_ID, 50);
+  await use(
+    "chain",
+    "Converted 100 gold coins into 1 platinum coin and 100 platinum coins into 1 crystal coin.",
+    (m) => {
+      const c = counts(m);
+      return c.gold === 0 && c.platinum === 1 && c.crystal === start.crystal + 1;
+    },
   );
-  ok(`platinum=${total(inventory, PLATINUM_COIN_TYPE_ID)} crystal=${crystalBefore}->${total(inventory, CRYSTAL_COIN_TYPE_ID)}`);
+  ok(JSON.stringify(counts(inventory)));
 
-  step("1 crystal -> 100 platinum (break-down off a partial stack)");
-  await expectConversion(
-    "crystal broken down",
-    carried(inventory, CRYSTAL_COIN_TYPE_ID)[0]!,
-    (m) =>
-      total(m, CRYSTAL_COIN_TYPE_ID) === crystalBefore &&
-      total(m, PLATINUM_COIN_TYPE_ID) === 101,
-  );
-  ok(`crystal=${total(inventory, CRYSTAL_COIN_TYPE_ID)} platinum=${total(inventory, PLATINUM_COIN_TYPE_ID)}`);
-
-  step("the converter survives with charges spent (3 uses)");
+  step("the converter survives with charges spent");
   ok(`converter ${converter().id} still carried at revision ${converter().revision}`);
 
-  step("relogging: the conversions were persisted, not just cached");
+  step("relogging: the sweep was persisted, not just cached");
   client.terminate();
   const again = await PlaytestClient.connect(url);
   await again.enter(TOKEN, CHARACTER);
@@ -219,13 +184,8 @@ try {
       (m.inventory.containers ?? []).some((c) => c.container.id === bp.id),
     "backpack reopened",
   );
-  const after = {
-    gold: total(reloaded, GOLD_COIN_TYPE_ID),
-    platinum: total(reloaded, PLATINUM_COIN_TYPE_ID),
-    crystal: total(reloaded, CRYSTAL_COIN_TYPE_ID),
-    converters: carried(reloaded, GOLD_CONVERTER).length,
-  };
-  if (after.gold !== 99 || after.platinum !== 101 || after.crystal !== crystalBefore || after.converters !== 1) {
+  const after = { ...counts(reloaded), converters: carried(reloaded, GOLD_CONVERTER).length };
+  if (after.gold !== 0 || after.platinum !== 1 || after.crystal !== start.crystal + 1 || after.converters !== 1) {
     throw new Error(`persisted inventory mismatch: ${JSON.stringify(after)}`);
   }
   ok(`persisted: ${JSON.stringify(after)}`);

@@ -41,7 +41,7 @@ export function createItemAction(
       display,
     };
   }
-  if (item.useKind === "useWith" || item.useKind === "useWithItem") {
+  if (item.useKind === "useWith") {
     return {
       kind: "item",
       itemTypeId: item.typeId,

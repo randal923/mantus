@@ -1863,6 +1863,7 @@ export class GameServer {
     if (this.portableSeller.handleUseItem(session, intent, now)) return true;
     if (this.adventurersStone.handleUseItem(session, intent)) return true;
     if (this.templeScroll.handleUseItem(session, intent, now)) return true;
+    if (this.goldConverter.handleUseItem(session, intent, now)) return true;
     this.items.handle(session, intent, now);
     return true;
   }
@@ -1993,18 +1994,6 @@ export class GameServer {
         return;
       case "use-item-with":
         this.useItemWith(session, intent, now);
-        return;
-      case "use-item-on-item":
-        // Item-on-item uses share the generic use exhaust; only the gold
-        // converter answers, anything else fails closed.
-        if (session.useExhausted(now)) {
-          session.sendError("item-exhausted");
-          return;
-        }
-        session.armUseExhaust(now);
-        if (!this.goldConverter.handle(session, intent, now)) {
-          session.sendError("item-action-failed");
-        }
         return;
       case "use-item":
         this.useItem(session, intent, now);

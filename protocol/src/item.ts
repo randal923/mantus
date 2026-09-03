@@ -116,11 +116,6 @@ export const itemUseKindSchema = z.enum([
   "read",
   "food",
   "useWith",
-  /**
-   * Used on another item — carried or on the ground — rather than a tile
-   * (the gold converter); the client keeps the inventory open to pick it.
-   */
-  "useWithItem",
   /** Devices a right-click triggers server-side (the Portable Seller). */
   "activate",
 ]);
