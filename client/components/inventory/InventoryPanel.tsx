@@ -39,8 +39,6 @@ interface InventoryPanelProps {
   onUseRune?: (item: InventoryItem) => void;
   onUsePotion?: (item: InventoryItem) => void;
   onUseItemWith?: (item: InventoryItem) => void;
-  /** Set while a use-with awaits its target: a left click on an item picks it. */
-  onSelectItem?: (item: InventoryItem) => void;
   onOpenContainer?: (item: InventoryItem) => void;
   /** Opens a container dressing a gear slot (the quiver) in its own window. */
   onOpenEquippedContainer?: (item: InventoryItem) => void;
@@ -75,7 +73,6 @@ export function InventoryPanel({
   onUseRune,
   onUsePotion,
   onUseItemWith,
-  onSelectItem,
   onOpenContainer,
   onOpenEquippedContainer,
   onCloseContainer,
@@ -211,7 +208,6 @@ export function InventoryPanel({
             onUseRune={onUseRune}
             onUsePotion={onUsePotion}
             onUseItemWith={onUseItemWith}
-            onSelectItem={onSelectItem}
             onOpenContainer={onOpenContainer}
             onOpenEquippedContainer={onOpenEquippedContainer}
             onCloseContainer={onCloseContainer}

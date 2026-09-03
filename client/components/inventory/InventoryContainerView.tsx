@@ -44,8 +44,6 @@ interface InventoryContainerViewProps {
   onUseRune?: (item: InventoryItem) => void;
   onUsePotion?: (item: InventoryItem) => void;
   onUseItemWith?: (item: InventoryItem) => void;
-  /** Set while a use-with awaits its target: a left click on an item picks it. */
-  onSelectItem?: (item: InventoryItem) => void;
   onOpenContainer?: (item: InventoryItem) => void;
   /** Opens a container dressing a gear slot (the quiver) in its own window. */
   onOpenEquippedContainer?: (item: InventoryItem) => void;
@@ -76,7 +74,6 @@ export function InventoryContainerView({
   onUseRune,
   onUsePotion,
   onUseItemWith,
-  onSelectItem,
   onOpenContainer,
   onOpenEquippedContainer,
   onCloseContainer,
@@ -179,10 +176,7 @@ export function InventoryContainerView({
       onUsePotion(item);
       return;
     }
-    if (
-      (item.useKind === "useWith" || item.useKind === "useWithItem") &&
-      onUseItemWith
-    ) {
+    if (item.useKind === "useWith" && onUseItemWith) {
       onUseItemWith(item);
       return;
     }
@@ -268,9 +262,6 @@ export function InventoryContainerView({
                 item={item}
                 drawOpen={boundRootInView}
                 onActivate={item ? () => activateItem(item) : undefined}
-                onSelect={
-                  item && onSelectItem ? () => onSelectItem(item) : undefined
-                }
                 onDragStart={
                   item &&
                   dropContainer &&

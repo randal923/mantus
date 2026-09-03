@@ -186,7 +186,7 @@
   },
   {
    "path": "tools/classifyWorldActionRegistration.mjs",
-   "sha256": "7c0b66db093bb9bdd3fd38fe4299a8dfcf3dc94d2ae548ce925ba86dc37fb189"
+   "sha256": "73029d537c729b23990779febfb74b371c20c54e2370fbdec81283981e06bae2"
   },
   {
    "path": "tools/convertCanaryItems.mjs",

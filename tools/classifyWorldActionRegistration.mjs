@@ -157,7 +157,7 @@ const FILE_DISPOSITIONS = [
     status: "implemented",
     owner: "agents/gold-converter",
     reason:
-      "GoldConverterService + planGoldConversion: use-item-on-item exchanges a carried coin stack and burns a charge in one carried plan (ground-stack targets stay deferred, TODO.md)",
+      "GoldConverterService + planGoldConverterSweep: a plain use sweeps every carried coin by total (100 gold -> 1 platinum, then 100 platinum -> 1 crystal, chained), one charge per conversion, in one carried plan, and reports what it converted (deliberate deviation from Canary's per-stack use-with)",
   },
   {
     match: /^data-otservbr-global\/scripts\/actions\/system\/quest_reward_common\.lua$/,

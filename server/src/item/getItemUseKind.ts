@@ -12,7 +12,7 @@ export function getItemUseKind(type: ItemType): ItemUseKind | undefined {
   if (type.id === PORTABLE_SELLER_TYPE_ID) return "activate";
   if (type.id === ADVENTURERS_STONE_TYPE_ID) return "activate";
   if (type.id === TEMPLE_TELEPORT_SCROLL_TYPE_ID) return "activate";
-  if (GOLD_CONVERTER_TYPE_IDS.has(type.id)) return "useWithItem";
+  if (GOLD_CONVERTER_TYPE_IDS.has(type.id)) return "activate";
   if (type.kind === "rune") return "rune";
   if (getPotionDefinition(type.id)) return "potion";
   // Exercise weapons are used *on* a dummy, so they raise the same crosshair a
