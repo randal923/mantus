@@ -48,3 +48,4 @@ worktree is created, merged, or removed.
 | `agents/depot-closed-container-deposit` | done        |
 | `agents/lured-monster-return-home` | done        |
 | `agents/autoloot-e2e`            | done        |
+| `agents/autoloot-reach-corpses`  | done        |
