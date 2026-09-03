@@ -51,4 +51,4 @@ worktree is created, merged, or removed.
 | `agents/autoloot-reach-corpses`  | done        |
 | `agents/temple-teleport-scroll` | done        |
 | `agents/action-bar-item-use`   | done        |
-| `agents/gold-converter`        | in progress |
+| `agents/gold-converter`        | done        |
