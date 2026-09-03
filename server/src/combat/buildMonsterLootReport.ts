@@ -14,11 +14,6 @@ export interface MonsterLootReport {
   readonly monstersWithoutCorpse: ReadonlyArray<string>;
   /** Loot-bearing monsters whose corpse type is not a container. */
   readonly monstersWithUncontainableCorpse: ReadonlyArray<string>;
-  /**
-   * Loot-bearing monsters whose corpse holds fewer slots than their table has
-   * entries — a full table can overflow, exactly as it does in Canary.
-   */
-  readonly monstersWithOverflowingTable: ReadonlyArray<string>;
   /** Entries carrying Canary's `unique` flag, which the roll does not model. */
   readonly uniqueEntries: number;
   /** Entries whose count band is wider than one item. */
@@ -43,7 +38,6 @@ export function buildMonsterLootReport(
   const unresolvedItemNames = new Set<string>();
   const monstersWithoutCorpse: string[] = [];
   const monstersWithUncontainableCorpse: string[] = [];
-  const monstersWithOverflowingTable: string[] = [];
   for (const type of monsterTypes) {
     if (type.loot.length === 0) continue;
     lootBearingMonsters += 1;
@@ -51,11 +45,10 @@ export function buildMonsterLootReport(
       type.corpseItemTypeId > 0
         ? catalog.get(type.corpseItemTypeId)
         : undefined;
-    const capacity = corpse?.containerCapacity ?? 0;
+    // A corpse is sized to its loot, so only "a container at all" matters.
     if (type.corpseItemTypeId === 0) monstersWithoutCorpse.push(type.id);
-    else if (capacity < 1) monstersWithUncontainableCorpse.push(type.id);
-    else if (type.loot.length > capacity) {
-      monstersWithOverflowingTable.push(type.id);
+    else if (corpse?.containerCapacity === undefined) {
+      monstersWithUncontainableCorpse.push(type.id);
     }
     for (const entry of type.loot) {
       entries += 1;
@@ -82,7 +75,6 @@ export function buildMonsterLootReport(
     unresolvedEntries: entries - resolvedEntries,
     monstersWithoutCorpse: monstersWithoutCorpse.sort(),
     monstersWithUncontainableCorpse: monstersWithUncontainableCorpse.sort(),
-    monstersWithOverflowingTable: monstersWithOverflowingTable.sort(),
     uniqueEntries,
     countedEntries,
   };

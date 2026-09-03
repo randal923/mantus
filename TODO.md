@@ -1120,34 +1120,6 @@ limitations accepted during a session are recorded in the owning feature file
   five cells; the cap keeps that under ~300 tiles. Types past the cap are
   dropped silently rather than paged. Recommended fix: a result count with a
   "refine your search" note, or paging like the wiki bestiary's. Owner: same.
-- **Auto-loot needs the killer within one tile of the corpse** (accepted
-  2026-07-30). `ItemIntentHandler.autoLoot` reuses `isNear`, the same reach
-  rule a hand-made loot move obeys, so a ranged or run-away kill auto-loots
-  nothing. This is deliberate — the alternative is a reach exemption that
-  only auto-loot enjoys — but Canary's quick-loot is more forgiving, so
-  revisit if playtest finds it annoying. Recommended fix if changed: widen
-  the check inside `autoLoot` only, never in `planLoot`. Owner: same.
-- **A loot-filter edit sent while the previous one is still being written is
-  refused and lost** (found 2026-09-02 by `yarn playtest:autoloot`, scenario
-  `double`). `LootFilterHandler.handleUpdate` answers
-  `loot-filter-update-pending` for the second `update-loot-filter` and keeps
-  the first; the session ends up with the *older* list, the client shows the
-  newer one until the echo reverts it, and the next kill sweeps against the
-  stale list. Only needs the DB write to outlast the client's 800 ms
-  debounce (a slow prod round-trip, or a player ticking two cells fast).
-  Recommended fix: coalesce instead of refuse — keep a `nextLootFilter` on the
-  session, apply it in memory at once, and let the in-flight persist chain
-  write the latest value when it finishes (one echo per committed write).
-  Owner: the loot filter work (2026-08-06).
-- **Auto-loot needs the killer within one tile** is now measured, not just
-  accepted: scenario `ranged` (sudden death rune from three tiles) sweeps
-  nothing and leaves the corpse full. Canary's `Creature::onDeath` auto-loots
-  for any corpse the killer can *path* to (`getPathMatching` + `isReachable`),
-  so every paladin, wand/rod and rune kill here is a "auto-loot did not pick
-  up" report waiting to happen. Recommended fix (if the design changes):
-  replace `isNear` inside `autoLoot` with a bounded reachability check
-  (same-floor, within the client viewport, walkable path), leaving `planLoot`
-  and hand-loot reach untouched. Owner: same.
 - **The last hitter, not the top damager, owns and auto-loots the corpse**
   (found 2026-09-02, scenario `two`). `DeathHandler` resolves `killerId` as the
   player who landed the final blow and only falls back to `topDamagerId()`
@@ -1157,34 +1129,49 @@ limitations accepted during a session are recorded in the owning feature file
   59% of the work got nothing and could not even open the corpse
   (`loot-protected`). Recommended fix: `killerId = target.topDamagerId() ??
   lastHitPlayer`, keeping experience/bestiary credit as they are. Owner: same.
-- **22 monster types with loot tables leave no corpse at all** (found
-  2026-09-02, scenario `nocorpse`). `createMonsterCorpse` returns null when the
-  corpse type has no container capacity, so the whole loot roll is
-  discarded: water elemental and massive water elemental (9582 — in Canary
-  the "remains" are a fluid source you fish the loot out of with a fishing
-  rod, `fishing_rod.lua`, an action this server does not have), gaffir
-  (31307), misguided bully/thief (26125), death blob (11317), lava lurker
-  (27586), plus 15 types whose corpse id is not in `data/item-catalog.json`
-  at all (48340, 21887, 48271, 49994, 48112, 48259, 35384, 35388, 33891,
-  30298, 30137, 49990, 48416, 3138, 0). Recommended fix: port the fishing-rod
-  corpse loot for the two water elementals; for the rest, re-check the
-  corpse ids against Canary's `items.xml`/OTB and either give the corpse a
-  container capacity in the catalog or map the monster to its lootable
-  corpse stage. Owner: monster/loot parity.
-- **`rollMonsterLoot` stops at the corpse's container capacity** (noted
-  2026-09-02). 147 monster types have more table entries than corpse slots
-  (annihilon 39 > 24, black knight 22 > 20 …); entries past the cap can never
-  drop once the earlier ones hit, which the playtest's ×50 loot rate makes
-  visible (a minotaur corpse showed 10 of its entries and dropped the rest).
-  At 1× rates this is rare but real for bosses. Verify Canary's
-  `MonsterType::createLoot` behaviour (it inserts with `internalAddThing`,
-  which does not enforce capacity) before deciding. Owner: monster/loot
-  parity.
-- **Auto-loot's capacity skip is silent** (scenario `cap`): a drop heavier
-  than the free capacity is left in the corpse with no message; Canary sends
-  "Attention: Your capacity is not enough to loot this item" per sweep
-  (`playerQuickLootCorpse`). Recommended fix: one `combat-text`/status line per
-  sweep when at least one listed drop was skipped for capacity. Owner: same.
+- **Auto-loot reach ignores creatures standing in the way** (accepted
+  2026-09-02, with the ranged-kill fix). `isCorpseReachable` requires the
+  same floor, the killer's own view range and a pathable route to a tile
+  next to the corpse, but does not treat an occupied tile as blocked — Canary's
+  `getPathMatching` does (`Tile::queryAdd`). Creatures move and the sweep
+  runs once on the death tick, so blocking on them would lose loot to a
+  passing monster; the cost is a sweep through a doorway a player is standing
+  in. Recommended fix if abused: add `!world.isOccupied(position)` to the
+  `canStep` in `server/src/item/isCorpseReachable.ts`. Owner: auto-loot.
+- **Container-flagged items without an items.xml size get capacity 0, not
+  Canary's default 8** (noted 2026-09-02). `tools/buildItemCatalog.mjs`
+  writes `containerCapacity: 0` for the ~215 DAT-container items Canary's
+  items.xml gives no `containerSize` (mostly later corpse decay stages);
+  Canary's `ItemType::maxItems` defaults to 8. Only the corpses of
+  loot-bearing monsters are corrected (`server/src/item/overrides/corpses`),
+  because a corpse is sized to its loot anyway and widening all 215 would
+  turn map decoration (stone tiles, crystals) into openable containers on
+  the map. Recommended fix if a zero-slot container ever matters: change the
+  builder default to 8 and re-check `buildQuestChestDefinitions`/`ChestService`
+  which treat capacity > 0 as "is a container". Owner: item catalog.
+- **`yarn items:catalog` ends in a missing tool** (noted 2026-09-02).
+  The chain's last step is `node tools/buildItemAnimations.mjs`, which does
+  not exist (`tools/importAppearanceAnimations.mjs` does); the earlier steps
+  run and their outputs are current. Recommended fix: point the script at the
+  right tool or drop the step. Owner: tooling.
+- **`yarn workspace server creature-loot:build` output has drifted from the
+  committed asset** (noted 2026-09-02). Regenerating
+  `client/public/assets/creature-loot-items.json` adds `clientId` to every
+  tooltip (1511 entries changed, none added or removed); the committed file
+  predates that projection change and was left untouched here to keep the
+  diff on topic. Recommended fix: regenerate and commit it on its own.
+  Owner: tooling.
+- **`yarn playtest:autoloot` cannot kill monsters that turn invisible** (noted
+  2026-09-02). The rig reads `creature-left` as "gone", so a water elemental,
+  poor soul or mechanical fighter casting invisibility ends `killAdjacent`
+  at ~96% health with no death — the branch-era "water elemental drops
+  nothing" finding was this, not the corpse. The override-corpse scenario
+  uses the death blob instead. Recommended fix: have the rig keep a target
+  alive across `creature-left`/`creature-joined` pairs of the same id and
+  re-issue the attack when it reappears. Owner: playtest harness.
+- **The lost gnome leaves no corpse** (accepted 2026-09-02): Canary sets
+  `monster.corpse = 0` for it too, so its loot table never drops upstream
+  either. Pinned by `monsterLootParity`. Owner: monster/loot parity.
 - **Auto-loot has no per-category container routing** (accepted 2026-07-30).
   Everything on the pick-up list goes through `planBackpackPlacement`, which fills
   the equipped backpack and every bag nested inside it depth-first — correct

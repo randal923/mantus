@@ -48,6 +48,13 @@ export class Session {
   actionBarUpdatePending = false;
   actionBotUpdatePending = false;
   lootFilterUpdatePending = false;
+  /**
+   * The newest loot-filter edit that arrived while a durable write was still
+   * in flight. It is already live in `lootFilter`; the persist chain writes
+   * it once the in-flight write settles, so the latest edit always wins and
+   * none is refused (intermediate ones coalesce away).
+   */
+  lootFilterDeferred: LootFilter | null = null;
   /** Ready-time for the next loot-filter item listing; throttles the window. */
   lootFilterItemsReadyAt = 0;
   huntingBotRouteUpdatePending = false;

@@ -20,12 +20,13 @@ import {
 } from "../rarity/playerAffixEffects";
 import { monotonicNow } from "../monotonicNow";
 import type { CarriedPersistPlan } from "./CarriedPersistPlan";
+import { carriedWeight } from "../depot/carriedWeight";
 import { chargesOf } from "./chargesOf";
 import { CorpseCreator } from "./CorpseCreator";
 import type { DecayManager } from "./DecayManager";
 import { dropUnknownItemTypes } from "./dropUnknownItemTypes";
 import { InventoryCacheManager } from "./InventoryCacheManager";
-import { isNear } from "./isNear";
+import { isCorpseReachable } from "./isCorpseReachable";
 import { itemDisplayRarityOf } from "./itemDisplayRarityOf";
 import { lootFilterTakes } from "./lootFilterTakes";
 import type { Item } from "./Item";
@@ -68,6 +69,10 @@ interface PendingPotionUse {
   readonly healthRestore: number;
   readonly manaRestore: number;
 }
+
+/** Canary game.cpp `playerQuickLootCorpse` capacity notice, verbatim. */
+const LOOT_TOO_HEAVY_TEXT =
+  "Attention! The loot you are trying to pick up is too heavy for you to carry.";
 
 export class ItemIntentHandler {
   private readonly outcomes = new ResolvedOutcomes<[number]>();
@@ -1008,9 +1013,19 @@ export class ItemIntentHandler {
         );
       });
     let taken = 0;
+    let skippedForCapacity = false;
     for (const item of eligible) {
       const cache = this.inventories.get(playerId);
       if (!cache) break;
+      // Detection only — planLoot re-checks the weight and is the enforcer.
+      if (
+        carriedWeight(this.catalog, cache.items) +
+          carriedWeight(this.catalog, this.world.getWorldSubtree(item.id)) >
+        cache.capacityMax * 100
+      ) {
+        skippedForCapacity = true;
+        continue;
+      }
       const plan = planLoot({
         characterId: playerId,
         catalog: this.catalog,
@@ -1180,7 +1195,17 @@ export class ItemIntentHandler {
     const player = this.world.getPlayer(playerId);
     const corpse = this.world.getWorldItem(corpseId);
     if (!player || !corpse || corpse.location.kind !== "world") return;
-    if (!isNear(player.position, corpse.location.position)) return;
+    if (
+      !isCorpseReachable(
+        this.world,
+        player,
+        session.viewRange,
+        corpse.location.position,
+        now,
+      )
+    ) {
+      return;
+    }
     const owner = corpse.attributes.ownerCharacterId;
     if (typeof owner === "string" && owner !== playerId) return;
     const eligible = this.world
@@ -1202,9 +1227,19 @@ export class ItemIntentHandler {
           itemDisplayRarityOf(type, item),
         );
       });
+    let skippedForCapacity = false;
     for (const item of eligible) {
       const cache = this.inventories.get(playerId);
       if (!cache) break;
+      // Detection only — planLoot re-checks the weight and is the enforcer.
+      if (
+        carriedWeight(this.catalog, cache.items) +
+          carriedWeight(this.catalog, this.world.getWorldSubtree(item.id)) >
+        cache.capacityMax * 100
+      ) {
+        skippedForCapacity = true;
+        continue;
+      }
       const plan = planLoot({
         characterId: playerId,
         catalog: this.catalog,
@@ -1226,6 +1261,14 @@ export class ItemIntentHandler {
       const persist = plan.persist;
       this.enqueueItemPersist(session, playerId, persist);
       this.analyzerHooks?.onLooted(playerId, item.typeId, item.count);
+    }
+    // One warning per sweep, as Canary's `playerQuickLootCorpse` sends it.
+    if (skippedForCapacity && session.playerId === playerId) {
+      session.send({
+        type: "combat-log",
+        kind: "warning",
+        text: LOOT_TOO_HEAVY_TEXT,
+      });
     }
   }
 

@@ -14,6 +14,7 @@ import { doomedContainedItemsQuery } from "./sql/doomedContainedItemsQuery";
 import { insertDecayContentDestroyedAudit } from "./sql/insertDecayContentDestroyedAudit";
 import { insertDecayTransformAudit } from "./sql/insertDecayTransformAudit";
 import { withSerializableTransaction } from "./withSerializableTransaction";
+import { decayKeepSlots } from "./decayKeepSlots";
 
 export class PgDecayOps {
   constructor(
@@ -49,12 +50,10 @@ export class PgDecayOps {
           removedItemIds: [row.id, ...removed],
         };
       }
-      const capacity =
-        this.catalog.require(targetTypeId).containerCapacity ?? 0;
       const removedItemIds = await this.destroyContainedItems(
         client,
         row.id,
-        capacity,
+        decayKeepSlots(this.catalog, targetTypeId),
       );
       const result = await client.query<ItemRow>(decayTransformUpdate, [
         row.id,

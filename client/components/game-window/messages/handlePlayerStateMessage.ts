@@ -139,6 +139,11 @@ export function handlePlayerStateMessage(
     if (message.kind === "condition") {
       state.showScreenMessage(message.text, "status");
     }
+    // Warnings ("Attention! The loot ... is too heavy") are red, like
+    // Tibia's status warnings.
+    if (message.kind === "warning") {
+      state.showScreenMessage(message.text, "warning");
+    }
     return false;
   }
 

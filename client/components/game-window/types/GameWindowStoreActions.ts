@@ -190,7 +190,10 @@ export interface GameWindowStoreActions {
   setMapContextMenu: (
     value: SetStateAction<MapContextMenuState | null>,
   ) => void;
-  showScreenMessage: (text: string, tone: "look" | "status") => void;
+  showScreenMessage: (
+    text: string,
+    tone: "look" | "status" | "warning",
+  ) => void;
   clearScreenMessage: () => void;
   closeMarket: () => void;
   reconnect: (characterId: string | null) => void;
