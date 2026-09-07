@@ -51,6 +51,15 @@ export class SessionRegistry {
   }
 
   /** Call after session.playerId is assigned during character selection. */
+  /** Distinct client addresses among sessions bound to a player (otservlist's `unique`). */
+  uniquePlayerAddressCount(): number {
+    const addresses = new Set<string>();
+    for (const session of this.sessionsByPlayerId.values()) {
+      addresses.add(session.remoteAddress);
+    }
+    return addresses.size;
+  }
+
   bindPlayer(session: Session): void {
     if (session.playerId) this.sessionsByPlayerId.set(session.playerId, session);
   }

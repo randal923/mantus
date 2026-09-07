@@ -5,6 +5,7 @@ import type { MapItem } from "./MapItem";
 import type { MapTransition } from "./MapTransition";
 import type { StageTables } from "./progression/stageRates";
 import type { RarityConfig } from "./rarity/RarityConfig";
+import type { StatusConfig } from "./status/StatusConfig";
 import type { MapCleanupConfig } from "./world/MapCleanupService";
 
 export type MapConfig =
@@ -97,6 +98,8 @@ export interface ServerConfig {
   map: MapConfig;
   /** Absent when the periodic ground-item sweep is switched off. */
   mapCleanup?: MapCleanupConfig;
+  /** OpenTibia status-protocol listener (server lists); absent when off. */
+  status?: StatusConfig;
   creatures?: {
     contentName: string;
     activationRange: { x: number; y: number };

@@ -14,5 +14,5 @@ COPY content content
 COPY server server
 COPY config.yml ./
 
-EXPOSE 4000
+EXPOSE 4000 7171
 CMD ["yarn", "workspace", "server", "start"]

@@ -43,6 +43,24 @@ moderation:
 combat:
   seed: 1129270594
 
+# OpenTibia status protocol (Canary's ProtocolStatus): a raw TCP listener
+# server lists such as otservlist.org poll for uptime and player counts. Port
+# 0 disables it; STATUS_PORT / STATUS_IP override port and ip. `ip` is the
+# public address the listing points at (Fly's dedicated IPv4) and is only
+# echoed back, never bound.
+status:
+  port: 7171
+  ip: ""
+  serverName: Mantus Online
+  location: United States
+  url: https://mantusonline.com/
+  ownerName: Mantus Online
+  ownerEmail: ""
+  motd: Welcome to Mantus Online! Play in your browser at https://mantusonline.com/
+  # A rendered reply is reused for this long, so a query flood costs one
+  # snapshot per window.
+  cacheMs: 5000
+
 rates:
   # Non-negative up to 1000. Fractional progression is floored to whole units.
   experience: 2
