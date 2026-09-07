@@ -53,3 +53,4 @@ worktree is created, merged, or removed.
 | `agents/action-bar-item-use`   | done        |
 | `agents/gold-converter`        | done        |
 | `agents/gold-converter-sweep`  | done        |
+| `agents/otservlist-status`     | in progress |

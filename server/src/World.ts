@@ -1,4 +1,9 @@
-import type { Direction, Position, ViewRange } from "@tibia/protocol";
+import type {
+  CreatureKind,
+  Direction,
+  Position,
+  ViewRange,
+} from "@tibia/protocol";
 import { canSee } from "./canSee";
 import type { Creature } from "./creature/Creature";
 import { Monster } from "./creature/Monster";
@@ -467,9 +472,17 @@ export class World {
   }
 
   get monsterCount(): number {
+    return this.countCreatures("monster");
+  }
+
+  get npcCount(): number {
+    return this.countCreatures("npc");
+  }
+
+  private countCreatures(kind: CreatureKind): number {
     let count = 0;
     for (const creature of this.creatures.values()) {
-      if (creature.kind === "monster") count++;
+      if (creature.kind === kind) count++;
     }
     return count;
   }

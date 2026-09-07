@@ -13,6 +13,7 @@ import {
 } from "./rarity/affixDefinitions";
 import { DISABLED_RARITY_CONFIG } from "./rarity/RarityConfig";
 import type { AffixId } from "./rarity/RolledAffix";
+import type { StatusConfig } from "./status/StatusConfig";
 
 const DEFAULT_CONFIG_PATH = fileURLToPath(
   new URL("../../config.yml", import.meta.url),
@@ -192,6 +193,19 @@ const serverConfigFileSchema = z
     moderation: z
       .object({ retentionDays: positiveIntegerSchema.max(3_650) })
       .strict(),
+    status: z
+      .object({
+        port: portSchema,
+        ip: z.string().max(100),
+        serverName: trimmedStringSchema,
+        location: trimmedStringSchema,
+        url: trimmedStringSchema,
+        ownerName: trimmedStringSchema,
+        ownerEmail: z.string().max(100),
+        motd: z.string().max(500),
+        cacheMs: positiveIntegerSchema.max(60_000),
+      })
+      .strict(),
     combat: z.object({ seed: uint32Schema }).strict(),
     rates: z
       .object({
@@ -324,11 +338,29 @@ const environmentOverridesSchema = z
     DEV_AUTH: booleanOverrideSchema.optional(),
     DEV_COMMANDS: booleanOverrideSchema.optional(),
     TRUST_PROXY: booleanOverrideSchema.optional(),
+    STATUS_PORT: z
+      .string()
+      .regex(/^\d+$/, "must be an integer")
+      .transform(Number)
+      .pipe(portSchema)
+      .optional(),
+    STATUS_IP: z.string().max(100).optional(),
     MAP_NAME: nameSchema.optional(),
     SPAWN_TOWN: trimmedStringSchema.optional(),
     CREATURES_ENABLED: booleanOverrideSchema.optional(),
   })
   .passthrough();
+
+function statusConfig(
+  status: z.infer<typeof serverConfigFileSchema>["status"],
+  overrides: z.infer<typeof environmentOverridesSchema>,
+): StatusConfig | undefined {
+  const port = overrides.STATUS_PORT ?? status.port;
+  // Port 0 switches the listener off; tests that want an ephemeral port pass
+  // a StatusConfig directly.
+  if (port === 0) return undefined;
+  return { ...status, port, ip: overrides.STATUS_IP ?? status.ip };
+}
 
 export async function loadServerConfig(
   configPath = process.env.CONFIG_PATH ?? DEFAULT_CONFIG_PATH,
@@ -384,6 +416,7 @@ export async function loadServerConfig(
     maxProtocolViolations: config.network.maxProtocolViolations,
     chat: config.chat,
     moderationRetentionDays: config.moderation.retentionDays,
+    status: statusConfig(config.status, overrides),
     combatSeed: config.combat.seed,
     rates: config.rates,
     rarity: config.rarity

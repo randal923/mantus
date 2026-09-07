@@ -125,6 +125,8 @@ import { resolveMapData } from "./resolveMapData";
 import { ProgressionSystem } from "./progression/ProgressionSystem";
 import { publicStageRates } from "./progression/publicStageRates";
 import { PublicApi } from "./PublicApi";
+import { StatusServer } from "./status/StatusServer";
+import type { StatusSnapshot } from "./status/StatusSnapshot";
 import { Session } from "./Session";
 import { LoginQueue } from "./LoginQueue";
 import { SessionRegistry } from "./SessionRegistry";
@@ -250,6 +252,9 @@ export interface GameServerDeps {
 
 export class GameServer {
   private readonly httpServer: HttpServer;
+  private readonly statusServer: StatusServer | undefined;
+  /** High-water mark of players in world since this process started. */
+  private peakPlayers = 0;
   private readonly wss: WebSocketServer;
   private readonly world: World;
   private readonly registry: SessionRegistry;
@@ -1487,7 +1492,35 @@ export class GameServer {
       maxPayload: PROTOCOL_LIMITS.maxMessageBytes,
     });
     this.httpServer.listen(config.port);
+    this.statusServer = config.status
+      ? new StatusServer(config.status, () => this.statusSnapshot())
+      : undefined;
     this.loop = new TickLoop(config.tickMs, () => this.tick());
+  }
+
+  /** Public aggregate numbers only (charter rule 6): nothing per player. */
+  private statusSnapshot(): StatusSnapshot {
+    const playersOnline = this.world.playerCount;
+    // The tick samples the peak too; folding the query in keeps `peak >=
+    // online` in every reply even between ticks.
+    this.peakPlayers = Math.max(this.peakPlayers, playersOnline);
+    return {
+      uptimeSeconds: Math.floor((monotonicNow() - this.startedAt) / 1000),
+      playersOnline,
+      uniqueAddresses: this.registry.uniquePlayerAddressCount(),
+      maxPlayers: this.config.maxSessions,
+      peakPlayers: this.peakPlayers,
+      monsters: this.world.monsterCount,
+      npcs: this.world.npcCount,
+      rates: {
+        experience: this.config.rates.experience,
+        skill: this.config.rates.skill,
+        loot: this.config.rates.loot,
+        magic: this.config.rates.magic,
+        spawn: this.config.rates.spawn,
+      },
+      mapName: this.world.mapName,
+    };
   }
 
   get port(): number {
@@ -1495,6 +1528,11 @@ export class GameServer {
     return typeof address === "object" && address
       ? address.port
       : this.config.port;
+  }
+
+  /** Bound status-protocol port, or undefined when the listener is off. */
+  get statusPort(): number | undefined {
+    return this.statusServer?.port;
   }
 
   get unsavedPlayerCount(): number {
@@ -1529,6 +1567,17 @@ export class GameServer {
     });
     this.loop.start();
     this.pixOrders?.startReconciliation();
+    void this.statusServer?.listen().then(
+      () => {
+        console.log(
+          `status protocol listening on tcp://localhost:${this.statusServer?.port}`,
+        );
+      },
+      (cause: unknown) => {
+        const reason = cause instanceof Error ? cause.message : "unknown";
+        console.error(`status listener failed to start: ${reason}`);
+      },
+    );
     this.heartbeat = setInterval(
       () => this.pingSessions(),
       this.config.heartbeatMs,
@@ -1585,6 +1634,7 @@ export class GameServer {
 
   private tick(): void {
     const now = monotonicNow();
+    this.peakPlayers = Math.max(this.peakPlayers, this.world.playerCount);
     for (const session of this.registry.all()) session.beginBatch();
     try {
       this.processDisconnects(now);
@@ -2440,6 +2490,7 @@ export class GameServer {
       });
     });
     await httpClosed;
+    await this.statusServer?.close();
   }
 
   /**

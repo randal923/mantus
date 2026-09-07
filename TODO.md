@@ -29,6 +29,18 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Status-protocol listener has no per-IP query cooldown** (2026-09-07).
+  Canary's ProtocolStatus refuses a second query from the same IP inside
+  `statusTimeout`; ours (`server/src/status/StatusServer.ts`) instead caches
+  the rendered snapshot for `status.cacheMs` and caps concurrent sockets at
+  32 with a 3 s idle timeout. Behind Fly's raw-TCP service every query
+  arrives from the proxy's address, so a per-IP rule would need the
+  `proxy_proto` handler plus PROXY-v1 header parsing. Recommended fix if a
+  crawler ever floods the port: add `handlers = ["proxy_proto"]` to the 7171
+  service and parse the PROXY line before the status packet. Also: the
+  `peak` players attribute is a per-process high-water mark (resets on
+  deploy; Canary persists `players_record`), and `<map>` omits width/height
+  because MapData has no dimensions.
 - **Monsters walk at half their speed: the think fires 25 ms before the step
   cooldown ends** (2026-09-02, found while verifying the walk-home fix with
   a wasp on the real map). `MonsterBrain.tick` sets `nextThinkAt = max(now +

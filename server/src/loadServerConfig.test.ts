@@ -144,6 +144,29 @@ describe("loadServerConfig", () => {
     expect(config.map.spawnTown).toBe("Venore");
   });
 
+  it("loads the committed status-protocol block", async () => {
+    const config = await loadServerConfig(CONFIG_PATH, {});
+    expect(config.status).toMatchObject({
+      port: 7171,
+      serverName: "Mantus Online",
+      url: "https://mantusonline.com/",
+      cacheMs: expect.any(Number),
+    });
+  });
+
+  it("switches the status listener off at port 0 and overrides its public ip", async () => {
+    const off = await loadServerConfig(CONFIG_PATH, { STATUS_PORT: "0" });
+    expect(off.status).toBeUndefined();
+    const moved = await loadServerConfig(CONFIG_PATH, {
+      STATUS_PORT: "7172",
+      STATUS_IP: "203.0.113.7",
+    });
+    expect(moved.status).toMatchObject({ port: 7172, ip: "203.0.113.7" });
+    await expect(
+      loadServerConfig(CONFIG_PATH, { STATUS_PORT: "seven" }),
+    ).rejects.toThrow("STATUS_PORT must be an integer");
+  });
+
   it("rejects unknown settings instead of silently ignoring typos", async () => {
     const source = await readFile(CONFIG_PATH, "utf8");
     const path = await temporaryConfig(`${source}unknownSetting: true\n`);

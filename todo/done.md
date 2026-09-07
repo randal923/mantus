@@ -6789,3 +6789,48 @@ reaches players once main is pushed and the Fly deploy runs.
 - **Residual risk:** audits are per-row net deltas, so a platinum stack
   that both gains minted coins and loses spent ones logs only the net
   movement. The Magic Gold Converter stays inert (`TODO.md`).
+
+## 2026-09-07 — OpenTibia status protocol for otservlist.org (`agents/otservlist-status`)
+
+- **Problem:** otservlist.org (and every other OT server list) verifies a
+  server by opening a raw TCP socket to the listed IP:port and sending the
+  OpenTibia status query (`06 00 FF FF "info"`), expecting Canary's `tsqp`
+  XML back. Mantus only spoke WebSocket-over-HTTP on 4000 behind Fly's
+  http/tls handlers, so the listing form could not be completed.
+- **What changed:** `StatusServer` is a raw `node:net` listener (default
+  port 7171, `status` block in `config.yml`, `STATUS_PORT`/`STATUS_IP`
+  overrides) answering both Canary status forms: the `FF FF info` XML query
+  (sent raw, no length header, exactly as Canary's `setRawMessages(true)`
+  path) and the binary `01 <flags>` query (length-framed). The XML carries
+  uptime, ip, servername, port, location, url, owner, `players
+  online/unique/max/peak`, monster/npc totals, rates, map name and motd.
+  `unique` is the distinct client addresses among player-bound sessions
+  (`SessionRegistry.uniquePlayerAddressCount`, otservlist's 4-MC rule);
+  `peak` is a per-process high-water mark sampled each tick and on query.
+  The listener never touches game state: it reads a snapshot the game
+  server renders, cached for `cacheMs` (5 s in prod) so a query flood costs
+  one snapshot per window; malformed, oversized (>263 B) or silent (3 s)
+  sockets are dropped without a reply; 32 concurrent sockets max. The
+  per-player list (`extPlayersInfo`) and character lookup are deliberately
+  not answered on this unauthenticated socket (charter rule 6). Fly: a
+  second `[[services]]` block forwards 7171 with no handlers, which only
+  works on a dedicated IPv4 — allocated 2026-09-07 (`188.93.144.4`, $2/mo)
+  and echoed via `STATUS_IP`.
+- **Files:** `server/src/status/{StatusServer,StatusConfig,StatusSnapshot,
+  buildStatusXml,buildStatusInfo,parseStatusRequest,escapeXml}.ts` (+
+  tests), `server/src/GameServer.ts` (snapshot, peak, start/stop,
+  `statusPort`), `server/src/GameServer.status.test.ts`,
+  `server/src/SessionRegistry.ts`, `server/src/World.ts` (`npcCount`),
+  `server/src/config.ts`, `server/src/loadServerConfig.ts` (+ tests),
+  `config.yml`, `server/fly.toml`, `server/Dockerfile`, `TODO.md`.
+- **Verification:** 11 unit tests (framing incl. byte-at-a-time arrival,
+  XML escaping, binary reply layout, cache window, malformed/oversized/HTTP
+  rejection without a snapshot call, no player list on request) plus an
+  end-to-end `GameServer` test: two players logging in from one address
+  report `online=2 unique=1 peak=2`, no character names in the reply, and
+  `online=1 peak=2` after one leaves. Config tests cover the committed
+  block, port-0 off switch and env overrides. Full server unit suite green
+  (4254 tests), all workspaces typecheck. Production probe recorded below
+  after deploy.
+- **Residual risk:** no per-IP query cooldown (needs `proxy_proto`, see
+  TODO.md); peak resets per deploy; `<map>` has no width/height.
