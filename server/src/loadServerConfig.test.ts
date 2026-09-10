@@ -50,6 +50,24 @@ describe("loadServerConfig", () => {
     });
   });
 
+  it("leaves the starter town unset so the server defaults it to Thais", async () => {
+    const config = await loadServerConfig(CONFIG_PATH, {});
+    expect(config.starterTownId).toBeUndefined();
+  });
+
+  it("accepts an explicit starter town id", async () => {
+    const source = await readFile(CONFIG_PATH, "utf8");
+    const directory = await mkdtemp(join(tmpdir(), "server-config-"));
+    temporaryDirectories.push(directory);
+    const path = join(directory, "config.yml");
+    await writeFile(
+      path,
+      source.replace(/^characters:\n/m, "characters:\n  starterTownId: 3\n"),
+    );
+    const config = await loadServerConfig(path, {});
+    expect(config.starterTownId).toBe(3);
+  });
+
   it("loads the committed rarity block with its tuning tables", async () => {
     const config = await loadServerConfig(CONFIG_PATH, {});
     // Chances are live-tuned in config.yml; assert shape, not exact values.

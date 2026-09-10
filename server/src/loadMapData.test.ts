@@ -116,6 +116,33 @@ describe("loadMapData", () => {
     expect(map.isWalkable({ x: 1, y: 2, z: 6 })).toBe(false);
   });
 
+  it("resolves town ids by name, case-insensitively", () => {
+    const directory = mkdtempSync(join(tmpdir(), "tibia-map-"));
+    directories.push(directory);
+    const header = Buffer.alloc(12);
+    header.write("TMAP", 0, "ascii");
+    header.writeUInt8(1, 4);
+    header.writeUInt8(SECTOR_SIZE, 5);
+    header.writeUInt32LE(1, 8);
+    writeFileSync(join(directory, "fixture.map.bin"), Buffer.concat([header, sector(7)]));
+    writeFileSync(
+      join(directory, "fixture.map.json"),
+      JSON.stringify({
+        towns: [
+          { id: 1, name: "Temple", x: 1, y: 2, z: 7 },
+          { id: 8, name: "Thais", x: 1, y: 2, z: 7 },
+        ],
+        spawn: { x: 1, y: 2, z: 7 },
+      }),
+    );
+
+    const map = loadMapData(directory, "fixture", "Temple");
+
+    expect(map.getTownId?.("thais")).toBe(8);
+    expect(map.getTownId?.("Temple")).toBe(1);
+    expect(map.getTownId?.("Venore")).toBeUndefined();
+  });
+
   it("distinguishes blocked tiles and loads explicit floor transitions", () => {
     const directory = mkdtempSync(join(tmpdir(), "tibia-map-"));
     directories.push(directory);

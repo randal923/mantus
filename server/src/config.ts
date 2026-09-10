@@ -89,7 +89,11 @@ export interface ServerConfig {
      */
     stages: StageTables;
   };
-  starterTownId: number;
+  /**
+   * Home town written to new characters. Unset means the town named
+   * `DEFAULT_STARTER_TOWN` (Thais), resolved against the loaded map.
+   */
+  starterTownId?: number;
   characterSaveIntervalMs: number;
   maxCharacterSaveRetries: number;
   characterSaveRetryDelayMs: number;

@@ -150,6 +150,11 @@ export function gridMapData(config: GridMapConfig): MapData {
     getTownName(townId) {
       return config.towns?.find((town) => town.id === townId)?.name;
     },
+    getTownId(townName) {
+      const wanted = townName.toLowerCase();
+      return config.towns?.find((town) => town.name.toLowerCase() === wanted)
+        ?.id;
+    },
     getTownTemples() {
       return [{ ...spawn }];
     },
