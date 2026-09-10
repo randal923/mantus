@@ -6834,3 +6834,36 @@ reaches players once main is pushed and the Fly deploy runs.
   after deploy.
 - **Residual risk:** no per-IP query cooldown (needs `proxy_proto`, see
   TODO.md); peak resets per deploy; `<map>` has no width/height.
+
+## 2026-09-09 — New characters default to Thais as their home town (`agents/starter-town-default`)
+
+- **Problem:** `CharacterService.create` always wrote `config.characters.
+  starterTownId` as the new character's `town_id`, and `config.yml` pinned
+  it to 1 (Dawnport Tutorial) while `map.spawnTown` was Thais. Every new
+  character therefore spawned at the Thais temple but was a citizen of
+  Dawnport Tutorial: death respawn, the Temple Teleport Scroll and the depot
+  id all pointed at the world-spawn temple instead of Thais. There was no
+  way to leave the town unset.
+- **What changed:** `characters.starterTownId` is optional. When unset, the
+  server resolves the town named `DEFAULT_STARTER_TOWN` ("Thais") on the
+  loaded map at boot (`resolveStarterTownId`, via the new `MapData.
+  getTownId` / `World.townId` name lookup, case-insensitive) and refuses to
+  start if the map has no such town. A set value is used as before.
+  `config.yml` drops the pinned `starterTownId: 1`, so new characters are
+  Thais citizens (town 8 on otservbr). The temple-scroll playtest expects
+  the Thais temple as home now.
+- **Files:** `server/src/character/{defaultStarterTown,resolveStarterTownId}.ts`
+  (+ test), `server/src/{MapData,loadMapData,gridMapData,World,config,
+  loadServerConfig,GameServer}.ts`, `server/src/world/overrideMapData.ts`,
+  `server/src/playtest/scenarios/templeTeleportScroll.ts`, `config.yml`,
+  `server/src/{loadServerConfig,loadMapData}.test.ts`.
+- **Verification:** unit tests for the resolver (fallback, explicit id,
+  map without Thais), config loading with and without the key, and the
+  map name lookup; `yarn playtest:temple-scroll` against the real otservbr
+  map on the embedded Postgres: the fresh character's row carries
+  `town_id = 8` and the scroll lands them at 32369,32241,7 (Thais temple).
+  Server typecheck and unit suite green.
+- **Residual risk:** characters created before this change keep
+  `town_id = 1` in dev and prod; see TODO.md (accepted gaps) for the
+  backfill note. Citizenship tiles (mutable `Player.townId`) remain open
+  under the teleport-gaps entry.

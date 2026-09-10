@@ -167,7 +167,9 @@ progression:
       - { minLevel: 126, multiplier: 2 }
 
 characters:
-  starterTownId: 1
+  # starterTownId: the home town written to new characters (death respawn,
+  # depot, temple scroll). Leave it unset to use Thais, resolved by name from
+  # the loaded map; a set value must be a town id the map knows.
   saveIntervalMs: 30000
   maxSaveRetries: 3
   saveRetryDelayMs: 100

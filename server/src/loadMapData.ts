@@ -368,6 +368,10 @@ export function loadMapData(
     getTownName(townId) {
       return meta.towns.find((town) => town.id === townId)?.name;
     },
+    getTownId(townName) {
+      const wanted = townName.toLowerCase();
+      return meta.towns.find((town) => town.name.toLowerCase() === wanted)?.id;
+    },
     getTownTemples() {
       return townTemples;
     },

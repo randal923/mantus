@@ -93,6 +93,11 @@ export class World {
     return this.map.getTownName?.(townId);
   }
 
+  /** A town's id by name; undefined when the map knows no such town. */
+  townId(townName: string): number | undefined {
+    return this.map.getTownId?.(townName);
+  }
+
   /** One town's temple; undefined when the map knows no such town. */
   townTemple(townId: number): Position | undefined {
     return this.map.getTownTemple?.(townId);

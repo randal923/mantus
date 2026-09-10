@@ -43,6 +43,8 @@ export interface MapData {
    */
   getTrashholderTypeId?(position: Position): number | undefined;
   getTownName?(townId: number): string | undefined;
+  /** A town's id by (case-insensitive) name, for name-keyed defaults. */
+  getTownId?(name: string): number | undefined;
   /** Every town's temple position, for temple-proximity rules (wheel respec). */
   getTownTemples?(): ReadonlyArray<Position>;
   /** One town's temple position, for home-temple teleports. */

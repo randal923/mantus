@@ -29,6 +29,15 @@ limitations accepted during a session are recorded in the owning feature file
 
 ## Accepted gaps
 
+- **Characters created before 2026-09-09 are citizens of Dawnport Tutorial
+  (`town_id = 1`)** while new ones default to Thais (`agents/
+  starter-town-default`): `config.yml` used to pin `characters.starterTownId:
+  1` although everyone spawns at the Thais temple, so their death respawn,
+  Temple Teleport Scroll and depot id still point at the world-spawn temple.
+  Recommended fix once citizenship tiles ship (todo/teleport-gaps.md): a
+  one-off migration `UPDATE characters SET town_id = 8 WHERE town_id = 1`
+  plus the matching depot rows, reconciled with an audit note; until then
+  the affected characters can be re-homed by hand with the same statement.
 - **Status-protocol listener has no per-IP query cooldown** (2026-09-07).
   Canary's ProtocolStatus refuses a second query from the same IP inside
   `statusTimeout`; ours (`server/src/status/StatusServer.ts`) instead caches

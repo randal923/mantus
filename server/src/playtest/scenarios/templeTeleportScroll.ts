@@ -13,12 +13,12 @@ import { TEMPLE_TELEPORT_SCROLL_TYPE_ID } from "../../item/templeTeleportScrollT
  * temple's protection zone too — and stays in the inventory.
  * Run with: yarn playtest:temple-scroll
  */
-// config.yml starterTownId 1 = Dawnport Tutorial; its temple is the world
-// spawn in otservbr.map.json.
-const HOME_TEMPLE = { x: 32069, y: 31901, z: 6 };
+// config.yml leaves characters.starterTownId unset, so new characters are
+// citizens of Thais and the scroll brings them to the Thais temple.
+const THAIS_TEMPLE = { x: 32369, y: 32241, z: 7 };
+const HOME_TEMPLE = THAIS_TEMPLE;
 // South of the Thais temple, outside its protection zone (monsters may spawn).
 const THAIS_STREET = { x: 32369, y: 32260, z: 7 };
-const THAIS_TEMPLE = { x: 32369, y: 32241, z: 7 };
 
 // Fresh letters-only character per run: playtest databases persist.
 const suffix = [...String(Date.now() % 1_000_000)]

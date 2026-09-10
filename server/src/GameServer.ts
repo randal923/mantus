@@ -23,6 +23,7 @@ import { MapCleanupService } from "./world/MapCleanupService";
 import { WorldLightCycle } from "./world/WorldLightCycle";
 import { LoginLoadQueue } from "./character/LoginLoadQueue";
 import { CharacterService } from "./character/CharacterService";
+import { resolveStarterTownId } from "./character/resolveStarterTownId";
 import { MonsterEventService } from "./creature/MonsterEventService";
 import type { CharacterStore } from "./character/CharacterStore";
 import { ChatHandler } from "./chat/ChatHandler";
@@ -403,7 +404,7 @@ export class GameServer {
     );
     const characterService = new CharacterService(deps.characters, {
       ...this.world.templePosition,
-      townId: config.starterTownId,
+      townId: resolveStarterTownId(config.starterTownId, this.world),
     });
     // One lane per character shared by the two writers of their `characters`
     // row, so a snapshot save never aborts an item persist mid-transaction.

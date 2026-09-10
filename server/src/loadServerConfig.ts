@@ -276,7 +276,7 @@ const serverConfigFileSchema = z
       .strict(),
     characters: z
       .object({
-        starterTownId: positiveIntegerSchema,
+        starterTownId: positiveIntegerSchema.optional(),
         saveIntervalMs: positiveIntegerSchema,
         maxSaveRetries: nonnegativeIntegerSchema,
         saveRetryDelayMs: nonnegativeIntegerSchema,
