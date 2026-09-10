@@ -42,12 +42,8 @@ export function KeyBindingCaptureButton({
           setCapturing(false);
           return;
         }
-        if (
-          event.code === "Tab" ||
-          event.code === "Enter" ||
-          event.code === "NumpadEnter"
-        ) {
-          // Reserved for focus navigation and chat.
+        if (event.code === "Enter" || event.code === "NumpadEnter") {
+          // Reserved for chat.
           return;
         }
         const combo = serializeKeyBindingEvent(

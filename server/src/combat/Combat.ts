@@ -641,14 +641,21 @@ export class Combat {
     const spell = combatItem
       ? this.spells.getRune(combatItem.item.typeId)
       : undefined;
-    if (
-      !player ||
-      !combatItem ||
-      combatItem.type.kind !== "rune" ||
-      !spell ||
-      !this.spellCaster.canBeginSpell(session, player, spell, intent.target, now)
-    ) {
+    if (!player || !combatItem || combatItem.type.kind !== "rune" || !spell) {
       this.feedback.reject(session, now);
+      return false;
+    }
+    // A refused rune reports the same typed reason as the spoken spell would
+    // (level, magic level, vocation, exhaust...), so the client can print it.
+    const rejection = this.spellCaster.spellRejectionCode(
+      session,
+      player,
+      spell,
+      intent.target,
+      now,
+    );
+    if (rejection) {
+      this.feedback.reject(session, now, rejection);
       return false;
     }
     return this.items.consumeForCombat(

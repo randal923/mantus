@@ -38,6 +38,29 @@ limitations accepted during a session are recorded in the owning feature file
   one-off migration `UPDATE characters SET town_id = 8 WHERE town_id = 1`
   plus the matching depot rows, reconciled with an audit note; until then
   the affected characters can be re-homed by hand with the same statement.
+- **`yarn playtest:spells` is stale on two counts** (found 2026-09-09 while
+  verifying mage runes). (1) `spellParity.ts` still expects PvP-halved damage
+  (`round(x/2)`), but `DamageResolver` disabled the halving on 2026-08-03, so
+  every damage spell/rune now "fails" with roughly double the expected
+  number even though the values sit inside the full Canary formula bounds
+  (verified: all 19 runes on Sorcerer/Druid, base and promoted, pass once
+  the harness compares against the unhalved range). (2) `ParityRig.promoteAt`
+  says "promotion", but the promotion node in
+  `content/npcs/canary-dialogue-baseline.json` matches only `promot` and
+  `matchesNpcDialogueInput` is whole-word, so every promoted station times
+  out ("timed out waiting for Ishebad promotion offer") and the scenario
+  crashes before casting. Recommended fix: drop the halving from the
+  scenario's expected range, say "promot" in `promoteAt`, and drop leftover
+  runes after each rune test (a caster given 10 of every rune overflows its
+  backpack, which surfaces as "Could not create sudden death rune").
+- **Players typing "promotion" get no answer from the kings** (2026-09-09).
+  Same root cause as above: Canary matches keywords by substring
+  (`promot` ⊂ `promotion`), our matcher only whole words, and the dialogue
+  button is labelled with the raw stem "Promot". The click path works.
+  Recommended fix: either import the full keyword list (`promot`,
+  `promotion`) for such stems or let `matchesNpcDialogueInput` accept a
+  keyword as a prefix of an input word; relabel the button from the
+  response text.
 - **Status-protocol listener has no per-IP query cooldown** (2026-09-07).
   Canary's ProtocolStatus refuses a second query from the same IP inside
   `statusTimeout`; ours (`server/src/status/StatusServer.ts`) instead caches

@@ -40,14 +40,20 @@ const PANEL_BINDING_ACTIONS = [
 
 const INTERFACE_BINDING_ACTIONS = ["toggleGameMenu", "openBugReport"] as const;
 
+// One-shot combat actions; the target cycle walks the visible monsters by
+// distance and asks the server to attack the next one (it still validates).
+const COMBAT_BINDING_ACTIONS = ["nextTarget", "previousTarget"] as const;
+
 export type MovementBindingAction = (typeof MOVEMENT_BINDING_ACTIONS)[number];
 export type KeyBindingAction =
   | MovementBindingAction
   | (typeof PANEL_BINDING_ACTIONS)[number]
-  | (typeof INTERFACE_BINDING_ACTIONS)[number];
+  | (typeof INTERFACE_BINDING_ACTIONS)[number]
+  | (typeof COMBAT_BINDING_ACTIONS)[number];
+export type CombatBindingAction = (typeof COMBAT_BINDING_ACTIONS)[number];
 export type HotkeyAction = Exclude<KeyBindingAction, MovementBindingAction>;
 export type KeyBindings = Readonly<Record<KeyBindingAction, string | null>>;
-export type KeyBindingCategory = "movement" | "panels" | "interface";
+export type KeyBindingCategory = "movement" | "combat" | "panels" | "interface";
 
 export interface KeyBindingSection {
   readonly category: KeyBindingCategory;
@@ -56,6 +62,7 @@ export interface KeyBindingSection {
 
 export const KEY_BINDING_SECTIONS: ReadonlyArray<KeyBindingSection> = [
   { category: "movement", actions: MOVEMENT_BINDING_ACTIONS },
+  { category: "combat", actions: COMBAT_BINDING_ACTIONS },
   { category: "panels", actions: PANEL_BINDING_ACTIONS },
   { category: "interface", actions: INTERFACE_BINDING_ACTIONS },
 ];
@@ -68,6 +75,14 @@ export const MOVEMENT_BINDING_DIRECTIONS: Readonly<
   moveDown: "south",
   moveLeft: "west",
 };
+
+export function isCombatBindingAction(
+  action: KeyBindingAction,
+): action is CombatBindingAction {
+  return (COMBAT_BINDING_ACTIONS as ReadonlyArray<KeyBindingAction>).includes(
+    action,
+  );
+}
 
 export function isMovementBindingAction(
   action: KeyBindingAction,
@@ -107,4 +122,6 @@ export const DEFAULT_KEY_BINDINGS: KeyBindings = {
   toggleStore: null,
   toggleGameMenu: "Escape",
   openBugReport: "Control+KeyZ",
+  nextTarget: "Tab",
+  previousTarget: "Shift+Tab",
 };

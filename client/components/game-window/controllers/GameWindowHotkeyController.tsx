@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { useHotkeys } from "../../../hooks/useHotkeys";
+import { nextAttackTarget } from "../../../lib/game-window/nextAttackTarget";
+import { isCombatBindingAction } from "../../../lib/hotkeys/keyBindings";
 import { createPanelActions } from "../createPanelActions";
 import { useGameWindowStore } from "../store/useGameWindowStore";
 import { useGameWindowStoreApi } from "../store/useGameWindowStoreApi";
@@ -20,6 +22,17 @@ export function GameWindowHotkeyController() {
     }
     // While the game menu modal is up, only the menu toggle stays live.
     if (state.gameMenuOpen) return;
+    if (isCombatBindingAction(action)) {
+      const own = state.ownCharacter ?? ownCharacter;
+      const targetId = nextAttackTarget(
+        state.visibleCreatures,
+        own.position,
+        state.fightState?.attackTargetId ?? null,
+        action === "nextTarget" ? 1 : -1,
+      );
+      if (targetId) state.runtime.clientRef.current?.attackTarget(targetId);
+      return;
+    }
     panelActions[action]();
   });
 

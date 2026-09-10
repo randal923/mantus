@@ -713,7 +713,8 @@ export class SpellCaster {
     }
   }
 
-  private spellRejectionCode(
+  /** The typed reason a cast would be refused right now, or null when it may begin. */
+  spellRejectionCode(
     session: Session,
     player: Player,
     spell: SpellDefinition,

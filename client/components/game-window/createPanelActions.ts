@@ -1,7 +1,13 @@
-import type { HotkeyAction } from "../../lib/hotkeys/keyBindings";
+import type {
+  CombatBindingAction,
+  HotkeyAction,
+} from "../../lib/hotkeys/keyBindings";
 import type { GameWindowStore } from "./types/GameWindowStore";
 
-export type PanelAction = Exclude<HotkeyAction, "toggleGameMenu">;
+export type PanelAction = Exclude<
+  HotkeyAction,
+  "toggleGameMenu" | CombatBindingAction
+>;
 
 /**
  * The one place that knows how to open/close each game panel, including the

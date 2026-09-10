@@ -1456,13 +1456,59 @@ describe("Combat", () => {
       expect.objectContaining({ id: RUNE_ID, count: 1, version: 2 }),
     );
     expect(monster.health).toBeLessThan(monster.maxHealth);
+    // The same-tick replay is refused as busy; the stale revision afterwards
+    // no longer names a carried rune at all.
     expect(
-      harness.sent.filter(
-        (message) =>
-          message.type === "error" &&
-          message.code === "combat-action-failed",
-      ).length,
-    ).toBeGreaterThanOrEqual(2);
+      harness.sent.flatMap((message) =>
+        message.type === "error" ? [message.code] : [],
+      ),
+    ).toEqual(["spell-busy", "combat-action-failed"]);
+  });
+
+  it("names the unmet level when an underleveled character uses a rune", async () => {
+    // Sudden death needs level 45; the rune is refused with the same typed
+    // reason a spoken spell gives, and no charge is spent.
+    const harness = await makeHarness({
+      character: makeLeveledCharacter(20, "Sorcerer", 15),
+      inventory: [
+        ownedItem(
+          RUNE_ID,
+          3155,
+          { kind: "container", containerId: BACKPACK_ID, slot: 0 },
+          2,
+        ),
+      ],
+    });
+    const monster = makeMonster(
+      "monster-instance:rune-target:1",
+      { x: 2, y: 1, z: 7 },
+      makeMonsterType({ health: 500, maxHealth: 500 }),
+    );
+    harness.world.addCreature(monster);
+    harness.session.knownCreatureIds.add(monster.id);
+    harness.combat.selectTarget(harness.session, monster.id, 1_000);
+
+    harness.combat.useRune(
+      harness.session,
+      {
+        type: "use-rune",
+        itemId: RUNE_ID,
+        revision: 1,
+        target: { kind: "attack-target" },
+      },
+      1_000,
+    );
+    await settleItems(harness, 1_000);
+
+    expect(
+      harness.sent.filter((message) => message.type === "error").map(
+        (message) => (message as { code: string }).code,
+      ),
+    ).toEqual(["spell-level-restricted"]);
+    expect(monster.health).toBe(monster.maxHealth);
+    await expect(harness.store.loadForCharacter(PLAYER_ID)).resolves.toContainEqual(
+      expect.objectContaining({ id: RUNE_ID, count: 2, version: 1 }),
+    );
   });
 
   it("uses a restorative potion on self once and enforces its shared exhaust", async () => {

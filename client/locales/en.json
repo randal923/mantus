@@ -1807,10 +1807,13 @@
     "resetDefaults": "Reset Defaults",
     "categories": {
       "movement": "Movement",
+      "combat": "Combat",
       "panels": "Windows",
       "interface": "Interface"
     },
     "actions": {
+      "nextTarget": "Next Target",
+      "previousTarget": "Previous Target",
       "moveUp": "Move Up",
       "moveLeft": "Move Left",
       "moveDown": "Move Down",
@@ -1890,6 +1893,9 @@
     "spell-weapon-required": "You must equip a weapon to cast that spell.",
     "item-action-failed": "That item action could not be completed.",
     "portable-seller-empty": "Your loot pouch has nothing to sell.",
+    "spell-summon-limit": "You cannot summon more creatures.",
+    "spell-parameter-invalid": "That spell needs a valid parameter.",
+    "item-exhausted": "You are exhausted. Wait a moment before using that again.",
     "potion-exhausted": "Wait a moment before using another potion.",
     "potion-level-restricted": "Your level is too low to use that potion.",
     "potion-vocation-restricted": "Your vocation cannot use that potion.",

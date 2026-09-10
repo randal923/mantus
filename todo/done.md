@@ -6835,6 +6835,80 @@ reaches players once main is pushed and the Fly deploy runs.
 - **Residual risk:** no per-IP query cooldown (needs `proxy_proto`, see
   TODO.md); peak resets per deploy; `<map>` has no width/height.
 
+## 2026-09-09 — Rune refusals name the missing requirement (`agents/rune-requirement-message`)
+
+- **Problem:** using a rune the character is not allowed to use (level,
+  magic level, vocation...) only puffed. `Combat.useRune` collapsed every
+  precheck into the generic `combat-action-failed`, and the client renders
+  that code as the Canary poff with no text, so a level-8 Sorcerer with a
+  sudden death rune got no explanation. Spoken spells already reported the
+  typed reason.
+- **What changed:** `SpellCaster.spellRejectionCode` is public and
+  `Combat.useRune` rejects with that code (`spell-level-restricted`,
+  `spell-magic-level-restricted`, `spell-vocation-restricted`,
+  `spell-exhausted`, `spell-busy`...), keeping `combat-action-failed` only
+  for a missing/stale item. On the client, `handleGameClientError` still
+  puffs for every `spell-*`/`potion-*` code but the requirement class
+  (level, magic level, vocation, not learned, mana, soul, potion level and
+  vocation) also prints the existing `serverErrors.<code>` text as a white
+  status line and combat-log entry — the same channel as "You are full."
+  No toast, no banner.
+- **Files:** `server/src/combat/Combat.ts`, `server/src/combat/SpellCaster.ts`,
+  `server/src/combat/Combat.test.ts`,
+  `client/components/game-window/controllers/handleGameClientError.ts` (+
+  new `.test.ts`), `gitworktree.md`, `todo/status.md`, `TODO.md`.
+- **Verification:** unit test "names the unmet level when an underleveled
+  character uses a rune" (error `spell-level-restricted`, no charge spent,
+  target untouched); the existing rune replay test now asserts
+  `["spell-busy", "combat-action-failed"]`; client test asserts puff + status
+  line + combat log for `spell-level-restricted` and puff only for
+  `combat-action-failed`. Wire-level playtest against the embedded Postgres:
+  a level-8 Sorcerer using item 3155 receives exactly
+  `["spell-level-restricted"]` and keeps 3 charges. Mage rune parity sweep
+  (all 19 runes on base and promoted Sorcerer/Druid, full-damage bounds)
+  passed 35/35 before the change; combat suites (92 tests) and both
+  typechecks green after it.
+- **Residual risk:** exhaust, out-of-range, line-of-sight, protection-zone
+  and target-invalid refusals stay puff-only by design; extend
+  `REQUIREMENT_MESSAGE_CODES` if a message is wanted for them.
+
+## 2026-09-09 — Tab / Shift+Tab cycle the attack target (`agents/target-cycle-hotkey`)
+
+- **Problem:** the only way to pick a monster was a click on the map or
+  the battle list; there was no keyboard target cycling.
+- **What changed:** new rebindable "Combat" section in the Hotkey Mapping
+  view with `nextTarget` (default `Tab`) and `previousTarget`
+  (`Shift+Tab`). `client/lib/game-window/nextAttackTarget.ts` orders the
+  visible monsters on the player's floor nearest-first (ties by name, then
+  id, so repeated presses are stable), skips players, NPCs, other floors
+  and dead creatures, wraps around, and restarts at the nearest when the
+  current target left the view. `GameWindowHotkeyController` sends the
+  ordinary `attack-target` intent for the pick, so the server still
+  validates it (`canPlayerTarget`: PZ, floor, invisibility, attackable).
+  `PanelAction` excludes the combat actions; the capture button no longer
+  refuses `Tab` (Enter stays reserved for chat); existing users get the
+  defaults through the store's `merge` backfill. Locale keys
+  `hotkeys.categories.combat`, `hotkeys.actions.nextTarget/previousTarget`
+  in en and pt-BR.
+- **Files:** `client/lib/hotkeys/keyBindings.ts`,
+  `client/lib/game-window/nextAttackTarget.ts` (+ test),
+  `client/components/game-window/createPanelActions.ts`,
+  `client/components/game-window/controllers/GameWindowHotkeyController.tsx`,
+  `client/components/settings/KeyBindingCaptureButton.tsx`,
+  `client/lib/hotkeys/resolveHotkey.test.ts`, `client/locales/{en,pt-BR}.json`,
+  `client/e2e/targetCycleHotkey.e2e.test.tsx`, `gitworktree.md`,
+  `todo/status.md`.
+- **Verification:** 6 unit tests on the ordering/cycling rules, resolveHotkey
+  maps Tab/Shift+Tab, key-binding store and settings tests green (26
+  tests), client typecheck + eslint clean. Browser e2e against the real
+  playtest server (embedded Postgres): Tab with no monster in view sends
+  nothing; with two GM-spawned dragons Tab targets one (server confirms via
+  `attack-target-changed`), Tab again the other, Shift+Tab returns to the
+  first; a focused text input keeps Tab for itself; no server errors.
+- **Residual risk:** ordering is by distance at press time, so monsters
+  swapping distance between presses can revisit one; the cycle ignores the
+  battle-list sort order. Tab is bindable now, so a user can rebind it away
+  from focus navigation deliberately.
 ## 2026-09-09 — New characters default to Thais as their home town (`agents/starter-town-default`)
 
 - **Problem:** `CharacterService.create` always wrote `config.characters.

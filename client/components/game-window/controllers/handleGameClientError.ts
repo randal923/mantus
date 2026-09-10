@@ -25,11 +25,15 @@ export function handleGameClientError(
     renderer.clearMapItemPreviews();
   }
   // A refused gameplay action reads as Canary does it: the puff on the player
-  // and nothing else. No banner, no toast.
+  // plus the reason as a white status line and combat-log entry, the same
+  // channel as "You are full." No banner, no toast.
   if (showPuff) {
     if (state.ownCharacter) {
       renderer.showLocalMagicEffect(state.ownCharacter.position, 3);
     }
+    const text = i18n.t(`serverErrors.${code}`);
+    state.showScreenMessage(text, "status");
+    state.appendCombatLog(text);
     return;
   }
   // A refused seller trigger is ordinary gameplay feedback: log line, no

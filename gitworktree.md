@@ -54,4 +54,6 @@ worktree is created, merged, or removed.
 | `agents/gold-converter`        | done        |
 | `agents/gold-converter-sweep`  | done        |
 | `agents/otservlist-status`     | done        |
-| `agents/starter-town-default`  | in progress |
+| `agents/rune-requirement-message` | done        |
+| `agents/target-cycle-hotkey`      | done        |
+| `agents/starter-town-default`  | done        |

@@ -27,6 +27,13 @@ describe("resolveHotkey", () => {
     );
   });
 
+  it("maps Tab and Shift+Tab to the target cycle", () => {
+    expect(resolveHotkey(press("Tab"), DEFAULT_KEY_BINDINGS)).toBe("nextTarget");
+    expect(
+      resolveHotkey(press("Tab", { shiftKey: true }), DEFAULT_KEY_BINDINGS),
+    ).toBe("previousTarget");
+  });
+
   it("returns null for unbound keys", () => {
     expect(resolveHotkey(press("KeyZ"), DEFAULT_KEY_BINDINGS)).toBeNull();
   });
